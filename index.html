@@ -123,6 +123,18 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .loy::before{content:"";position:absolute;inset:0;background:#e8ecea;clip-path:polygon(50% 0,100% 14%,100% 60%,50% 100%,0 60%,0 14%)}
 .loy::after{content:"";position:absolute;inset:6%;background:linear-gradient(#2b3238,#101418);clip-path:polygon(50% 0,100% 14%,100% 60%,50% 100%,0 60%,0 14%)}
 .loy b{position:absolute;inset:0 0 14% 0;display:grid;place-items:center;z-index:1;color:#fff;font:800 calc(var(--cw)*.16)/1 var(--ui);font-variant-numeric:tabular-nums}.badge.tok{left:4%;top:4%;border-color:var(--dim);color:var(--dim)}
+.kcs{position:absolute;left:3%;top:19%;max-height:74%;display:flex;flex-direction:column;flex-wrap:wrap;gap:calc(var(--cw)*.02);pointer-events:none}
+.kc{width:calc(var(--cw)*.2);height:calc(var(--cw)*.2);border-radius:50%;background:#000;border:1px solid #fff;display:grid;place-items:center;box-shadow:0 1px 3px #000c;flex:none}
+.kc svg{width:74%;height:74%;fill:#fff;display:block}
+.badge.ctr.nm{display:flex;align-items:center;gap:calc(var(--cw)*.03);padding:1px 7px 1px 1px;border-color:#fff;color:#fff;background:#000}
+.badge.ctr.nm .kc{width:calc(var(--cw)*.17);height:calc(var(--cw)*.17);border:0;box-shadow:none}
+.badge.ctr.lore{padding:1px 8px;font-family:var(--display);font-weight:400;font-size:calc(var(--cw)*.17);letter-spacing:.04em}
+.badge.ctr.named{border-color:#fff;color:#fff;background:#000;white-space:nowrap}
+.badge.spl{left:4%;bottom:21%;border-style:dashed;border-color:#7fd6ff;color:#bfeaff;background:#06202cdd;white-space:nowrap}
+.badge.chap{left:4%;top:4%;border-color:#fff;color:#fff;background:#000;font-family:var(--display);font-weight:400;white-space:nowrap}
+.pile .dtag{position:absolute;right:4px;top:5px;font:800 10px var(--ui);letter-spacing:.06em;color:var(--ink);background:#000c;border:1px solid var(--dim);border-radius:99px;padding:1px 6px;z-index:2;pointer-events:none;white-space:nowrap}
+.pile .dtag.on{color:#1b1205;background:var(--brass);border-color:var(--brass)}.pile .dtag.low{top:26px}
+#stormTag{cursor:pointer;color:var(--ink);border-color:var(--brass)}#stormTag b{color:var(--brass);letter-spacing:0;font-variant-numeric:tabular-nums;margin-left:3px}
 .badge.note{left:4%;bottom:6%;right:30%;border-radius:4px;color:var(--ink);border-color:var(--line);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .badge.ctl{right:4%;top:4%;border-color:var(--opp);color:var(--opp)}
 #ghost{position:fixed;z-index:60;pointer-events:none;opacity:.85;transform:translate(-50%,-50%) rotate(-3deg)}
@@ -264,7 +276,7 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
     <div id="oppBack" class="row opp"></div>
     <div id="oppFront" class="row front opp"></div>
     <div id="mid">
-      <span id="turnlbl"></span>
+      <span id="turnlbl"></span><span id="stormTag" class="pill" hidden></span>
       <div class="phases" id="phases"></div>
       <div class="tools">
         <button id="undoBtn" title="Undo your last action (Ctrl+Z)">↶ <span>Undo</span></button>
@@ -308,7 +320,7 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v1.35';
+const VERSION = 'v1.36';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 function feedbackUrl(){
   let details = 'not in a game';
@@ -343,7 +355,7 @@ function toDB(c){
 }
 function saveDB(){ const o={}; let n=0; for(const k in DB){ if(!DB[k].tmp && n++<5000) o[k]=DB[k]; } store.set('mt_cards_v1', o); }
 async function ensureCards(names, onProgress){
-  const want = [...new Set(names.filter(Boolean))].filter(n => { const k=keyOf(n); return (!DB[k] || DB[k].tmp) && !pending.has(k); });
+  const want = [...new Set(names.filter(Boolean))].filter(n => { const k=keyOf(n); return (!DB[k] || DB[k].tmp || (DB[k].back && DB[k].loy2===undefined)) && !pending.has(k); });
   if(!want.length) return;
   want.forEach(n => pending.add(keyOf(n)));
   let done = 0;
@@ -402,7 +414,7 @@ const deckText = d => d.main.map(([n,c])=>c+' '+n).join('\n') + (d.side.length ?
 
 /* ================= state ================= */
 const S = Object.assign({name:'', autoDraw:true}, store.get('mt_settings', {}));
-const newPlayer = () => ({ name:S.name||'Player', deck:'', life:20, ctr:{poison:0,energy:0}, lib:[], hand:[], bf:[], gy:[], ex:[], st:[], side:[], reveal:false, arrows:[], mull:0, wins:0, roll:null, dealt:false, kept:false, mana:noMana(), energySeen:false, drew:0 });
+const newPlayer = () => ({ name:S.name||'Player', deck:'', life:20, ctr:{poison:0,energy:0}, lib:[], hand:[], bf:[], gy:[], ex:[], st:[], side:[], reveal:false, arrows:[], mull:0, wins:0, roll:null, dealt:false, kept:false, mana:noMana(), energySeen:false, drew:0, cast:{n:0,is:0}, cares:null });
 const G = { myId:'p1', solo:false, code:'', me:newPlayer(), opp:null, turn:{active:null, phase:2, n:0}, log:[], net:'', idc:0, peer:null, conn:null, mode:null, hover:null };
 const oppId = () => G.myId==='p1' ? 'p2' : 'p1';
 const nid = () => G.myId+'-'+(++G.idc).toString(36);
@@ -415,7 +427,7 @@ const cname = c => c.fd ? 'a face-down card' : '[['+(cdata(c).n||'a card')+'|'+(
 function pub(){
   const m=G.me, p = c => c.fd ? Object.assign({}, c, {k:null, cu:null, note:''}) : c;
   return { name:m.name, deck:m.deck, life:m.life, ctr:m.ctr, libN:m.lib.length, handN:m.hand.length, sideN:m.side.length,
-    hand:(m.reveal || m.ctl) ? m.hand : null, ctl:!!m.ctl, ctlNext:!!m.ctlNext, bf:m.bf.map(p), gy:m.gy, ex:m.ex.map(p), st:m.st.map(p), arrows:m.arrows, mull:m.mull, wins:m.wins||0, roll:m.roll||null, dealt:!!m.dealt, kept:!!m.kept, mana:m.mana||noMana(), energySeen:!!m.energySeen };
+    hand:(m.reveal || m.ctl) ? m.hand : null, ctl:!!m.ctl, ctlNext:!!m.ctlNext, bf:m.bf.map(p), gy:m.gy, ex:m.ex.map(p), st:m.st.map(p), arrows:m.arrows, mull:m.mull, wins:m.wins||0, roll:m.roll||null, dealt:!!m.dealt, kept:!!m.kept, mana:m.mana||noMana(), energySeen:!!m.energySeen, cast:m.cast||{n:0,is:0}, cares:m.cares||null };
 }
 /* undo: a snapshot of my own side is kept before each change. Shuffles and anything that crosses to the other player close the history. */
 const UNDO=[]; let lastSnap=null, lastLogi=0;
@@ -481,7 +493,7 @@ function onMsg(m){
   }
   else if(m.t==='log'){ addLog(String(m.text).slice(0,400), m.chat ? 'co' : 'o'); const ks=[...String(m.text).matchAll(/\[\[[^|\]]*\|([^\]]*)\]\]/g)].map(x=>x[1]).filter(Boolean); if(ks.length) ensureCards(ks); }
   else if(m.t==='take'){ const f=find(m.id); if(f && f.z==='ex' && (f.c.offer || (f.c.by && f.c.by.mode==='play' && f.c.by.pid===oppId()))){ G.noUndo=true; const c=f.c; G.me.ex.splice(f.i,1); delete c.offer; delete c.by; delete c.warp; c.fd=false; send({t:'give', card:c, zone:'st'}); log(`${G.opp?G.opp.name:'Opponent'} casts ${cname(c)} from ${G.me.name}'s exile.`); changed(); } }
-  else if(m.t==='give'){ G.noUndo=true; const gc=m.card, play=m.zone==='bf'||m.zone==='st'; if((gc.tok && !play) || (gc.made && !play && m.zone!=='hand')){ render(); return; } if(m.zone==='st') gc.ts=Date.now(); place(m.card, m.zone, m.pos); if(m.zone==='st') castTriggers(gc); if(m.card.k) ensureCards([m.card.k]).then(render); changed(); }
+  else if(m.t==='give'){ G.noUndo=true; const gc=m.card, play=m.zone==='bf'||m.zone==='st'; if((gc.tok && !play) || (gc.made && !play && m.zone!=='hand')){ render(); return; } if(m.zone==='st') gc.ts=Date.now(); place(m.card, m.zone, m.pos); if(m.zone==='st'){ noteCast(gc); castTriggers(gc); } if(m.card.k) ensureCards([m.card.k]).then(render); changed(); }
   else if(m.t==='cmd'){ runCmd(m); }
   else if(m.t==='clrarrow'){ const n=G.me.arrows.length; G.me.arrows=G.me.arrows.filter(a=>a.a!==m.id && a.b!==m.id); if(G.me.arrows.length!==n) changed(); }
   else if(m.t==='show'){ const c={id:'s:'+(m.k||''), k:m.k, cu:m.cu}; ensureCards(m.k?[m.k]:[]).then(()=>showCard(c, `${G.opp?G.opp.name:'Your opponent'} shows you ${m.what}`)); }
@@ -510,9 +522,9 @@ function move(id, zone, o={}){
   if(from==='gy') delete c.fbk;
   m[from].splice(f.i,1); if(from==='ex'){ delete c.offer; delete c.by; delete c.warp; }
   if(from==='bf' || from==='st'){ for(const x of m.bf) if(x.att===id) x.att=null; m.arrows = m.arrows.filter(a=>a.a!==id && a.b!==id); }
-  if(zone!=='bf'){ c.tap=false; c.c=0; c.att=null; c.atk=false; c.flip=false; c.note=''; c.row=null; c.anim=false; c.fdk=null; c.exert=false; c.stun=0; delete c.tp; delete c.tt; if(zone!=='st') c.imp=0; if(zone!=='ex' && zone!=='st') c.fd=false; }
+  if(zone!=='bf'){ c.tap=false; c.c=0; c.att=null; c.atk=false; c.flip=false; c.note=''; c.row=null; c.anim=false; c.fdk=null; c.exert=false; c.stun=0; delete c.tp; delete c.tt; delete c.kw; delete c.lt; if(zone!=='st') c.imp=0; if(zone!=='ex' && zone!=='st') c.fd=false; }
   if(zone==='bf' && from!=='bf'){ c.fd=!!o.fd; c.fdk=o.fd&&o.fdk?o.fdk:null; c.tap=!!o.tap; const d=cdata(c), L=c.flip&&d.back ? d.loy2 : d.loy; if(!c.fd && L && !isNaN(+L)) c.c=+L; }
-  if(zone==='st'){ c.ts=Date.now(); if(from!=='st') castTriggers(c); }
+  if(zone==='st'){ c.ts=Date.now(); if(from!=='st'){ noteCast(c); castTriggers(c); } }
   const leavesPlay = !['bf','st'].includes(zone);
   if(c.tok && leavesPlay){ if(!o.silent) log(`${m.name}'s token ${cname(c)} leaves play.`); return; }
   if(c.made && leavesPlay && zone!=='hand'){ log(`${m.name}'s created card ${cname(c)} leaves the game.`); return; }
@@ -527,27 +539,33 @@ function move(id, zone, o={}){
       : `moves ${nm} from ${ZN[from]} to ${ZN[zone]}`;
     log(`${m.name} ${verb}.`);
   }
+  if(zone==='bf' && from!=='bf' && !o.later) entered(c);
 }
 function draw(n=1, quiet){ const m=G.me; let k=0; while(n-- > 0 && m.lib.length){ m.hand.push(m.lib.shift()); k++; } if(!quiet) log(`${m.name} draws ${k===1?'a card':k+' cards'}.`); if(!k && !quiet) toast('Your library is empty.'); return k; }
 function shuffleLib(quiet){ G.noUndo=true; shuffle(G.me.lib); if(!quiet) log(`${G.me.name} shuffles their library.`); }
 function playFromHand(id){ const f=find(id); if(!f) return; move(id, isLand(f.c) ? 'bf' : 'st'); changed(); }
-function resolve(id){ const f=find(id); if(!f) return; const c=f.c; const emp = isSpell(c) && !c.fd ? empowers(c) : [], modal = emp.length && isModal(c); if(c.tok && isSpell(c)){ G.me.st.splice(f.i,1); log(`${G.me.name}'s copy of ${cname(c)} resolves.`); } else if(isSpell(c)){ const xr=c.xr; move(id,'gy',{silent:true}); log(`${cname(c)} resolves${xr?' and is exiled':''}.`); } else { const imp=c.imp||0; move(id,'bf',{silent:true}); if(imp){ c.imp=imp; c.c=imp; log(`${cname(c)} resolves and enters with ${imp} time counter${imp>1?'s':''}. It is not a creature until they are gone.`); } else log(`${cname(c)} resolves and enters the battlefield.`); }
+function resolve(id){ const f=find(id); if(!f) return; const c=f.c;
+  if(c.ch){ G.me.st.splice(f.i,1); const s=find(c.ch.id); log(`${cname(c)} resolves.`); changed(); if(c.ch.last && s && s.z==='bf') sagaEnd(s.c); return; }
+  const emp = isSpell(c) && !c.fd ? empowers(c) : [], modal = emp.length && isModal(c); if(c.tok && isSpell(c)){ G.me.st.splice(f.i,1); log(`${G.me.name}'s copy of ${cname(c)} resolves.`); } else if(isSpell(c)){ const xr=c.xr; move(id,'gy',{silent:true}); log(`${cname(c)} resolves${xr?' and is exiled':''}.`); } else { const imp=c.imp||0; move(id,'bf',{silent:true,later:true}); if(imp){ c.imp=imp; c.c=imp; log(`${cname(c)} resolves and enters with ${imp} time counter${imp>1?'s':''}. It is not a creature until they are gone.`); } else { log(`${cname(c)} resolves and enters the battlefield.`); entered(c); } }
   if(emp.length===1 && emp[0].n!=null && !modal) empowerJace(emp[0].n, c); else if(emp.length) askEmpower(c, emp[0].n ?? 1);   // a modal spell or Empower Jace X asks first
   changed(); }
 function manaAbilities(c){
-  const out=[], txt=cdata(c).o||'', add=(o,cost,exert)=>{ if(o && !out.some(a=>a.out===o && a.cost===cost)) out.push({out:o, cost, exert}); };
+  const out=[], cond=[], txt=cdata(c).o||'', add=(list,o,cost,exert,rem)=>{ if(o && !list.some(a=>a.out===o && a.cost===cost)) list.push({out:o, cost, exert, rem}); };
   for(const m of txt.matchAll(/\badd ([^.\n]*)/gi)){ const cl=m[1];
     const pre=txt.slice(txt.lastIndexOf('\n', m.index)+1, m.index), ci=pre.lastIndexOf(':'), costPart=ci>=0 ? pre.slice(0,ci) : '';
-    const cost=[...costPart.matchAll(/\{([WUBRGC]|\d+)\}/g)].map(x=>x[1]).join(','), exert=/\bexert\b/i.test(costPart);
-    if(/any (one )?color|any type|any of/i.test(cl)){ 'WUBRG'.split('').forEach(k=>add(k,cost,exert)); continue; }
+    const cost=[...costPart.matchAll(/\{([WUBRGC]|\d+)\}/g)].map(x=>x[1]).join(','), exert=/\bexert\b/i.test(costPart), rem=/\bremove an? [\w+\/-]+ counter from\b/i.test(costPart);
+    // "If it has a luck counter on it, instead add one mana of any color" (Gemstone Caverns): only with a counter, and then it replaces the plain ability
+    const iff=/counters? on (?:it|him|her), instead $/i.test(pre), list=iff ? cond : out; if(iff && !(c.c>0)) continue;
+    if(/any (one )?color|any type|any of/i.test(cl)){ 'WUBRG'.split('').forEach(k=>add(list,k,cost,exert,rem)); continue; }
     const syms=[...cl.matchAll(/\{([WUBRGC])\}/g)].map(x=>x[1]); if(!syms.length) continue;
-    if(/ or /i.test(cl)) syms.forEach(k=>add(k,cost,exert)); else add(syms.join(''),cost,exert); }
-  const tl=faceType(c), sub={Plains:'W',Island:'U',Swamp:'B',Mountain:'R',Forest:'G'}; for(const k in sub) if(new RegExp('\\b'+k+'\\b').test(tl)) add(sub[k],'',false);
+    if(/ or /i.test(cl)) syms.forEach(k=>add(list,k,cost,exert,rem)); else add(list,syms.join(''),cost,exert,rem); }
+  if(cond.length) return cond;
+  const tl=faceType(c), sub={Plains:'W',Island:'U',Swamp:'B',Mountain:'R',Forest:'G'}; for(const k in sub) if(new RegExp('\\b'+k+'\\b').test(tl)) add(out,sub[k],'',false,false);
   return out;
 }
 const manaOptions = c => [...new Set(manaAbilities(c).map(a=>a.out))];
 const costLabel = cost => cost.split(',').map(k=>MNAME[k]||k).join(' + ');
-const abilityLabel = a => (a.cost ? 'Pay '+costLabel(a.cost)+', tap for ' : 'Tap for ')+manaLabel(a.out)+(a.exert ? ' (exerts)' : '');
+const abilityLabel = a => (a.cost ? 'Pay '+costLabel(a.cost)+', tap for ' : 'Tap for ')+manaLabel(a.out)+(a.exert ? ' (exerts)' : '')+(a.rem ? ' (removes a counter)' : '');
 function payCost(cost){
   if(!cost) return true; const m=G.me; if(!m.mana) m.mana=noMana(); const pool=Object.assign({}, m.mana);
   for(const k of cost.split(',')){ if(MANA.includes(k)){ if(pool[k]<1) return false; pool[k]--; } }
@@ -555,8 +573,9 @@ function payCost(cost){
   m.mana=pool; return true;
 }
 function useAbility(c, a){
+  if(a.rem && !(c.c>0)){ toast('It has no counters left to remove.'); return false; }
   if(!payCost(a.cost)){ toast(`That costs ${costLabel(a.cost)}. Put it in your mana pool first, then try again.`); return false; }
-  c.tap=true; addMana(a.out); if(a.exert){ c.exert=true; log(`${G.me.name} exerts ${cname(c)}. It will not untap next turn.`); } return true;
+  c.tap=true; addMana(a.out); if(a.rem) c.c--; if(a.exert){ c.exert=true; log(`${G.me.name} exerts ${cname(c)}. It will not untap next turn.`); } return true;
 }
 const manaLabel = o => MANA.filter(k=>o.includes(k)).map(k=>{ const n=o.split(k).length-1; return (n>1?n+' ':'')+MNAME[k]; }).join(' + ');
 function addMana(o){ const m=G.me; if(!m.mana) m.mana=noMana(); for(const ch of o) if(ch in m.mana) m.mana[ch]++; }
@@ -564,7 +583,8 @@ function turnCleanup(prev, next){
   let ch=false; const m=G.me;
   if(next.phase!==prev.phase || next.n!==prev.n){ ch=emptyPool(); if(next.phase!==3) for(const c of m.bf) if(c.atk){ c.atk=false; ch=true; } }
   if(next.active===G.myId && next.phase===5 && prev.phase!==5 && next.n===prev.n) for(const c of m.bf) if(c.imp && c.c>0){ c.c--; log(`End step: a time counter comes off ${cname(c)} (${c.c} left).`); impDone(c); ch=true; }
-  if(next.n!==prev.n){ for(const c of m.ex) if(c.offer){ delete c.offer; ch=true; } for(const c of m.bf) if(c.anim){ c.anim=false; c.row=null; ch=true; } if(clearBoosts()) ch=true; for(const c of m.gy) if(c.fbk){ delete c.fbk; ch=true; } }
+  if(next.active===G.myId && !next.passed && next.n>0 && next.phase>=2 && sagaTick(next.n)) ch=true;
+  if(next.n!==prev.n){ if(m.cast && (m.cast.n||m.cast.is)) ch=true; m.cast={n:0,is:0}; for(const c of m.ex) if(c.offer){ delete c.offer; ch=true; } for(const c of m.bf) if(c.anim){ c.anim=false; c.row=null; ch=true; } if(clearBoosts()) ch=true; for(const c of m.gy) if(c.fbk){ delete c.fbk; ch=true; } }
   return ch;
 }
 const sgn = n => (n<0?'−':'+')+Math.abs(n), boostText = c => sgn(c.tp||0)+'/'+sgn(c.tt||0);
@@ -589,6 +609,123 @@ function castTriggers(sp){
   }
   if(out.length) log(out.join('. ')+'.');
 }
+/* ================= counters (v1.36) =================
+   c.c is the one number on a card; what it is called comes from the card: +1/+1 on creatures, loyalty on planeswalkers, lore on Sagas,
+   otherwise the counter its own text names (luck, charge, mining, burden...). c.kw lists keyword counters (flying, lifelink...). */
+const ROMAN=['0','I','II','III','IV','V','VI','VII','VIII','IX','X'], roman = n => ROMAN[n] || String(n);
+const NUMW={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10};
+const KW=['flying','first strike','double strike','deathtouch','hexproof','indestructible','lifelink','menace','reach','trample','vigilance','haste'];
+const ICON={
+  flying:'<path d="M3.500 17.500c.8-6.700 5.600-11.900 17-12.500-.9 2.800-2.600 4.900-5 6.200h3.300c-1.200 2.200-3.300 3.600-6.100 4.200h3c-2.400 2.400-6.500 3.400-12.200 2.100z"/>',
+  lifelink:'<path d="M12 20.500s-8-5-8-10.700A4.300 4.300 0 0 1 12 7.600a4.300 4.300 0 0 1 8 2.200c0 5.700-8 10.700-8 10.700z"/>',
+  'first strike':'<path d="M20.500 3.500v3l-9.200 9.200-3-3 9.200-9.200z"/><path d="M6.200 11.200l6.600 6.600M8.600 15.400L4.600 19.400" stroke="#fff" stroke-width="2.400" stroke-linecap="round" fill="none"/>',
+  'double strike':'<path d="M4.500 4.500l11.500 11.500M19.500 4.500L8 16M14 19l4.500-4.500M5.500 14.500L10 19M17.300 17.300l2.200 2.200M6.700 17.300l-2.200 2.200" stroke="#fff" stroke-width="2.200" stroke-linecap="round" fill="none"/>',
+  deathtouch:'<path fill-rule="evenodd" d="M12 3.500a7.500 7.500 0 0 0-7.500 7.500c0 2.500 1.200 4.500 3.100 5.700v2.800h8.800v-2.800c1.900-1.200 3.100-3.200 3.100-5.700A7.500 7.500 0 0 0 12 3.500zM9 13.600a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm6 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>',
+  hexproof:'<path d="M12 2.800l7.500 2.700v5.700c0 4.800-3.200 8.300-7.500 10-4.300-1.700-7.500-5.200-7.500-10V5.500z"/>',
+  indestructible:'<path d="M7 4h10l4.500 5.800L12 21 2.500 9.800z"/>',
+  menace:'<path d="M7.500 4.500L5.500 19.500M13 4.500l-2 15M18.500 4.500l-2 15" stroke="#fff" stroke-width="2.600" stroke-linecap="round" fill="none"/>',
+  reach:'<path d="M12 2.500l6.500 7.500h-4.300V21.500h-4.400V10H5.500z"/>',
+  trample:'<circle cx="6.500" cy="10.500" r="2.200"/><circle cx="12" cy="7.300" r="2.200"/><circle cx="17.500" cy="10.500" r="2.200"/><path d="M12 12.200c-3.200 0-5.800 2.600-5.800 5.200 0 1.600 1.300 2.600 2.900 2.300 1-.2 1.900-.6 2.900-.6s1.900.4 2.900.6c1.600.3 2.900-.7 2.900-2.300 0-2.600-2.600-5.200-5.800-5.200z"/>',
+  vigilance:'<path fill-rule="evenodd" d="M2 12s3.800-6.500 10-6.500S22 12 22 12s-3.800 6.500-10 6.500S2 12 2 12zm10 3.800a3.800 3.800 0 1 0 0-7.600 3.800 3.800 0 0 0 0 7.600z"/><circle cx="12" cy="12" r="1.800"/>',
+  haste:'<path d="M14 2L5 13.500h5.500L9 22l10-12h-5.500z"/>',
+  luck:'<circle cx="8.600" cy="8.600" r="3.700"/><circle cx="15.400" cy="8.600" r="3.700"/><circle cx="8.600" cy="15.400" r="3.700"/><circle cx="15.400" cy="15.400" r="3.700"/><path d="M12 12c1.500 3.500 3.500 6.200 6.500 8.500" stroke="#fff" stroke-width="1.800" stroke-linecap="round" fill="none"/>',
+  charge:'<rect x="3" y="7.500" width="15.500" height="9" rx="1.800" fill="none" stroke="#fff" stroke-width="2"/><rect x="19.500" y="10" width="2" height="4" rx=".6"/><path d="M11.800 8.800l-3.300 3.700h2.300l-1 2.700 3.500-3.900h-2.300z"/>',
+  time:'<circle cx="12" cy="12" r="8" fill="none" stroke="#fff" stroke-width="2"/><path d="M12 7.300V12l3.200 2" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/>',
+  oil:'<path d="M12 3s6.500 7 6.500 11.700a6.500 6.500 0 0 1-13 0C5.500 10 12 3 12 3z"/>'
+};
+const kcHTML = name => `<span class="kc" title="${esc(name)} counter"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[name]||''}</svg></span>`;
+const frontText = c => { const d=cdata(c), o=d.o||''; return (d.back ? o.split('\n\n')[c.flip?1:0]||o : o).replace(/\([^)]*\)/g,''); };
+const isSaga = c => /\bSaga\b/.test(faceType(c));
+const CSTOP=new Set([...KW.join(' ').split(' '),'stun','poison','energy','experience','rad','loyalty','lore','that','those','the','more','additional','another','target','such','other','same','these','many','each','all','any','its','no','of']);
+function ctrName(c){
+  if(c.imp) return 'time'; if(!c.k && !c.cu) return ''; if(isSaga(c)) return 'lore';
+  const o=frontText(c); if(/\b(Vanishing|Suspend)\b/.test(o)) return 'time';
+  for(const m of o.matchAll(/\b(?:an?|one|two|three|four|five|six|seven|eight|nine|ten|x|\d+|of|no|more|many|those|that|each|all|its|another|additional|the|any|has|have|with|remove|removing|put) ([a-z]+) counters?\b/gi)){ const n=m[1].toLowerCase(); if(!CSTOP.has(n)) return n; }
+  return '';
+}
+const ctrLabel = c => isPW(c) ? 'loyalty' : (isCreature(c) && !c.imp) ? '' : ctrName(c);
+function counterBadge(c, cr){
+  if(cr) return `<span class="badge ctr ${c.c<0?'neg':''}">${(c.c>0?'+':'−')+Math.abs(c.c)}</span>`;
+  const n=ctrName(c);
+  if(n==='lore') return `<span class="badge ctr named lore" title="Lore counters">${roman(c.c)}</span>`;
+  if(ICON[n]) return `<span class="badge ctr nm">${kcHTML(n)}${c.c}</span>`;
+  return `<span class="badge ctr${n?' named':''}">${n?esc(n)+' ':''}${c.c}</span>`;
+}
+function toggleKw(c, k){
+  const a=c.kw||[];
+  if(a.includes(k)){ c.kw=a.filter(x=>x!==k); if(!c.kw.length) delete c.kw; log(`${cname(c)} loses its ${k} counter.`); }
+  else { c.kw=[...a,k]; log(`${cname(c)} gets a ${k} counter.`); }
+  changed();
+}
+const kwMenu = (c, x, y) => menu(x, y, KW.map(k=>[((c.kw||[]).includes(k) ? '✓ Remove the ' : 'Add a ')+k+' counter', ()=>toggleKw(c,k)]));
+/* "enters with three mining counters on it", Modular N, Fading N, Vanishing N: fixed numbers only; X and "for each" stay manual */
+function entersWith(c){
+  const o=frontText(c); let m;
+  if((m=o.match(/\bModular (\d+)/))) return {n:+m[1], name:'+1/+1'};
+  if((m=o.match(/\b(Vanishing|Fading) (\d+)/))) return {n:+m[2], name:m[1]==='Fading'?'fade':'time'};
+  m=o.match(/\benters(?: the battlefield)?(?: tapped)?(?: and)? with (an?|one|two|three|four|five|six|seven|eight|nine|ten|\d+) ([a-z0-9+\-−\/]+(?: strike)?) counters? on (?:it|him|her|them)([^.\n]*)/i);
+  if(!m || /\b(for each|if|unless|plus|equal|where|instead)\b/i.test(m[3])) return null;
+  return {n:NUMW[m[1].toLowerCase()]||+m[1]||1, name:m[2].toLowerCase().replace('−','-')};
+}
+function entered(c){
+  if(c.fd || (!c.k && !c.cu)) return;
+  if(isSaga(c)){ c.c=1; c.lt=G.turn.n; addChapter(c,1); log(`${cname(c)} gets its first lore counter. Chapter I goes on the stack.`); return; }
+  const e=entersWith(c); if(!e) return; const cr=isCreature(c), many=e.n>1 ? e.n+' '+e.name+' counters' : 'a '+e.name+' counter';
+  if(e.name==='+1/+1' || e.name==='-1/-1'){ if(!cr) return; c.c=(c.c||0)+(e.name==='+1/+1'?e.n:-e.n); }
+  else if(KW.includes(e.name)){ if(!(c.kw||[]).includes(e.name)) c.kw=[...(c.kw||[]), e.name]; }
+  else if(e.name==='loyalty' || e.name==='stun' || cr || isPW(c)) return;
+  else c.c=e.n;
+  log(`${cname(c)} enters with ${many}.`);
+}
+/* Sagas: a lore counter as it enters and at its controller's first main phase; each chapter waits on the stack as a marker */
+function chapters(c){
+  const text={}; let last=0;
+  for(const line of frontText(c).split('\n')){ const m=line.match(/^((?:[IVX]+)(?:, ?[IVX]+)*) — (.*)$/); if(!m) continue;
+    for(const r of m[1].split(/, ?/)){ const n=ROMAN.indexOf(r); if(n>0){ text[n]=m[2]; last=Math.max(last,n); } } }
+  return {text, last};
+}
+function addChapter(c, n){
+  const d=cdata(c), ch=chapters(c);
+  G.me.st.push(mk(null,{tok:true, ts:Date.now(), ch:{id:c.id, n, last:ch.last>0 && n>=ch.last}, cu:{n:`${faceName(c,0)}: chapter ${roman(n)}`, t:'Chapter ability', o:ch.text[n]||'', img:d.img||''}}));
+}
+function sagaTick(turnN){
+  let ch=false;
+  for(const c of [...G.me.bf]){ if(c.fd || c.lt===turnN || !isSaga(c)) continue; c.lt=turnN;
+    const last=chapters(c).last; if(last && (c.c||0)>=last) continue;
+    c.c=(c.c||0)+1; addChapter(c, c.c); log(`${cname(c)} gets a lore counter (${roman(c.c)}). Chapter ${roman(c.c)} goes on the stack.`); ch=true; }
+  return ch;
+}
+function sagaEnd(s){
+  const d=cdata(s), xf=!!d.back && /return it to the battlefield transformed/i.test(d.o||'');
+  modal(`${faceName(s,0)}: last chapter resolved`, `<span class="hint">${xf ? 'Its last chapter exiles it and returns it to the battlefield transformed.' : 'A Saga is sacrificed once its last chapter has resolved.'}</span>`, [
+    ['Leave it on the battlefield',()=>closeModal(),'ghost'],
+    xf ? ['Exile it and return it transformed',()=>{ closeModal(); const f=find(s.id); if(!f || f.z!=='bf') return; const c=f.c; c.c=0; c.tap=false; c.row=null; c.atk=false; delete c.kw; delete c.lt; delete c.tp; delete c.tt; c.flip=true; const L=cdata(c).loy2; if(isPW(c) && L && !isNaN(+L)) c.c=+L; log(`${G.me.name} exiles ${cname(c)} and returns it transformed (${faceName(c,1)}).`); changed(); },'go']
+       : ['Sacrifice the Saga',()=>{ closeModal(); const f=find(s.id); if(!f || f.z!=='bf') return; log(`${G.me.name} sacrifices ${cname(f.c)}.`); move(s.id,'gy',{silent:true}); changed(); },'go'] ]);
+}
+/* spells cast this turn: the storm count, and instants and sorceries for Ral */
+function noteCast(c){ const m=G.me; if(!m.cast) m.cast={n:0,is:0}; m.cast.n++; if(!c.fd && isSpell(c)) m.cast.is++; }
+const isStormText = o => /(^|\n|, )storm\b/i.test(o) || /\b(has|have|gains?|with) storm\b/i.test(o);
+function setCares(){
+  const m=G.me, all=[]; for(const z of Object.keys(ZN)) for(const c of m[z]) if(c.o===G.myId && !c.tok) all.push((cdata(c).o||'').replace(/\([^)]*\)/g,''));
+  m.cares={storm:all.some(isStormText), del:all.some(o=>/\bdelirium\b/i.test(o))};
+}
+const stormCount = () => ((G.me.cast&&G.me.cast.n)||0) + ((G.opp&&G.opp.cast&&G.opp.cast.n)||0);
+const TYPES=['Artifact','Battle','Creature','Enchantment','Instant','Kindred','Land','Planeswalker','Sorcery','Tribal'];
+function gyTypes(gy){
+  const set=new Set();
+  for(const c of gy||[]){ if(!c.k && !c.cu) continue; const d=cdata(c), faces=(d.t||'').split(' // '), t=(d.back ? [faces[0]] : faces).map(x=>x.split('—')[0]).join(' ');
+    for(const k of TYPES) if(new RegExp('\\b'+k+'\\b').test(t)) set.add(k==='Tribal' ? 'Kindred' : k); }
+  return [...set].sort();
+}
+const spellTracker = c => !c.flip && /for each instant and sorcery spell you(?:'|’)ve cast this turn/i.test(cdata(c).o||'');
+function transform(c){
+  c.flip=!c.flip; const d=cdata(c); let extra='';
+  if(isPW(c)){ const L=c.flip&&d.back ? d.loy2 : d.loy;
+    if(L && !isNaN(+L)){ const add=/additional loyalty counter on (?:him|her|it|them) for each instant and sorcery spell you(?:'|’)ve cast this turn/i.test(d.o||'') ? ((G.me.cast&&G.me.cast.is)||0) : 0;
+      c.c=+L+add; extra=` It enters with ${c.c} loyalty${add ? ` (${L} + ${add} instant${add>1?'s':''} and sorceries cast this turn)` : ''}.`; } }
+  log(`${G.me.name} transforms ${cname(c)}.${extra}`);
+}
+const ctrLine = c => { const n=ctrLabel(c); return (c.c ? `${n ? n[0].toUpperCase()+n.slice(1)+' counters' : 'Counters'}: ${n==='lore' ? roman(c.c) : c.c}` : '') + (c.kw&&c.kw.length ? `${c.c?'\n':''}Keyword counters: ${c.kw.join(', ')}` : ''); };
 const canAnimate = c => isLand(c) && !isCreature(c) && /becomes? an? [^.]*creature/i.test(cdata(c).o||'');
 function animateLand(id){ const f=find(id); if(!f||f.z!=='bf') return; const c=f.c; c.anim=!c.anim; c.row=c.anim?'f':null; if(!c.anim) c.atk=false; log(c.anim ? `${G.me.name}'s ${cname(c)} becomes a creature until end of turn.` : `${G.me.name}'s ${cname(c)} is a land again.`); changed(); }
 function faceToggle(id){
@@ -711,7 +848,7 @@ function toggleTap(id, x, y){
     menu(x, y, [...emp, ...mana, '-', [mana.length ? 'Tap without adding mana' : 'Tap', ()=>{ c.tap=true; changed(); }]]); return; }
   if(!c.fd && (isLand(c) || (!isCreature(c) && /\{T\}[^:\n]*: add/i.test(cdata(c).o||'')))){
     const abs=manaAbilities(c);
-    if(abs.length>1 || (abs.length===1 && abs[0].cost)){ if(x==null){ const el=$(`#table .card[data-id="${id}"]`), r=el?el.getBoundingClientRect():{left:200,top:200,width:0}; x=r.left+r.width/2; y=r.top+20; }
+    if(abs.length>1 || (abs.length===1 && (abs[0].cost || abs[0].rem))){ if(x==null){ const el=$(`#table .card[data-id="${id}"]`), r=el?el.getBoundingClientRect():{left:200,top:200,width:0}; x=r.left+r.width/2; y=r.top+20; }
       menu(x, y, [...abs.map(a=>[abilityLabel(a), ()=>{ if(useAbility(c,a)) changed(); }]), '-', ['Tap without adding mana', ()=>{ c.tap=true; changed(); }]]); return; }
     if(abs.length===1) addMana(abs[0].out);
   }
@@ -730,7 +867,9 @@ const isPW = c => /\bPlaneswalker\b/.test(faceType(c));
 const minCounters = c => (isCreature(c) && !isPW(c)) ? -99 : 0;
 const impendingN = c => { const m=(cdata(c).o||'').match(/\bImpending (\d+)/i); return m ? +m[1] : 0; };
 function impDone(c){ if(c.imp && !(c.c>0)){ c.imp=0; c.c=0; log(`The last time counter is off ${cname(c)}. It is now a creature.`); } }
-function addCounter(id, d){ const f=find(id); if(!f) return; f.c.c=Math.max(f.c.imp?0:minCounters(f.c),(f.c.c||0)+d); impDone(f.c); changed(); }
+function addCounter(id, d){ const f=find(id); if(!f) return; const c=f.c, was=c.c||0; c.c=Math.max(c.imp?0:minCounters(c),was+d); impDone(c);
+  if(d>0 && f.z==='bf' && !c.fd && c.c>was && isSaga(c)){ const last=chapters(c).last; if(!last || c.c<=last){ addChapter(c, c.c); log(`${cname(c)} gets a lore counter (${roman(c.c)}). Chapter ${roman(c.c)} goes on the stack.`); } }
+  changed(); }
 function setLife(d){ G.me.life+=d; clearTimeout(setLife.t); setLife.acc=(setLife.acc||0)+d; setLife.t=setTimeout(()=>{ const a=setLife.acc; setLife.acc=0; if(a) log(`${G.me.name}'s life: ${G.me.life} (${a>0?'+':''}${a}).`); }, 900); changed(); }
 function setTurn(t, fresh){ const prev=G.turn; G.turn=t; send({t:'turn', turn:t, fresh:!!fresh}); if(turnCleanup(prev, t)) changed(); else { render(); save(); } }
 function startMyTurn(){
@@ -738,8 +877,8 @@ function startMyTurn(){
   if(m.ctlNext && G.opp){ m.ctlNext=false; m.ctl=true; const cm=`${G.opp.name} controls ${m.name} during this turn.`; addLog(cm,'s'); send({t:'log', text:cm}); } else m.ctlNext=false;
   const msg = `Turn ${G.turn.n}: ${m.name} untaps.`; addLog(msg,'s'); send({t:'log', text:msg});
   G.noUndo=true; checkpoint();
-  emptyPool(); for(const c of m.ex) delete c.offer; for(const c of m.bf) if(c.anim){ c.anim=false; c.row=null; } clearBoosts(); for(const c of m.gy) delete c.fbk;
-  if(S.autoDraw){ if(G.turn.n>1 && m.lib.length){ draw(1); m.drew=G.turn.n; } G.turn.phase=2; }
+  emptyPool(); for(const c of m.ex) delete c.offer; for(const c of m.bf) if(c.anim){ c.anim=false; c.row=null; } clearBoosts(); for(const c of m.gy) delete c.fbk; m.cast={n:0,is:0};
+  if(S.autoDraw){ if(G.turn.n>1 && m.lib.length){ draw(1); m.drew=G.turn.n; } G.turn.phase=2; sagaTick(G.turn.n); }
   else G.turn.phase=0;
   send({t:'turn', turn:G.turn}); changed();
 }
@@ -766,7 +905,7 @@ function newMatch(){ G.me.wins=0; send({t:'newmatch'}); log(`${G.me.name} starte
 function gather(){
   const m=G.me; G.noUndo=true;
   for(const z of ['hand','bf','gy','ex','st']){ for(const c of m[z].splice(0)){ if(c.tok || c.made) continue; if(c.o!==G.myId){ send({t:'give', card:Object.assign(c,{tap:false,c:0,att:null,atk:false,fd:false,flip:false}), zone:'lib'}); continue; } Object.assign(c,{tap:false,c:0,att:null,atk:false,fd:false,flip:false,note:'',row:null}); m.lib.push(c); } }
-  m.life=20; m.ctr={poison:0,energy:0}; m.arrows=[]; m.reveal=false; m.mull=0; m.roll=null; m.dealt=false; m.kept=false; m.mana=noMana(); m.energySeen=false; m.drew=0; m.ctl=false; m.ctlNext=false; for(const c of m.lib){ delete c.by; delete c.warp; delete c.offer; }
+  m.life=20; m.ctr={poison:0,energy:0}; m.arrows=[]; m.reveal=false; m.mull=0; m.roll=null; m.dealt=false; m.kept=false; m.mana=noMana(); m.energySeen=false; m.drew=0; m.ctl=false; m.ctlNext=false; m.cast={n:0,is:0}; for(const c of m.lib){ delete c.by; delete c.warp; delete c.offer; delete c.kw; delete c.lt; }
 }
 function newGame(remote){
   gather(); G.turn={active:null, phase:2, n:0};
@@ -787,7 +926,7 @@ function pregameModal(){
       : '<span class="hint">No more opening-hand cards.</span>'; };
   const el=modal('Pregame actions', '<span class="hint">Your opening hand has cards that can act before the game begins. Use any you want, then click Done. The player going first acts first.</span><div id="pgList" style="display:flex;flex-direction:column;gap:12px"></div>', [['Done',()=>closeModal(),'go']]);
   $('#pgList').onclick=e=>{ const b=e.target.closest('[data-pg]'); if(!b) return; const f=find(b.dataset.id); if(!f) return;
-    if(b.dataset.pg==='bf'){ move(f.c.id,'bf',{silent:true}); log(`${G.me.name} begins the game with ${cname(f.c)} on the battlefield.`); changed(); paint(); }
+    if(b.dataset.pg==='bf'){ const c=f.c, o=(cdata(c).o||'').replace(/\([^)]*\)/g,''), w=o.match(/begin the game with [^.]*? on the battlefield with (an?|one|two|three|\d+) ([a-z]+) counters? on it/i); move(c.id,'bf',{silent:true,later:true}); let extra=''; if(w){ const n=NUMW[w[1].toLowerCase()]||+w[1]||1; c.c=n; extra=` with ${n>1?n+' '+w[2]+' counters':'a '+w[2]+' counter'} on it`; } else entered(c); log(`${G.me.name} begins the game with ${cname(c)} on the battlefield${extra}.`); if(/If you do, exile a card from your hand/i.test(o)) toast('Now exile a card from your hand: right-click it → To exile.'); changed(); paint(); }
     else { log(`${G.me.name} reveals ${cname(f.c)} from their opening hand.`); b.disabled=true; b.textContent='Revealed'; } };
   paint();
 }
@@ -798,7 +937,7 @@ async function loadDeck(d, name, onProgress){
   const m=G.me; for(const z of ['lib','hand','bf','gy','ex','st','side']){ for(const c of m[z]) if(c.o!==G.myId && !c.tok) send({t:'give', card:c, zone:'lib'}); m[z]=[]; }
   for(const [n,c] of d.main) for(let i=0;i<c;i++) m.lib.push(mk(kk(n)));
   for(const [n,c] of d.side) for(let i=0;i<c;i++) m.side.push(mk(kk(n)));
-  m.deck=name; m.life=20; m.ctr={poison:0,energy:0}; m.mull=0; m.arrows=[]; m.roll=null; m.dealt=false; m.kept=false; m.mana=noMana(); m.energySeen=false; m.drew=0;
+  m.deck=name; m.life=20; m.ctr={poison:0,energy:0}; m.mull=0; m.arrows=[]; m.roll=null; m.dealt=false; m.kept=false; m.mana=noMana(); m.energySeen=false; m.drew=0; m.cast={n:0,is:0}; setCares();
   log(`${m.name} brought ${name}.`); shuffleUp();
 }
 
@@ -813,7 +952,10 @@ function cardHTML(c, z, mine, cls=''){
   const pw = z==='bf' && !backUp && isPW(c), cr = !pw && isCreature(c) && !c.imp;
   const heldN = z==='bf' ? (HELD[c.id]||0) : 0;
   const extra = (heldN ? `<span class="badge held">holds ${heldN}</span>` : '') + (c.warp && z==='ex' ? WARP_SVG : '');
-  let b = (pw ? `<span class="loy"><b>${c.c||0}</b></span>` : c.c ? `<span class="badge ctr ${c.c<0?'neg':''}">${cr ? (c.c>0?'+':'−')+Math.abs(c.c) : c.c}</span>` : '') + (z==='st' && c.xr ? '<span class="badge tok" style="border-color:var(--bad);color:var(--bad)">exile after</span>' : '') + (z==='bf' && (c.tp||c.tt) ? `<span class="badge tmp" title="Until end of turn">${boostText(c)}</span>` : '') + (z==='bf' && (c.exert || c.stun>0) ? `<span class="badge zz">${c.exert?'Zzz':''}${c.exert&&c.stun>0?' · ':''}${c.stun>0?'Stun '+c.stun:''}</span>` : '') + (c.imp && (z==='bf'||z==='st') ? '<span class="badge tok" style="border-color:var(--brass);color:var(--brass)">impending</span>' : c.anim ? '<span class="badge tok" style="border-color:var(--brass);color:var(--brass)">creature</span>' : c.tok ? '<span class="badge tok">token</span>' : c.made ? '<span class="badge tok">created</span>' : '') + (c.fd && c.fdk && z==='bf' ? `<span class="badge note" style="border-color:var(--brass);color:var(--brass);right:4%">${esc(c.fdk)} · 2/2</span>` : c.note ? `<span class="badge note">${esc(c.note)}</span>` : '')
+  const cast = mine ? G.me.cast : (G.opp && G.opp.cast);
+  let b = (pw ? `<span class="loy"><b>${c.c||0}</b></span>` : c.c ? (backUp ? `<span class="badge ctr">${c.c}</span>` : counterBadge(c, cr)) : '')
+    + (z==='bf' && !backUp && c.kw && c.kw.length ? `<span class="kcs">${c.kw.map(kcHTML).join('')}</span>` : '')
+    + (z==='bf' && !backUp && spellTracker(c) ? `<span class="badge spl" title="Instants and sorceries cast this turn">Spells ${(cast&&cast.is)||0}</span>` : '') + (z==='st' && c.xr ? '<span class="badge tok" style="border-color:var(--bad);color:var(--bad)">exile after</span>' : '') + (z==='bf' && (c.tp||c.tt) ? `<span class="badge tmp" title="Until end of turn">${boostText(c)}</span>` : '') + (z==='bf' && (c.exert || c.stun>0) ? `<span class="badge zz">${c.exert?'Zzz':''}${c.exert&&c.stun>0?' · ':''}${c.stun>0?'Stun '+c.stun:''}</span>` : '') + (c.ch ? `<span class="badge chap">Chapter ${roman(c.ch.n)}</span>` : c.imp && (z==='bf'||z==='st') ? '<span class="badge tok" style="border-color:var(--brass);color:var(--brass)">impending</span>' : c.anim ? '<span class="badge tok" style="border-color:var(--brass);color:var(--brass)">creature</span>' : c.tok ? '<span class="badge tok">token</span>' : c.made ? '<span class="badge tok">created</span>' : '') + (c.fd && c.fdk && z==='bf' ? `<span class="badge note" style="border-color:var(--brass);color:var(--brass);right:4%">${esc(c.fdk)} · 2/2</span>` : c.note ? `<span class="badge note">${esc(c.note)}</span>` : '')
     + (z==='bf' && c.o && c.o !== (mine?G.myId:oppId()) ? '<span class="badge ctl">borrowed</span>' : '');
   if(z==='gy' && c.fbk){ cls+=' fbk'; b+='<span class="fbkban">FLASHBACK</span>'; }
   return `<div class="card ${mine?'':'opp'} ${c.tap?'tap':''} ${c.atk?'atk':''} ${c.fd&&mine?'fdmine':''} ${cls}" data-id="${c.id}" data-z="${z}" data-o="${mine?'me':'opp'}">${inner}${b}${extra}</div>`;
@@ -832,8 +974,8 @@ function rowsHTML(bf, mine){
 }
 function pileHTML(z, label, cards, n, mine, top){
   const still = !mine && (z==='lib' || z==='hand'), tip = still ? '' : mine ? (z==='lib' ? 'Click to draw, right-click for more' : 'Click to look through') : 'Click to look through';
-  const fbN = z==='gy' ? cards.filter(c=>c.fbk).length : 0;
-  return `<div class="pile ${still?'still':''}${fbN?' fbpile':''}" title="${tip}" data-pile="${z}" data-o="${mine?'me':'opp'}" ${mine&&z!=='side'?`data-drop="${z}"`:''}>${top||''}${fbN?`<span class="fbtag">FLASHBACK${fbN>1?' ×'+fbN:''}</span>`:''}<label>${label}<b>${n}</b></label></div>`;
+  const fbN = z==='gy' ? cards.filter(c=>c.fbk).length : 0, who = mine ? G.me : G.opp, ty = z==='gy' && who && who.cares && who.cares.del ? gyTypes(cards) : null;
+  return `<div class="pile ${still?'still':''}${fbN?' fbpile':''}" title="${tip}${ty ? ` · Card types here: ${ty.join(', ')||'none'}` : ''}" data-pile="${z}" data-o="${mine?'me':'opp'}" ${mine&&z!=='side'?`data-drop="${z}"`:''}>${top||''}${fbN?`<span class="fbtag">FLASHBACK${fbN>1?' ×'+fbN:''}</span>`:''}${ty?`<span class="dtag ${ty.length>=4?'on':''} ${fbN?'low':''}">${ty.length>=4?'DELIRIUM':'TYPES'} ${ty.length}</span>`:''}<label>${label}<b>${n}</b></label></div>`;
 }
 function avatarHTML(p, pid, mine){
   const act = G.turn.n && G.turn.active===pid;
@@ -884,6 +1026,8 @@ function render(){
   // turn + phases
   const t=G.turn, mine=t.active===G.myId, tl=$('#turnlbl');
   tl.textContent = t.n ? `Turn ${t.n} · ${mine ? (t.passed ? 'you passed the turn' : 'your turn') : (o&&o.name||'Opponent')+(t.passed ? ' passed the turn' : "'s turn")}` : 'Before the game'; tl.className = mine&&t.n ? 'mine' : '';
+  const stg=$('#stormTag'), showStorm=!!(t.n && ((m.cares&&m.cares.storm) || (o&&o.cares&&o.cares.storm)));
+  stg.hidden=!showStorm; if(showStorm){ const mine_n=(m.cast&&m.cast.n)||0, opp_n=(o&&o.cast&&o.cast.n)||0; stg.innerHTML=`Storm <b>${mine_n+opp_n}</b>`; stg.title=`Spells cast this turn: ${mine_n} by you${o?`, ${opp_n} by ${o.name}`:''}. Click to add one of yours, right-click to take one off.`; }
   $('#phases').innerHTML = PH.map((p,i)=>`<button data-ph="${i}" class="${t.n&&t.phase===i?'on':''}">${p}</button>`).join('');
   $('#drawBtn').hidden = !(t.n>1 && t.active===G.myId && !S.autoDraw && t.phase===1 && m.drew!==t.n && m.lib.length);
   const nb=$('#next');
@@ -997,7 +1141,7 @@ document.addEventListener('pointerover', e=>{
   const el=e.target.closest('.card[data-id]'); if(!el){ hideZoom(); G.hover=null; return; }
   G.hover=el.dataset.id; const f=findAny(el.dataset.id); if(!f){ if(el.dataset.id.startsWith('s:')) showZoom(DB[el.dataset.id.slice(2)], el.getBoundingClientRect()); return; }
   const c=f.c; if((!c.k && !c.cu) || (c.fd && !f.mine)) { hideZoom(); return; }
-  const d=cdata(c); showZoom((c.flip&&d.back)?{...d,img:d.back}:d, el.getBoundingClientRect(), (c.c?`Counters: ${c.c}`:'')+(c.note?`\nNote: ${c.note}`:''));
+  const d=cdata(c); showZoom((c.flip&&d.back)?{...d,img:d.back}:d, el.getBoundingClientRect(), ctrLine(c)+(c.note?`\nNote: ${c.note}`:''));
 });
 document.addEventListener('pointerdown', e=>{ if(!e.target.closest('#ctx')) closeMenu(); }, true);
 
@@ -1016,11 +1160,12 @@ function cardMenu(id, x, y){
     ['Block…',()=>startMode('block',id),'B'], ['Target…',()=>startMode('arrow',id),'R'], '-',
     [c.exert?'Remove exert':'Exert (skips its next untap)',()=>{ c.exert=!c.exert; if(c.exert) log(`${G.me.name} exerts ${cname(c)}. It will not untap next turn.`); ch(); }],
     ['Add a stun counter',()=>{ c.stun=(c.stun||0)+1; log(`${cname(c)} gets a stun counter (${c.stun}).`); ch(); }], c.stun>0&&['Remove a stun counter',()=>{ c.stun--; ch(); }],
-    ['Add a counter (+1)',()=>addCounter(id,1),'C'], ['Remove a counter (−1)',()=>addCounter(id,-1),'X'],
+    [ctrLabel(c) ? `Add a ${ctrLabel(c)} counter` : 'Add a counter (+1)',()=>addCounter(id,1),'C'], [ctrLabel(c) ? `Remove a ${ctrLabel(c)} counter` : 'Remove a counter (−1)',()=>addCounter(id,-1),'X'],
+    (!c.fd && (isCreature(c) || c.anim || (c.kw&&c.kw.length)))&&['Keyword counter… (flying, lifelink, first strike)',()=>kwMenu(c,x,y)],
     ['Boost until end of turn…',async()=>{ const v=await ask('Boost until end of turn', '+1/+1', 'Power/toughness change, e.g. +2/+0 or -1/-1'); const g=v&&v.replace(/−/g,'-').match(/([+-]?\d+)\s*\/\s*([+-]?\d+)/); if(g){ boost(c,parseInt(g[1],10),parseInt(g[2],10)); log(`${cname(c)} gets ${sgn(parseInt(g[1],10))}/${sgn(parseInt(g[2],10))} until end of turn.`); ch(); } }], (c.tp||c.tt)&&['Clear boost',()=>{ delete c.tp; delete c.tt; ch(); }],
     ['Set counters…',async()=>{ const n=await askN('Set counters', c.c||0); if(n!=null){ c.c=Math.max(minCounters(c),n); ch(); } }],
     ['Note…',async()=>{ const v=await ask('Note on this card', c.note||'', 'Short note, e.g. +2/+2 until end of turn'); if(v!=null){ c.note=v.slice(0,40); ch(); } }], '-',
-    d.back&&[c.flip?'Turn to front face':'Transform',()=>{ c.flip=!c.flip; log(`${G.me.name} transforms ${cname(c)}.`); ch(); },'F'],
+    d.back&&[c.flip?'Turn to front face':'Transform',()=>{ transform(c); ch(); },'F'],
     [c.fd?(c.fdk?`Turn face up (reveal the ${c.fdk.toLowerCase()})`:'Turn face up'):'Turn face down',()=>faceToggle(id), c.fd&&c.fdk?'F':''],
     ['Attach to…',()=>startMode('attach',id)], c.att&&['Detach',()=>{ c.att=null; ch(); }],
     ['Move to the other row',()=>{ const cur=c.row||((c.fd||isCreature(c))?'f':'b'); c.row=cur==='f'?'b':'f'; ch(); }],
@@ -1035,6 +1180,7 @@ function cardMenu(id, x, y){
     impendingN(c)>0&&[`Cast for its impending cost (${impendingN(c)} time counters)`,()=>{ const n=impendingN(c); move(id,'st',{silent:true}); c.imp=n; log(`${G.me.name} casts ${cname(c)} for its impending cost.`); ch(); }],
     ['Morph (face down 2/2)',()=>{ move(id,'bf',{fd:true,fdk:'Morph',silent:true}); log(`${G.me.name} casts a card face down as a 2/2 creature (morph).`); ch(); }], [isLand(c)?'Play land tapped':'Put onto the battlefield tapped',go('bf',{tap:true}),isLand(c)?'Shift-click':''], !isLand(c)&&['Put straight onto the battlefield',go('bf')], ['Play face down',go('bf',{fd:true})],
     ['Reveal to opponent',()=>log(`${G.me.name} reveals ${cname(c)} from hand.`)], ['Discard',go('gy'),'G'], '-', ...dest.filter(i=>i&&i[0]!=='To graveyard'&&i[0]!=='To battlefield') ];
+  else if(z==='st' && c.ch) items=[ ['Resolve this chapter',()=>resolve(id)], ['Remove it without resolving (countered)',()=>{ G.me.st.splice(find(id).i,1); log(`${cname(c)} is removed from the stack without resolving.`); ch(); }], ['Target…',()=>startMode('arrow',id),'R'] ];
   else if(z==='st') items=[
     ['Resolve',()=>resolve(id)], ['Countered: to graveyard',()=>{ log(`${cname(c)} is countered.`); move(id,'gy',{silent:true}); ch(); }],
     ['Copy this spell',()=>{ G.me.st.push(mk(c.k,{tok:true,ts:Date.now()})); log(`${G.me.name} copies ${cname(c)}.`); ch(); }], ['Target…',()=>startMode('arrow',id),'R'], '-', ...dest ];
@@ -1090,7 +1236,7 @@ function confirmBox(title, text, yes){ modal(title, `<span class="hint">${esc(te
 function helpModal(){
   const k=(a,b)=>`<div><kbd class="k">${a}</kbd> ${b}</div>`;
   modal('How this table works', `<span class="hint">Nothing is enforced. Click does the usual thing, right-click shows everything else, and you can drag cards between your zones.</span>
-  <div class="two"><div><h4>Mouse</h4><div>Click a card in hand: lands enter play, spells go to the stack.</div><div>Shift-click a land in hand to play it tapped.</div><div>Click a spell on the stack to resolve it.</div><div>Click a permanent to tap or untap it.</div><div>Click your library to draw. Right-click it to scry, search, mill or shuffle.</div><div>Click a graveyard or exile pile to look through it.</div><div>Before each game: High roll, then the winner clicks I'll go first and it becomes their turn 1. Each player draws an opening hand, mulligans if they want, then keeps.</div><div>Lands that can become creatures: right-click and choose Become a creature. The land moves to the creature row and goes back when the turn ends.</div><div>After you keep, the table offers pregame actions for cards that mention your opening hand, such as Leylines.</div><div>Morph: right-click a card in hand. Manifest: right-click your library. Either puts the card face down in the creature row marked as a 2/2. Right-click it, or press F over it, to turn it face up.</div><div>Emrakul, the Promised End: the player being controlled opens the ☰ menu and gives the opponent control of their turn. The controller then plays that turn from their own screen. When it ends, the controlled player takes an extra turn.</div><div>Exiled by a card (Leyline Binding, Dauthi Voidwalker): right-click your card and pick Exile under a card or Exile with a void counter, then click the card doing the exiling. It stays in your exile count and shows in the Exiled by cards box. Held cards come back when the exiling card leaves; void-counter cards can be cast by the exiling card's controller.</div><div>Warp: right-click a card with warp on the battlefield to send it to the warp zone. It counts as exiled and can be cast again from its right-click menu.</div><div>Impending: right-click the card in hand and choose Cast for its impending cost. It resolves with its time counters, sits with your non-creature permanents, loses one counter at each of your end steps, and moves to the creature row when the last one is gone.</div><div>Two-sided cards: right-click one in your hand to play its land side straight to the land row, or to cast its other side. A plain click uses the front.</div><div>Targets: hold the right mouse button on a card and drag to its target to draw an arrow. Right-click either end for Clear targets. Arrows clear themselves when either card leaves play.</div><div>Exert and stun: right-click a permanent. An exerted card shows Zzz and skips its next untap. A stunned card shows Stun and a number; each time it would untap, one counter comes off instead.</div><div>Lands with a paid mana ability (Arena of Glory): put the cost in your pool first, then choose the Pay… option. The cost is taken out of your pool for you.</div><div>Prowess and similar: when you cast a noncreature spell, your creatures with prowess get +1/+1 in a dashed blue badge, and cards like Slickshot Show-Off get their own boost. It adds up through the turn and clears when the turn ends. Right-click a creature for Boost until end of turn to add or fix one by hand.</div><div>Snapcaster Mage and the like: right-click a card in your graveyard and choose Mark for flashback. It glows with a gold FLASHBACK banner, your graveyard pile glows, and the log tells your opponent. Casting it from the graveyard exiles it afterwards; the mark clears when the turn ends.</div><div>Flashback and the like: in your graveyard, pick Cast from here, then exile. The spell shows exile after on the stack, and when it resolves (or is countered into the graveyard) it goes to exile instead.</div><div>Empower Jace: an instant or sorcery that empowers Jace does it when you click it on the stack to resolve it (a modal spell, or Empower Jace X, asks how many first; 0 skips). A permanent with an empower ability shows Empower Jace when you click it, next to Tap. The first time creates a Jace planeswalker token with that many loyalty counters; after that the counters go on your existing Jace token.</div><div>Counters: C adds one and X removes one. On a creature, removing below zero gives −1 counters, shown in red. Planeswalkers show loyalty in a shield at the bottom right.</div><div>Mana creatures: right-click one for Tap for Green and the like; a plain click just taps it.</div><div>Mana pool: tapping a land adds its mana, and asks which colour when there is a choice. Click a lit symbol to spend one. Shift-click or right-click a symbol to add one by hand. The pool empties when the phase changes.</div><div>Right-click your graveyard to exile all of it. Right-click your library to show the top card to your opponent only.</div><div>Ending your turn passes it. Your opponent can still act (crack a fetch land, cast at end of turn) and clicks Start my turn when ready.</div><div>Ragavan and similar: the defending player right-clicks their library and picks Exile top card for opponent to cast. Both players see the card; the attacker gets a Cast this card button. If cast, it goes back to its owner's graveyard or exile when it leaves play. If not, it stays in the owner's exile.</div><div>Attackers get a gold border that clears when combat ends.</div><div>Searching your library sorts it into lands, creatures and other spells, in columns by mana value (lands by name). Your sideboard shows in one row, sorted the same way. Type in the filter box to narrow it down.</div><div>Chat: your messages show in gold and your opponent's in blue.</div><div>Life: use − and + beside either player. Shift-click changes by 5.</div><div>Undo steps back your own last action and says so in the log. It cannot go back past a shuffle, the end of a turn, or anything your opponent did to you.</div><div>Match score: click the circle under a player's life when they win a game. Right-click takes it back.</div></div>
+  <div class="two"><div><h4>Mouse</h4><div>Click a card in hand: lands enter play, spells go to the stack.</div><div>Shift-click a land in hand to play it tapped.</div><div>Click a spell on the stack to resolve it.</div><div>Click a permanent to tap or untap it.</div><div>Click your library to draw. Right-click it to scry, search, mill or shuffle.</div><div>Click a graveyard or exile pile to look through it.</div><div>Before each game: High roll, then the winner clicks I'll go first and it becomes their turn 1. Each player draws an opening hand, mulligans if they want, then keeps.</div><div>Lands that can become creatures: right-click and choose Become a creature. The land moves to the creature row and goes back when the turn ends.</div><div>After you keep, the table offers pregame actions for cards that mention your opening hand, such as Leylines.</div><div>Morph: right-click a card in hand. Manifest: right-click your library. Either puts the card face down in the creature row marked as a 2/2. Right-click it, or press F over it, to turn it face up.</div><div>Emrakul, the Promised End: the player being controlled opens the ☰ menu and gives the opponent control of their turn. The controller then plays that turn from their own screen. When it ends, the controlled player takes an extra turn.</div><div>Exiled by a card (Leyline Binding, Dauthi Voidwalker): right-click your card and pick Exile under a card or Exile with a void counter, then click the card doing the exiling. It stays in your exile count and shows in the Exiled by cards box. Held cards come back when the exiling card leaves; void-counter cards can be cast by the exiling card's controller.</div><div>Warp: right-click a card with warp on the battlefield to send it to the warp zone. It counts as exiled and can be cast again from its right-click menu.</div><div>Impending: right-click the card in hand and choose Cast for its impending cost. It resolves with its time counters, sits with your non-creature permanents, loses one counter at each of your end steps, and moves to the creature row when the last one is gone.</div><div>Two-sided cards: right-click one in your hand to play its land side straight to the land row, or to cast its other side. A plain click uses the front.</div><div>Targets: hold the right mouse button on a card and drag to its target to draw an arrow. Right-click either end for Clear targets. Arrows clear themselves when either card leaves play.</div><div>Exert and stun: right-click a permanent. An exerted card shows Zzz and skips its next untap. A stunned card shows Stun and a number; each time it would untap, one counter comes off instead.</div><div>Lands with a paid mana ability (Arena of Glory): put the cost in your pool first, then choose the Pay… option. The cost is taken out of your pool for you.</div><div>Prowess and similar: when you cast a noncreature spell, your creatures with prowess get +1/+1 in a dashed blue badge, and cards like Slickshot Show-Off get their own boost. It adds up through the turn and clears when the turn ends. Right-click a creature for Boost until end of turn to add or fix one by hand.</div><div>Snapcaster Mage and the like: right-click a card in your graveyard and choose Mark for flashback. It glows with a gold FLASHBACK banner, your graveyard pile glows, and the log tells your opponent. Casting it from the graveyard exiles it afterwards; the mark clears when the turn ends.</div><div>Flashback and the like: in your graveyard, pick Cast from here, then exile. The spell shows exile after on the stack, and when it resolves (or is countered into the graveyard) it goes to exile instead.</div><div>Empower Jace: an instant or sorcery that empowers Jace does it when you click it on the stack to resolve it (a modal spell, or Empower Jace X, asks how many first; 0 skips). A permanent with an empower ability shows Empower Jace when you click it, next to Tap. The first time creates a Jace planeswalker token with that many loyalty counters; after that the counters go on your existing Jace token.</div><div>Counters: C adds one and X removes one. On a creature, removing below zero gives −1 counters, shown in red. Planeswalkers show loyalty in a shield at the bottom right. Other cards name the counter from their own text: luck, charge and time get an icon, the rest show the word (mining 3, burden 2). Cards that enter with a set number of counters get them on their own.</div><div>Keyword counters: right-click a creature and choose Keyword counter for flying, lifelink, first strike and the rest. Each shows as a black circle with a white icon down the left side of the card.</div><div>Sagas enter with lore counter I and gain one at the start of your first main phase, shown as a Roman numeral. Each chapter waits on the stack; click it to resolve it. After the last chapter the table offers to sacrifice the Saga, or to flip it if that is what the chapter says.</div><div>Gemstone Caverns put onto the battlefield from Pregame actions gets its luck counter and then taps for any colour.</div><div>Storm: when either deck has a storm card, a Storm count beside the turn label shows the spells cast this turn by both players. Click it to add one, right-click to take one off.</div><div>Delirium: when a deck has a delirium card, that player's graveyard shows how many card types are in it, in gold at four or more.</div><div>Ral, Monsoon Mage shows the instants and sorceries you have cast this turn. When you transform him he enters with 2 loyalty plus that number.</div><div>Mana creatures: right-click one for Tap for Green and the like; a plain click just taps it.</div><div>Mana pool: tapping a land adds its mana, and asks which colour when there is a choice. Click a lit symbol to spend one. Shift-click or right-click a symbol to add one by hand. The pool empties when the phase changes.</div><div>Right-click your graveyard to exile all of it. Right-click your library to show the top card to your opponent only.</div><div>Ending your turn passes it. Your opponent can still act (crack a fetch land, cast at end of turn) and clicks Start my turn when ready.</div><div>Ragavan and similar: the defending player right-clicks their library and picks Exile top card for opponent to cast. Both players see the card; the attacker gets a Cast this card button. If cast, it goes back to its owner's graveyard or exile when it leaves play. If not, it stays in the owner's exile.</div><div>Attackers get a gold border that clears when combat ends.</div><div>Searching your library sorts it into lands, creatures and other spells, in columns by mana value (lands by name). Your sideboard shows in one row, sorted the same way. Type in the filter box to narrow it down.</div><div>Chat: your messages show in gold and your opponent's in blue.</div><div>Life: use − and + beside either player. Shift-click changes by 5.</div><div>Undo steps back your own last action and says so in the log. It cannot go back past a shuffle, the end of a turn, or anything your opponent did to you.</div><div>Match score: click the circle under a player's life when they win a game. Right-click takes it back.</div></div>
   <div><h4>Keys, with the pointer over your card</h4>${k('T','tap or untap')}${k('A','attack: taps and gets a gold border')}${k('V','attack with vigilance: gold border, stays untapped')}${k('B','block: then click the attacker')}${k('R','target: then click a card or player')}${k('C','add a counter')}${k('X','remove a counter')}${k('F','transform')}${k('G','graveyard')}${k('E','exile')}${k('H','hand')}<h4 style="margin-top:10px">Anywhere</h4>${k('D','draw a card')}${k('S','shuffle')}${k('Ctrl+Z','undo your last action')}${k('Space','next phase')}${k('Esc','cancel')}</div></div>`, [['Got it',()=>closeModal(),'go']]);
 }
 function sideboardModal(){
@@ -1185,9 +1331,11 @@ document.addEventListener('contextmenu', e=>{
   const mp=e.target.closest('[data-mana]'); if(mp){ e.preventDefault(); addMana(mp.dataset.mana); changed(); return; }
   const wm=e.target.closest('[data-win]'); if(wm){ e.preventDefault(); markWin(wm.dataset.win, -1); return; }
   const chip=e.target.closest('[data-ctr]'); if(chip){ e.preventDefault(); adjCtr(chip.dataset.pl, chip.dataset.ctr, -1); return; }
+  if(e.target.closest('#stormTag')){ e.preventDefault(); adjCast(-1); return; }
   if(e.target.closest('#myHand')){ e.preventDefault(); handMenu(e.clientX,e.clientY); return; }
   const av=e.target.closest('.avatar'); if(av && av.dataset.pl && arrowsOn(av.dataset.pl) && Date.now()-rdoneAt>400) menu(e.clientX, e.clientY, [['Clear targets',()=>clearTargets(av.dataset.pl)]]);
 });
+function adjCast(d){ const m=G.me; if(!m.cast) m.cast={n:0,is:0}; m.cast.n=Math.max(0, m.cast.n+d); log(`${m.name} sets the storm count to ${stormCount()}.`); changed(); }
 function adjCtr(pl, k, d){ if(pl===G.myId){ G.me.ctr[k]=Math.max(0,(G.me.ctr[k]||0)+d); log(`${G.me.name}: ${k} ${G.me.ctr[k]}.`); changed(); } else { send({t:'adj', ctr:k, d}); log(`${G.me.name} changes ${G.opp.name}'s ${k} by ${d>0?'+':''}${d}.`); } }
 document.addEventListener('click', e=>{
   const t=e.target;
@@ -1200,6 +1348,7 @@ document.addEventListener('click', e=>{
   const wm=t.closest('[data-win]'); if(wm){ markWin(wm.dataset.win, 1); return; }
   if(t.closest('[data-newmatch]')){ newMatch(); return; }
   const chip=t.closest('[data-ctr]'); if(chip){ adjCtr(chip.dataset.pl, chip.dataset.ctr, 1); return; }
+  if(t.closest('#stormTag')){ adjCast(1); return; }
   const av=t.closest('.avatar'); if(av && G.mode && G.mode.type!=='attach'){ finishMode(av.dataset.pl); return; }
   const ph=t.closest('[data-ph]'); if(ph && G.turn.n){ setTurn({...G.turn, phase:+ph.dataset.ph, passed:false}); return; }
   const fb=t.closest('[data-first]'); if(fb){ if(fb.disabled) return; const v=fb.dataset.first; if(v==='mull') mulligan(); else if(v==='roll') highRoll(); else if(v==='deal') drawOpening(); else if(v==='keep') keepHand(); else if(v==='me' && !G.turn.n) takeFirst(G.myId); return; }
@@ -1233,7 +1382,7 @@ document.addEventListener('keydown', e=>{
     if(k==='t') toggleTap(id); else if(k==='c') addCounter(id,1); else if(k==='x') addCounter(id,-1);
     else if(k==='a') attack(id,false); else if(k==='v') attack(id,true);
     else if(k==='f' && c.fd && c.fdk) faceToggle(id);
-    else if(k==='f' && cdata(c).back){ c.flip=!c.flip; changed(); }
+    else if(k==='f' && cdata(c).back){ transform(c); changed(); }
     else if(k==='r') startMode('arrow',id); else if(k==='b') startMode('block',id);
   } else if(f.z==='st' && k==='r') startMode('arrow',id);
 });
@@ -1399,7 +1548,7 @@ const sess=store.get('mt_session',null);
 if(sess && sess.me && Date.now()-sess.at < 864e5){
   $('#resumeBtn').hidden=false; $('#resumeTxt').textContent = (sess.solo ? 'Practice table' : 'Table '+sess.code) + (sess.me.deck ? ' · '+sess.me.deck : '');
   $('#resumeBtn').onclick=()=>{ G.solo=sess.solo; G.myId=sess.myId; G.code=sess.code; G.me=Object.assign(newPlayer(), sess.me); G.turn=sess.turn; G.idc=sess.idc||0; S.name=G.me.name; if(G.turn.n && sess.me.kept===undefined){ G.me.dealt=true; G.me.kept=true; }
-    connect(); const ks=[]; for(const z of Object.keys(ZN)) for(const c of G.me[z]) if(c.k) ks.push(c.k); ensureCards(ks).then(render);
+    connect(); const ks=[]; for(const z of Object.keys(ZN)) for(const c of G.me[z]) if(c.k) ks.push(c.k); ensureCards(ks).then(()=>{ if(!G.me.cares && G.me.deck){ setCares(); changed(); } else render(); });
     if(G.me.deck) showTable(); else showDecks(); };
 }
 /* Links from the Draft Table: ?t=CODE&r=h|g opens or joins that table, ?r=s is practice, &d=1 shows the newest saved deck. */
