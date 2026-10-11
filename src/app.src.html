@@ -153,7 +153,7 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .lorehex::after{content:"";position:absolute;inset:7%;background:linear-gradient(#f3ead2,#dccdaa);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
 .lorehex b{position:absolute;inset:0;display:grid;place-items:center;z-index:1;color:#1b1205;font:700 calc(var(--cw)*.15)/1 Georgia,"Times New Roman",serif;letter-spacing:.02em}
 .ltban{position:absolute;left:0;right:0;top:61%;text-align:center;font:800 calc(var(--cw)*.105)/1.15 var(--ui);letter-spacing:.08em;color:#1b1205;border-top:1px solid #fff8;border-bottom:1px solid #0008;padding:calc(var(--cw)*.025) 2px;box-shadow:0 2px 6px #0009;pointer-events:none}
-.ltban.lt-Plains{background:#f3ecc6}.ltban.lt-Island{background:#a9d6ee}.ltban.lt-Swamp{background:#b9a6c9}.ltban.lt-Mountain{background:#eea58c}.ltban.lt-Forest{background:#97cfa6}
+.ltban.lt-Plains{background:#f3ecc6}.ltban.lt-Island{background:#a9d6ee}.ltban.lt-Swamp{background:#b9a6c9}.ltban.lt-Mountain{background:#eea58c}.ltban.lt-Forest{background:#97cfa6}.ltban.lt-all{background:linear-gradient(#f0cf7a,#d9b25f);border-top-color:#fff3c9}
 .badge.note{left:4%;bottom:6%;right:30%;border-radius:4px;color:var(--ink);border-color:var(--line);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .badge.ctl{right:4%;top:4%;border-color:var(--opp);color:var(--opp)}
 #ghost{position:fixed;z-index:60;pointer-events:none;opacity:.85;transform:translate(-50%,-50%) rotate(-3deg)}
@@ -331,7 +331,7 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v1.42';
+const VERSION = 'v1.43';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 function feedbackUrl(){
   let details = 'not in a game';
@@ -743,7 +743,7 @@ function landTypes(c, pid, fx){
 }
 function landBanner(lt){
   const first=(lt.main||lt.plus)[0], plus = lt.plus.length>=4 ? ['+ALL BASICS'] : lt.plus.map(t=>'+'+t.toUpperCase());
-  return `<span class="ltban lt-${first}">${[...(lt.main ? [lt.main.map(t=>t.toUpperCase()).join(' / ')] : []), ...plus].join(' ')}</span>`;
+  return `<span class="ltban lt-${lt.plus.length>=4 ? 'all' : first}">${[...(lt.main ? [lt.main.map(t=>t.toUpperCase()).join(' / ')] : []), ...plus].join(' ')}</span>`;
 }
 /* activated abilities of permanents: read from the card's text and offered in its right-click menu; activating pays the simple parts of the cost
    (tap, loyalty, life, removing its own counters, sacrificing itself, mana if it is in the pool) and puts a marker on the stack */
