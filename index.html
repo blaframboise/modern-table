@@ -354,10 +354,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v1.51';
+const VERSION = 'v1.52';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v1.52','Oct 12','Cards whose names have accents (Troll of Khazad-dûm, Lórien Revealed) now load their picture and rules text even when a decklist spells them without the accent.'],
   ['v1.51','Oct 12','Creatures that grow "for every seven cards in your graveyard" and the like (Dark Matter Manipulator) show their current power and toughness.'],
   ['v1.50','Oct 12','The power/toughness box looks like the one printed on Magic cards: a silver frame with dark numbers.'],
   ['v1.49','Oct 12',"Death's Shadow shrinks and grows with your life total. Moonshadow loses a -1/-1 counter each time permanent cards go to your graveyard. Any creature with counters or a boost shows its current power and toughness, in red when its toughness is 0 or less."],
@@ -407,6 +408,7 @@ function toast(t){ const el=$('#toast'); el.textContent=t; el.style.opacity=1; c
 const DB = store.get('mt_cards_v1', {});
 const pending = new Set();
 const keyOf = n => n.startsWith('id:') ? n : n.trim().toLowerCase();
+const plainName = n => String(n||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();   // decklists often drop accents: Khazad-dum for Khazad-dûm
 function toDB(c){
   const f = c.card_faces, im = c.image_uris || (f && f[0].image_uris) || {};
   return { n:c.name, mc:c.mana_cost || (f ? f.map(x=>x.mana_cost).filter(Boolean).join(' // ') : ''), t:c.type_line || '',
@@ -427,10 +429,13 @@ async function ensureCards(names, onProgress){
         body: JSON.stringify({ identifiers: chunk.map(n => n.startsWith('id:') ? {id:n.slice(3)} : {name:n.split(' // ')[0]}) }) });
       if(!r.ok) throw new Error(r.status);
       const j = await r.json();
-      for(const c of j.data || []){
-        const d = toDB(c), front = c.name.split(' // ')[0].toLowerCase();
-        for(const n of chunk){ const k=keyOf(n); if(k==='id:'+c.id || k===c.name.toLowerCase() || k.split(' // ')[0]===front) DB[k]=d; }
-      }
+      const store1 = c => { const d=toDB(c), full=plainName(c.name), front=plainName(c.name.split(' // ')[0]);
+        for(const n of chunk){ const k=keyOf(n), p=plainName(k); if(k==='id:'+c.id || p===full || p.split(' // ')[0]===front) DB[k]=d; } };
+      for(const c of j.data || []) store1(c);
+      // names Scryfall did not recognise exactly (a missing accent, a slightly different spelling): ask its fuzzy name search, one at a time
+      for(const nf of (j.not_found || [])){ if(!nf || !nf.name) continue;
+        try{ await sleep(110); const r2=await fetch('https://api.scryfall.com/cards/named?fuzzy='+encodeURIComponent(nf.name)); if(r2.ok){ const c=await r2.json(); const d=toDB(c);
+          for(const n of chunk){ const k=keyOf(n); if(!n.startsWith('id:') && plainName(k.split(' // ')[0])===plainName(nf.name)) DB[k]=d; } } }catch(e){} }
     }catch(e){ console.warn('Scryfall lookup failed', e); }
     for(const n of chunk){ const k=keyOf(n); pending.delete(k); if(!DB[k]) DB[k]={n:n.startsWith('id:')?'Unknown card':n, t:'', o:'', img:'', tmp:1}; }
     done += chunk.length; onProgress && onProgress(done, want.length);
