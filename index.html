@@ -365,10 +365,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v1.59';
+const VERSION = 'v1.60';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v1.60','Oct 12',"When Shifting Woodland's ability targets a card, both players get a message that the ability is on the stack."],
   ['v1.59','Oct 12','Echoing Deeps asks which land card in a graveyard to copy as it enters, and stays a Cave as well.'],
   ['v1.58','Oct 12',"Shifting Woodland's delirium ability appears once you have delirium and turns it into a copy of a permanent card from your graveyard until end of turn. Vesuva asks which land to copy as it enters. Graveyard menu: return all lands to the battlefield tapped."],
   ['v1.57','Oct 12',"A pact trigger now stops your turn in the upkeep before you draw. Right-click it to counter it. Leaving the upkeep with it unresolved asks you to confirm, and your opponent decides whether you draw or must deal with the pact first."],
@@ -579,6 +580,7 @@ function onMsg(m){
   else if(m.t==='take'){ const f=find(m.id); if(f && f.z==='ex' && (f.c.offer || (f.c.by && f.c.by.mode==='play' && f.c.by.pid===oppId()))){ G.noUndo=true; const c=f.c; G.me.ex.splice(f.i,1); delete c.offer; delete c.by; delete c.warp; c.fd=false; send({t:'give', card:c, zone:'st'}); log(`${G.opp?G.opp.name:'Opponent'} casts ${cname(c)} from ${G.me.name}'s exile.`); changed(); } }
   else if(m.t==='give'){ G.noUndo=true; const gc=m.card, play=m.zone==='bf'||m.zone==='st'; if((gc.tok && !play) || (gc.made && !play && m.zone!=='hand')){ render(); return; } if(m.zone==='st') gc.ts=Date.now(); delete gc.lft; delete gc.sick; if(m.zone==='bf' && G.turn.n) gc.sick=true; place(m.card, m.zone, m.pos); if(m.zone==='gy') noteGy(gc); if(m.zone==='st'){ noteCast(gc); castTriggers(gc); } if(m.card.k) ensureCards([m.card.k]).then(render); changed(); }
   else if(m.t==='cmd'){ runCmd(m); }
+  else if(m.t==='notice'){ notice(String(m.title||'').slice(0,120), String(m.text||'').slice(0,400)); }
   else if(m.t==='pactgate'){ pactGateAsk(String(m.src||'a pact').slice(0,80), String(m.cost||'').slice(0,40)); }
   else if(m.t==='pactok'){ if(G.me.gate) releaseGate(); }
   else if(m.t==='pactopen'){ const pc=G.me.st.find(c=>c.pact); if(pc){ pactPanel(pc.id); toast(`${G.opp?G.opp.name:'Your opponent'} asks you to deal with the pact trigger first.`); } }
@@ -903,6 +905,7 @@ function pactAction(k){
 }
 /* copies (Vesuva, Shifting Woodland): c.cp={k, cu, orig, until} makes cdata() return the copied card, so picture, type, mana and abilities follow it;
    a banner with the original name stays on the card. `until` (a turn number) ends the copy when the turn changes. */
+function notice(title, text){ if(!$('#modal').hidden) closeModal(); modal(title, `<span class="hint">${esc(text)}</span>`, [['OK',()=>closeModal(),'go']]); }
 function pickCard(title, cards, cb, extraBtn){
   if(!$('#modal').hidden) closeModal();
   modal(title, `<div class="grid" id="pkGrid">${cards.map(c=>cardHTML(c,'gy',true)).join('')}</div><span class="hint">Click a card to choose it.</span>`, [['Cancel',()=>closeModal(),'ghost'], ...(extraBtn ? [extraBtn] : [])], {wide:true});
@@ -993,6 +996,7 @@ function activate(id, a, evDone, extra){
   G.me.st.push(mk(null,{tok:true, ts:Date.now(), ab:Object.assign({id:c.id}, extra&&extra.copy ? {copy:extra.copy} : {}), cu:{n:`${nm}: ability`, t:'Activated ability', o:abText(a), img:((c.flip&&d.back) ? d.back : d.img)||''}}));
   if(sac){ move(id,'gy',{silent:true}); paid.push('sacrificed'); }
   const t=abText(a); log(`${G.me.name} activates ${what}: ${t.length>220 ? t.slice(0,218)+'…' : t}${paid.length ? ' ('+paid.join(', ')+')' : ''}${extra&&extra.copy ? ', targeting '+extra.copy.name+' in their graveyard' : ''}`);
+  if(extra && extra.copy){ const title=`${nm}'s ability was put on the stack`; notice(title, `It targets ${extra.copy.name} in your graveyard. Click it on the stack to resolve it; ${nm} then becomes a copy of ${extra.copy.name} until end of turn.`); send({t:'notice', title, text:`It targets ${extra.copy.name} in ${G.me.name}'s graveyard. When it resolves, ${nm} becomes a copy of ${extra.copy.name} until end of turn.`}); }
   changed();
 }
 /* player aids, nothing enforced: c.sick marks a permanent that came under my control since my turn began (shown on creatures without haste);
