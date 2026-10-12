@@ -163,7 +163,7 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .lorehex b{position:absolute;inset:0;display:grid;place-items:center;z-index:1;color:#1b1205;font:700 calc(var(--cw)*.15)/1 Georgia,"Times New Roman",serif;letter-spacing:.02em}
 .ltban{position:absolute;left:0;right:0;top:61%;text-align:center;font:800 calc(var(--cw)*.105)/1.15 var(--ui);letter-spacing:.08em;color:#1b1205;border-top:1px solid #fff8;border-bottom:1px solid #0008;padding:calc(var(--cw)*.025) 2px;box-shadow:0 2px 6px #0009;pointer-events:none}
 .ltban.lt-Plains{background:#f3ecc6}.ltban.lt-Island{background:#a9d6ee}.ltban.lt-Swamp{background:#b9a6c9}.ltban.lt-Mountain{background:#eea58c}.ltban.lt-Forest{background:#97cfa6}.ltban.lt-all{background:linear-gradient(#f0cf7a,#d9b25f);border-top-color:#fff3c9}
-.badge.dpt{right:3.500%;bottom:2.500%;min-width:calc(var(--cw)*.27);text-align:center;border-radius:calc(var(--cw)*.05)/calc(var(--cw)*.07);padding:calc(var(--cw)*.012) calc(var(--cw)*.05);font:400 calc(var(--cw)*.17)/1.1 var(--display);letter-spacing:.03em;font-variant-numeric:tabular-nums;color:#141414;background:linear-gradient(#fbfbf8 0%,#e6e6e1 45%,#bdbdb7 100%);border:1px solid #2c2c2a;box-shadow:inset 0 1px 0 #fff,inset 0 -1px 2px #0005,0 0 0 1px #8e8e88,0 2px 4px #000a;white-space:nowrap}
+.badge.dpt{right:3.500%;bottom:2.500%;min-width:calc(var(--cw)*.27);text-align:center;border-radius:calc(var(--cw)*.05)/calc(var(--cw)*.07);padding:calc(var(--cw)*.012) calc(var(--cw)*.05);font:400 calc(var(--cw)*.17)/1.1 var(--display);-webkit-text-stroke:.06em currentColor;paint-order:stroke fill;letter-spacing:.05em;font-variant-numeric:tabular-nums;color:#141414;background:linear-gradient(#fbfbf8 0%,#e6e6e1 45%,#bdbdb7 100%);border:1px solid #2c2c2a;box-shadow:inset 0 1px 0 #fff,inset 0 -1px 2px #0005,0 0 0 1px #8e8e88,0 2px 4px #000a;white-space:nowrap}
 .badge.dpt.dead{color:#a3150c;background:linear-gradient(#fff1ef 0%,#f0c9c4 50%,#d39a93 100%);border-color:#6d0f08}
 .card.hasdpt .badge.ctr{bottom:21%}.card.hasdpt .badge.tmp{bottom:36%}
 .badge.note{left:4%;bottom:6%;right:30%;border-radius:4px;color:var(--ink);border-color:var(--line);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -346,10 +346,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v1.53';
+const VERSION = 'v1.54';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v1.54','Oct 12','Power/toughness numbers are bolder.'],
   ['v1.53','Oct 12','Power/toughness numbers use the same lettering as the life totals.'],
   ['v1.52','Oct 12','Cards whose names have accents (Troll of Khazad-dûm, Lórien Revealed) now load their picture and rules text even when a decklist spells them without the accent.'],
   ['v1.51','Oct 12','Creatures that grow "for every seven cards in your graveyard" and the like (Dark Matter Manipulator) show their current power and toughness.'],
