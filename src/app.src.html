@@ -45,6 +45,11 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
 .corner:hover{background:#71483a;color:#f3c48e}
 .joinrow{display:flex;gap:8px}.joinrow input{flex:1;text-transform:uppercase;letter-spacing:.2em;font-weight:800;min-width:0}
 
+.news{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:7px}
+.news h4{margin:0;font:600 11px var(--ui);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.newsrow{display:grid;grid-template-columns:86px 1fr;gap:10px;font-size:13.500px;color:var(--ink);line-height:1.4}
+.newsrow b{color:var(--brass);font-variant-numeric:tabular-nums}.newsrow b small{display:block;color:var(--dim);font-weight:400;font-size:11px}
+.news a{color:var(--brass);font-size:13px}
 /* ---------- deck screen ---------- */
 #decks{display:flex;flex-direction:column;background:var(--felt2)}
 .topbar{display:flex;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--rail);flex-wrap:wrap}
@@ -274,6 +279,7 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
     </div>
     <p id="lobbyMsg" style="color:var(--go)"></p>
     <p><a href="#" id="fbLink" style="color:var(--brass)">Send feedback</a> <span style="color:var(--dim)">· report a bug or suggest a change</span></p>
+    <div class="news" id="news"></div>
   </div>
 </div>
 
@@ -331,8 +337,30 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v1.45';
+const VERSION = 'v1.46';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
+/* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
+const NEWS = [
+  ['v1.46','Oct 11',"This What's new list."],
+  ['v1.45','Oct 11','Hand menu: discard 1 card at random, or choose how many to discard at random.'],
+  ['v1.44','Oct 11','Hand menu: pick several cards and discard them together. A discarded card with madness asks whether you want to cast it.'],
+  ['v1.43','Oct 11','The +ALL BASICS land banner (Dryad of the Ilysian Grove, Leyline of the Guildpact) is gold.'],
+  ['v1.42','Oct 11','Blood Moon, Harbinger of the Seas, Urborg and Yavimaya put a banner on every land they change, and those lands tap for the right colours.'],
+  ['v1.41','Oct 11','The land you played from your hand this turn carries a green NEW! banner.'],
+  ['v1.40','Oct 11',"Right-click a permanent to put one of its activated abilities on the stack; simple costs like tapping, loyalty, life and sacrificing itself are paid for you. Sagas show their chapter in a beige hexagon."],
+  ['v1.39','Oct 11','Creatures that arrived this turn show a small hourglass until your next turn (not if they have haste).'],
+  ['v1.38','Oct 11','Spells with Choose one or Choose two ask which modes you want as you cast them, and tell your opponent.'],
+  ['v1.37','Oct 11','Right-click your library to exile the top cards and play them until the end of your next turn. They wait in a gold box on your side of the table.'],
+  ['v1.36','Oct 10','Counters are named from the card (luck, charge, lore) and keyword counters like flying and lifelink show as icons. Saga chapters go on the stack. Storm count, delirium count, and a spell counter on Ral, Monsoon Mage.'],
+  ['v1.35','Oct 10','Mark a card in your graveyard for flashback (Snapcaster Mage); it glows gold until the turn ends.'],
+  ['v1.34','Oct 10','Graveyard: Cast from here, then exile, for flashback and similar.'],
+  ['v1.33','Oct 10','Empower Jace from Reality Fracture creates and grows the Jace token for you.'],
+  ['v1.32','Oct 9','Library search and sideboard are sorted into lands, creatures and other spells by mana value.'],
+  ['v1.31','Oct 9','Chat messages stand out in the log: yours in gold, your opponent\'s in blue.'],
+  ['v1.30','Oct 7','Prowess and similar creatures get their boost automatically when you cast a spell.']
+];
+const newsRow = ([v,d,t]) => `<div class="newsrow"><b>${v}<small>${d}</small></b><span>${esc(t)}</span></div>`;
+function newsModal(){ modal("What's new", `<div class="news" style="border:0;padding:0;max-width:640px">${NEWS.map(newsRow).join('')}</div><span class="hint">Something not working the way it says? Use Send feedback on the front page or in the table menu.</span>`, [['Close',()=>closeModal(),'go']]); }
 function feedbackUrl(){
   let details = 'not in a game';
   try{ if(typeof G!=='undefined' && (G.code || G.solo)){ const ua=navigator.userAgent, br=(ua.match(/(Edg|Chrome|Firefox|Safari)\/[\d]+/)||['browser'])[0];
@@ -1403,7 +1431,7 @@ function tableMenu(x,y){
     ['Concede this game',()=>concede()],
     ['Change deck',()=>showDecks()], ['Take the turn',()=>{ setTurn({active:G.myId, phase:2, n:Math.max(1,G.turn.n)}); }],
     [S.autoDraw?'Turn off auto-draw each turn':'Turn on auto-draw each turn',()=>{ S.autoDraw=!S.autoDraw; store.set('mt_settings',S); toast('Auto-draw is '+(S.autoDraw?'on':'off')); }],
-    ['Clear my arrows',()=>{ G.me.arrows=[]; changed(); }], ['Shortcuts and help',()=>helpModal()], ['Send feedback',()=>openFeedback()], '-',
+    ['Clear my arrows',()=>{ G.me.arrows=[]; changed(); }], ['Shortcuts and help',()=>helpModal()], ["What's new",()=>newsModal()], ['Send feedback',()=>openFeedback()], '-',
     ['Leave the table',()=>confirmBox('Leave this table?','Your seat is kept on this computer, so you can come back from the front page.',()=>{ save(); location.href=location.pathname+location.search; })] ]);
 }
 function confirmBox(title, text, yes){ modal(title, `<span class="hint">${esc(text)}</span>`, [['Cancel',()=>closeModal(),'ghost'],['Yes',()=>{ closeModal(); yes(); },'go']]); }
@@ -1710,6 +1738,7 @@ function paintTour(){
 
 /* ================= lobby ================= */
 const nameIn=$('#nameIn'); nameIn.value=S.name; $('#verTag').textContent=VERSION; $('#fbLink').onclick=e=>{ e.preventDefault(); openFeedback(); };
+$('#news').innerHTML = `<h4>What's new</h4>${NEWS.slice(0,3).map(newsRow).join('')}<a href="#" id="newsAll">See all changes</a>`; $('#newsAll').onclick=e=>{ e.preventDefault(); newsModal(); };
 function begin(role, code){
   S.name=(nameIn.value.trim()||'Player').slice(0,20); store.set('mt_settings',S);
   G.solo = role==='solo'; G.myId = role==='guest' ? 'p2' : 'p1'; G.code=code||''; G.me=newPlayer(); G.opp=null; G.turn={active:null,phase:2,n:0}; G.idc=0;
