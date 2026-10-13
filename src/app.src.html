@@ -131,7 +131,7 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .loy{position:absolute;right:3%;bottom:2.5%;width:calc(var(--cw)*.3);height:calc(var(--cw)*.27);pointer-events:none;filter:drop-shadow(0 1px 3px #000c)}
 .loy::before{content:"";position:absolute;inset:0;background:#e8ecea;clip-path:polygon(50% 0,100% 14%,100% 60%,50% 100%,0 60%,0 14%)}
 .loy::after{content:"";position:absolute;inset:6%;background:linear-gradient(#2b3238,#101418);clip-path:polygon(50% 0,100% 14%,100% 60%,50% 100%,0 60%,0 14%)}
-.loy b{position:absolute;inset:0 0 14% 0;display:grid;place-items:center;z-index:1;color:#fff;font:800 calc(var(--cw)*.16)/1 var(--ui);font-variant-numeric:tabular-nums}.badge.dmg{left:4%;bottom:6%;border-color:#ffb3ab;color:#fff;background:#8f1f17e6;white-space:nowrap}.badge.dmg.lethal{font-size:calc(var(--cw)*.105);letter-spacing:.02em;background:#d1281a;border-color:#fff;box-shadow:0 0 8px 2px #ff4a3a99}.card.dmglethal{outline:2px solid #ff4a3a;outline-offset:-2px}
+.loy b{position:absolute;inset:0 0 14% 0;display:grid;place-items:center;z-index:1;color:#fff;font:800 calc(var(--cw)*.16)/1 var(--ui);font-variant-numeric:tabular-nums}.badge.dmg{right:3%;top:18%;text-align:center;line-height:1.05;border-color:#ffb3ab;color:#fff;background:#8f1f17e6;white-space:nowrap}.badge.dmg small{display:block;font-size:.62em;letter-spacing:.1em}.badge.dmg.lethal{background:#d1281a;border-color:#fff;box-shadow:0 0 8px 2px #ff4a3a99}.card.dmglethal{outline:2px solid #ff4a3a;outline-offset:-2px}
 .badge.tok{left:4%;top:4%;border-color:var(--dim);color:var(--dim)}
 .kcs{position:absolute;left:3%;top:19%;max-height:74%;display:flex;flex-direction:column;flex-wrap:wrap;gap:calc(var(--cw)*.02);pointer-events:none}
 .kc{width:calc(var(--cw)*.2);height:calc(var(--cw)*.2);border-radius:50%;background:#000;border:1px solid #fff;display:grid;place-items:center;box-shadow:0 1px 3px #000c;flex:none}
@@ -217,7 +217,7 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .card.warped{outline:2px dashed #ffffff55;outline-offset:-3px}.card.warped>img,.card.warped>.txt{filter:saturate(.55) brightness(.82)}
 .wrpban{position:absolute;left:0;right:0;top:44%;text-align:center;font:800 calc(var(--cw)*.13)/1.1 var(--ui);letter-spacing:.14em;color:#fff;background:#000e;border-top:1px solid #fffa;border-bottom:1px solid #fffa;padding:calc(var(--cw)*.025) 0;box-shadow:0 2px 6px #0009;pointer-events:none}
 .warpmark{position:absolute;left:50%;top:8%;transform:translateX(-50%);width:calc(var(--cw)*.3);height:calc(var(--cw)*.3);pointer-events:none;filter:drop-shadow(0 1px 3px #000c)}
-.badge.zz{left:50%;top:40%;transform:translateX(-50%);border-color:#b9a7ff;color:#d6ccff;background:#120d2bdd;font-size:calc(var(--cw)*.15);white-space:nowrap}
+.badge.zz{left:4%;bottom:6%;border-color:#b9a7ff;color:#d6ccff;background:#120d2bdd;font-size:calc(var(--cw)*.15);white-space:nowrap}
 .badge.held{left:4%;top:4%;border-color:var(--opp);color:var(--opp)}
 .offer{display:flex;gap:10px;align-items:center;margin-top:4px}.offer .card{width:calc(var(--cw)*.6)}.offer span{font-size:12px;color:var(--dim);display:block;margin-bottom:6px}.offer button{font-size:12px;padding:5px 10px}
 #stackwrap h4,#logwrap h4,#offerwrap h4{margin:0 0 4px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:600}
@@ -368,10 +368,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v1.69';
+const VERSION = 'v1.70';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v1.70','Oct 13','The damage badge moved to the upper right of the card, under the summoning-sick mark, with LETHAL on a small second line, so it no longer covers counters, boosts or the power/toughness box. The exert/stun badge moved to the bottom left.'],
   ['v1.69','Oct 13','"Whenever this creature is dealt damage" triggers go on the stack when you mark damage on it. Hexhaven Invigorator\'s trigger opens your library when it resolves: pick up to that many lands to put onto the battlefield tapped, then it shuffles.'],
   ['v1.68','Oct 13','Damage on creatures: point at any creature (yours or your opponent\'s) and press − to mark 1 damage, = to take 1 off, or use Mark damage in its right-click menu. A red badge shows the damage (LETHAL when it reaches the toughness), the log records it, and it wears off when the turn ends.'],
   ['v1.67','Oct 13','Counters alone no longer bring up the power/toughness box: a creature with only +1/+1 or -1/-1 counters shows just its counter. The box still appears for pump effects and creatures like Tarmogoyf, and counts the counters there.'],
@@ -1566,7 +1567,7 @@ function cardHTML(c, z, mine, cls=''){
     + (z==='bf' && c.o && c.o !== (mine?G.myId:oppId()) ? '<span class="badge ctl">borrowed</span>' : '');
   if(z==='bf' && !backUp){ const lt=landTypes(c, mine?G.myId:oppId(), FX||landEffects()); if(lt) b+=landBanner(lt); }
   if(z==='bf' && c.cp){ b+=`<span class="cpban" title="${esc(c.cp.orig)}, copying ${esc((cdata(c).n)||'a card')}${c.cp.until?' until end of turn':''}">${esc(c.cp.orig)}</span>`; }
-  if(z==='bf' && c.dmg && !backUp){ const T=toughNow(c, mine?G.myId:oppId()), le=T!=null && c.dmg>=T; if(le) cls+=' dmglethal'; b+=`<span class="badge dmg${le?' lethal':''}" title="Damage marked this turn">${c.dmg} dmg${le?' · LETHAL':''}</span>`; }
+  if(z==='bf' && c.dmg && !backUp){ const T=toughNow(c, mine?G.myId:oppId()), le=T!=null && c.dmg>=T; if(le) cls+=' dmglethal'; b+=`<span class="badge dmg${le?' lethal':''}" title="Damage marked this turn">${c.dmg} dmg${le?'<small>LETHAL</small>':''}</span>`; }
   if(z==='bf' && c.lft){ cls+=' lft'; b+='<span class="lftban">NEW!</span>'; }
   if(z==='bf' && showSick(c)) b+=`<span class="kc sick${c.o && c.o !== (mine?G.myId:oppId()) ? ' low' : ''}" title="Summoning sick">${SICK_SVG}</span>`;
   if(z==='side' && c.comp) b+='<span class="compban">COMPANION</span>';
