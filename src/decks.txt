@@ -1,3 +1,441 @@
+@@ UGEMS Regional Championship Ghent|2026-10-10|67261|1st|Broodscale Combo|Alexander Rosdahl|7997876
+3 Ugin's Labyrinth
+3 Blade of the Bloodchief
+6 Forest
+4 Basking Broodscale
+4 Eldrazi Temple
+1 Cavern of Souls
+1 Shifting Woodland
+1 Springleaf Drum
+4 Kozilek's Command
+1 Yavimaya, Cradle of Growth
+4 Malevolent Rumble
+4 Ancient Stirrings
+4 Sowing Mycospawn
+3 Glaring Fleshraker
+2 Vexing Bauble
+1 Haywire Mite
+4 Emrakul, the Promised End
+1 Soul-Guide Lantern
+2 Boseiju, Who Endures
+2 Devourer of Destiny
+4 Urza's Saga
+1 Sire of Seven Deaths
+Sideboard
+3 Thought-Knot Seer
+2 Nature's Claim
+1 Vexing Bauble
+1 Pithing Needle
+2 Dismember
+3 Trinisphere
+2 Grafdigger's Cage
+1 Sire of Seven Deaths
+@@ UGEMS Regional Championship Ghent|2026-10-10|67261|2nd|Broodscale Combo|Timothée Blondiaux|7997877
+1 Gemstone Caverns
+4 Ugin's Labyrinth
+2 Blade of the Bloodchief
+3 Dismember
+4 Basking Broodscale
+6 Forest
+1 Talisman of Resilience
+4 Eldrazi Temple
+1 Shifting Woodland
+1 Springleaf Drum
+3 Devourer of Destiny
+4 Kozilek's Command
+4 Malevolent Rumble
+4 Ancient Stirrings
+4 Sowing Mycospawn
+1 Vexing Bauble
+1 Haywire Mite
+4 Emrakul, the Promised End
+1 Soul-Guide Lantern
+2 Boseiju, Who Endures
+4 Urza's Saga
+1 Sire of Seven Deaths
+Sideboard
+2 Thought-Knot Seer
+2 Nature's Claim
+2 Disruptor Flute
+1 Vexing Bauble
+2 Trinisphere
+1 Thief of Existence
+1 Warping Wail
+2 Grafdigger's Cage
+1 Cavern of Souls
+1 Sire of Seven Deaths
+@@ UGEMS Regional Championship Ghent|2026-10-10|67261|3rd|Living End|Anthony Pav|7997878
+1 Waker of Waves
+1 Thundering Falls
+4 Oliphaunt
+2 Striped Riverwinder
+3 Generous Ent
+1 Forest
+1 Hedge Maze
+4 Misty Rainforest
+1 Temple Garden
+1 Stomping Ground
+4 Wistfulness
+1 Breeding Pool
+4 Street Wraith
+2 Curator of Mysteries
+4 Force of Negation
+1 Island
+4 Violent Outburst
+1 Sacred Foundry
+4 Shardless Agent
+1 Colossal Skyturtle
+4 Subtlety
+1 Sink into Stupor
+1 Commercial District
+1 Steam Vents
+1 Valakut Awakening
+3 Living End
+4 Endurance
+Sideboard
+1 High Noon
+3 Mystical Dispute
+3 Teferi, Time Raveler
+1 Faerie Macabre
+1 Dismember
+2 Force of Vigor
+1 Ingot Chewer
+3 Clarion Conqueror
+@@ UGEMS Regional Championship Ghent|2026-10-10|67261|4th|Devoted Druid Combo|FilippoD|7997879
+1 Craterhoof Behemoth
+1 Horizon Canopy
+1 Windswept Heath
+2 Forest
+2 Dryad Arbor
+1 Misty Rainforest
+1 Underground Mortuary
+1 Temple Garden
+2 Overgrown Tomb
+4 Badgermole Cub
+4 Delighted Halfling
+4 Green Sun's Zenith
+1 Nurturing Peatland
+4 Nature's Rhythm
+2 Birds of Paradise
+1 Fiend Artisan
+4 Leyline of Abundance
+1 Duskwatch Recruiter
+2 Wooded Foothills
+4 Verdant Catacombs
+1 Shang-Chi, Master of Kung Fu
+1 Disciple of Freyalise
+4 Tyvar, Jubilant Brawler
+1 Tyvar, the Pummeler
+2 Boseiju, Who Endures
+1 Ouroboroid
+1 Vizier of Remedies
+4 Devoted Druid
+1 Formidable Speaker
+1 Endurance
+Sideboard
+2 Endurance
+1 Kraul Harpooner
+1 Fatal Push
+1 Vexing Bauble
+2 Chalice of the Void
+1 Grist, the Hunger Tide
+1 Guerrilla Gorilla
+1 Boromir, Warden of the Tower
+2 Abrupt Decay
+2 Thoughtseize
+1 Karn, Argent Defender
+@@ UGEMS Regional Championship Ghent|2026-10-10|67261|5th|Azorius Chant|Gerardo D'Elia|7997880
+1 Thundering Falls
+4 Silence
+1 Otawara, Soaring City
+4 Flooded Strand
+1 Erode
+3 Arid Mesa
+1 Monumental Henge
+2 Hallowed Fountain
+1 Floodfarm Verge
+4 Orim's Chant
+2 Consult the Star Charts
+1 Force of Negation
+2 Island
+1 Isochron Scepter
+4 Teferi, Time Raveler
+1 Spell Snare
+1 Polluted Delta
+1 Mystic Gate
+1 The Theorist, Jace Beleren
+4 Narset, Parter of Veils
+2 Meticulous Archive
+2 Prismatic Ending
+3 Day's Undoing
+2 Sink into Stupor
+4 Solitude
+2 Plains
+3 Wrath of the Skies
+1 Supreme Verdict
+1 Geier Reach Sanitarium
+Sideboard
+1 Ashiok, Dream Render
+3 Sanctum Prelate
+4 Mystical Dispute
+3 Consign to Memory
+1 Wrath of the Skies
+1 Erode
+1 Spell Snare
+1 Kaheera, the Orphanguard
+@@ UGEMS Regional Championship Ghent|2026-10-10|67261|6th|Boros Energy|Cristobal Abril Navarro|7997881
+2 Flooded Strand
+4 Ajani, Nacatl Pariah
+2 Elegant Parlor
+3 Seasoned Pyromancer
+4 Arid Mesa
+1 Dalkovan Encampment
+3 Windswept Heath
+1 Haliya, Guided by Light
+1 Arena of Glory
+2 Blood Moon
+2 Thraben Charm
+2 Lightning Bolt
+4 Guide of Souls
+1 Mountain
+4 Galvanic Discharge
+4 Ragavan, Nimble Pilferer
+3 Voice of Victory
+2 Ranger-Captain of Eos
+3 Goblin Bombardment
+3 Sacred Foundry
+4 Ocelot Pride
+3 Plains
+2 Marsh Flats
+Sideboard
+1 Surgical Extraction
+2 High Noon
+2 Vexing Bauble
+2 Wear // Tear
+1 The Legend of Roku
+3 Obsidian Charmaw
+2 Wrath of the Skies
+1 Meltdown
+1 Celestial Purge
+@@ UGEMS Regional Championship Ghent|2026-10-10|67261|7th|Broodscale Combo|Sebastian Sachse|7997882
+3 Forest
+1 Agatha's Soul Cauldron
+3 Blade of the Bloodchief
+3 Misty Rainforest
+1 Stomping Ground
+4 Basking Broodscale
+1 The Mycosynth Gardens
+4 Eldrazi Temple
+1 Cavern of Souls
+1 Springleaf Drum
+4 Kozilek's Command
+4 Grove of the Burnwillows
+4 Malevolent Rumble
+4 Walking Ballista
+4 Ancient Stirrings
+4 Sowing Mycospawn
+1 Vexing Bauble
+2 Unholy Heat
+1 Haywire Mite
+3 Emrakul, the Promised End
+1 Soul-Guide Lantern
+2 Boseiju, Who Endures
+4 Urza's Saga
+Sideboard
+1 Soulless Jailer
+2 Nature's Claim
+1 Disruptor Flute
+1 Pithing Needle
+1 Blasphemous Act
+2 Thief of Existence
+1 Grafdigger's Cage
+1 Liberator, Urza's Battlethopter
+2 Warping Wail
+2 Engineered Explosives
+1 Unholy Heat
+@@ UGEMS Regional Championship Ghent|2026-10-10|67261|8th|Jeskai Chant|Nils Gutiérrez von Porat|7997883
+1 Thundering Falls
+3 Silence
+1 Otawara, Soaring City
+4 Flooded Strand
+3 Arid Mesa
+1 Monumental Henge
+3 Scalding Tarn
+1 Hallowed Fountain
+4 Orim's Chant
+2 Consult the Star Charts
+2 Island
+1 Isochron Scepter
+4 Teferi, Time Raveler
+2 Spell Snare
+4 Galvanic Discharge
+1 Mystic Gate
+1 Sacred Foundry
+4 Narset, Parter of Veils
+2 Meticulous Archive
+3 Day's Undoing
+4 Solitude
+1 Sink into Stupor
+4 Wrath of the Skies
+2 Plains
+1 Steam Vents
+1 Geier Reach Sanitarium
+Sideboard
+1 Surgical Extraction
+3 High Noon
+3 Mystical Dispute
+1 Force of Negation
+4 Consign to Memory
+1 Celestial Purge
+1 Erode
+1 Kaheera, the Orphanguard
+@@ UGEMS Regional Championship Ghent|2026-10-10|67261|11th|Rakdos Delirium|Jakub Sznajder|7997886
+4 Stitcher's Supplier
+2 Swamp
+4 Flare of Malice
+4 Thoughtseize
+3 Lightning Bolt
+1 Arid Mesa
+4 Street Wraith
+1 Mountain
+4 Dark Matter Manipulator
+1 Polluted Delta
+2 Verdant Catacombs
+4 Moonshadow
+4 Mishra's Bauble
+4 Fear of Missing Out
+1 Raucous Theater
+4 Nethergoyf
+4 Detective's Phoenix
+3 Blood Crypt
+2 Marsh Flats
+4 Bloodstained Mire
+Sideboard
+1 Fatal Push
+1 Surgical Extraction
+1 Nihil Spellbomb
+1 Blood Moon
+3 Rough // Tumble
+3 Obsidian Charmaw
+2 Grafdigger's Cage
+2 Meltdown
+1 Ingot Chewer
+@@ UGEMS Regional Championship Ghent|2026-10-10|67261|15th|Samwise Gamgee Combo|Thomas Munk|7997890
+4 Ajani, Nacatl Pariah
+1 Lush Portico
+1 Yawgmoth, Thran Physician
+4 Windswept Heath
+1 Forest
+1 Dryad Arbor
+1 Misty Rainforest
+1 Underground Mortuary
+1 Viscera Seer
+3 City of Brass
+1 Temple Garden
+1 Stomping Ground
+1 Sylvan Safekeeper
+1 Overgrown Tomb
+4 Birthing Ritual
+1 Delighted Halfling
+3 Goblin Bombardment
+4 Verdant Catacombs
+4 Cauldron Familiar
+3 Young Wolf
+2 Carrion Feeder
+1 Haywire Mite
+1 Explosive Prodigy
+4 Gilded Goose
+2 Boseiju, Who Endures
+4 Chord of Calling
+1 Godless Shrine
+4 Samwise Gamgee
+Sideboard
+2 Endurance
+1 High Noon
+2 Vexing Bauble
+1 Witherbloom Charm
+1 Crystal Barricade
+1 Gaddock Teeg
+1 Masked Vandal
+1 Prismatic Ending
+2 Force of Vigor
+2 Thoughtseize
+1 Erode
+@@ Regional Championship SCG CON Los Angeles|2026-10-10||1st|Azorius Control (Kaheera)|Nate Green|
+4 Solitude
+4 Narset, Parter of Veils
+4 Teferi, Time Raveler
+3 Day's Undoing
+2 Prismatic Ending
+1 Supreme Verdict
+3 Wrath of the Skies
+2 Consult the Star Charts
+2 Erode
+1 Force of Negation
+1 March of Otherworldly Light
+4 Orim's Chant
+3 Silence
+2 Sink into Stupor
+1 Spell Snare
+3 Arid Mesa
+4 Flooded Strand
+1 Floodfarm Verge
+1 Geier Reach Sanitarium
+2 Hallowed Fountain
+2 Island
+2 Meticulous Archive
+1 Monumental Henge
+1 Mystic Gate
+1 Otawara, Soaring City
+2 Plains
+1 Polluted Delta
+1 Theorist's Sanctum
+1 Thundering Falls
+Sideboard
+1 Kaheera, the Orphanguard
+4 Consign to Memory
+3 High Noon
+4 Mystical Dispute
+1 Spell Snare
+1 Supreme Verdict
+1 Surgical Extraction
+@@ Regional Championship SCG CON Los Angeles|2026-10-10||2nd|Azorius Control (Kaheera)|Henry Romero|
+2 Solitude
+4 Narset, Parter of Veils
+4 Teferi, Time Raveler
+4 Day's Undoing
+4 Preordain
+3 Prismatic Ending
+2 Wrath of the Skies
+2 Force of Negation
+4 Orim's Chant
+1 Razorgrass Ambush
+4 Silence
+1 Sink into Stupor
+2 Spell Snare
+3 Arid Mesa
+4 Flooded Strand
+1 Geier Reach Sanitarium
+1 Godless Shrine
+1 Hall of Storm Giants
+2 Hallowed Fountain
+2 Island
+2 Meticulous Archive
+1 Monumental Henge
+1 Otawara, Soaring City
+2 Plains
+2 Polluted Delta
+1 Thundering Falls
+Sideboard
+1 Kaheera, the Orphanguard
+2 Consign to Memory
+2 High Noon
+3 Mystical Dispute
+2 Nihil Spellbomb
+1 Prismatic Ending
+1 Solitude
+1 Spell Snare
+2 The Wandering Emperor
 @@ Modern Challenge 32|2026-10-11|67189|3rd|BR|Bugsy69|7994140
 4 Thoughtseize
 2 Swamp
