@@ -380,10 +380,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v1.82';
+const VERSION = 'v1.83';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v1.83','Oct 14','An earthbent land\'s power/toughness box reads 0/0, like a printed card; its +1/+1 counters show separately, as on any creature.'],
   ['v1.82','Oct 14','Earthbend (Badgermole Cub and others): the trigger goes on the stack and asks you to click a land you control. When it resolves the land becomes a creature with haste and +1/+1 counters, marked EARTHBENT; tapping it for mana counts as tapping a creature. When it dies or is exiled, its return trigger goes on the stack and brings it back tapped as a plain land.'],
   ['v1.81','Oct 14','Leyline of Abundance (and other "whenever you tap a creature for mana, add an additional …" cards): tapping a creature for mana adds the extra mana at once, as the rules say for mana abilities, and the log notes it. Abilities on the stack are now removed with "Counter this ability".'],
   ['v1.80','Oct 13','Mishra\'s Bauble: when the active player moves on from the upkeep, the delayed draw trigger resolves by itself and its card is drawn.'],
@@ -1474,7 +1475,7 @@ function countPhrase(ph, pid, self){
   return null;
 }
 /* damage marked on a creature (c.dmg) until the turn ends; the controller's client keeps it, the other player asks with {t:'dmg'} */
-function toughNow(c, pid){ const dp=dynPT(c, pid); if(dp) return dp.t; const t=(cdata(c).pt||'').split('/')[1]; return /^-?\d+$/.test((t||'').trim()) ? +t+(c.c||0)+(c.tt||0) : null; }
+function toughNow(c, pid){ const dp=dynPT(c, pid); if(dp && dp.printed) return (c.c||0)+(c.tt||0); if(dp) return dp.t; const t=(cdata(c).pt||'').split('/')[1]; return /^-?\d+$/.test((t||'').trim()) ? +t+(c.c||0)+(c.tt||0) : null; }
 const DMGLOG={};
 function damage(id, d, by){
   const f=find(id);
@@ -1523,7 +1524,8 @@ function dynPT(c, pid){
       gp+=(+g[1])*k; gt+=(+g[2])*k; dyn=true; why.push(`+${g[1]}/+${g[2]} for ${g[3].trim()} ${g[5]}: ${cnt}${per>1 ? ' → '+k+'×' : ''}`); } };
   grow(o, '(?:this creature|this token|'+faceName(c,0).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')');
   for(const [bf] of [[sideOf(G.myId).bf],[sideOf(oppId()).bf]]) for(const e of bf) if(e.att===c.id && !e.fd && (e.k || e.cu)){ grow(frontText(e), 'Equipped creature'); for(const g of (frontText(e)||'').matchAll(/\b(?:Enchanted|Equipped) creature gets ([+\-−]\d+)\/([+\-−]\d+)\b(?! for each)/gi)){ const v=x=>parseInt(x.replace('−','-'),10); gp+=v(g[1]); gt+=v(g[2]); dyn=true; why.push(`${cdata(e).n}: ${g[1]}/${g[2]}`); } }
-  if(!dyn && !c.tp && !c.tt && !c.eb) return null;   // counters alone show only their badge; text-driven P/T and boosts get the box
+  if(!dyn && !c.tp && !c.tt && !c.eb) return null;
+  if(c.eb && !dyn && !c.tp && !c.tt) return {p:0, t:0, printed:true, why:'earthbent land: 0/0 (counters shown separately)'};   // its printed-style box; counters stay on their own badge   // counters alone show only their badge; text-driven P/T and boosts get the box
   const val=x=>{ x=String(x||'').trim(); if(/\*/.test(x)){ if(n==null) return null; return x.split('+').reduce((a,p)=>a+(p.trim()==='*' ? n : (+p||0)),0); } return /^-?\d+$/.test(x) ? +x : null; };
   const [ps,ts]=(d.pt || (c.eb ? '0/0' : '')).split('/'), bp=val(ps), bt=val(ts); if(bp==null || bt==null) return null;
   const cc=c.c||0; return {p:bp+gp+cc+(c.tp||0), t:bt+gt+cc+(c.tt||0), why:why.join('; ')};
@@ -1793,7 +1795,7 @@ function cardHTML(c, z, mine, cls=''){
   const cast = mine ? G.me.cast : (G.opp && G.opp.cast); let dpt=null;
   let b = (pw ? `<span class="loy"><b>${c.c||0}</b></span>` : c.c ? (backUp ? `<span class="badge ctr">${c.c}</span>` : counterBadge(c, cr)) : '')
     + (z==='bf' && !backUp && c.kw && c.kw.length ? `<span class="kcs">${c.kw.map(kcHTML).join('')}</span>` : '')
-    + (z==='bf' && !backUp && (cls+=(dpt=dynPT(c, mine?G.myId:oppId())) ? ' hasdpt' : '', dpt) ? `<span class="badge dpt${dpt.t<=0?' dead':''}" title="Current power/toughness">${dpt.p}/${dpt.t}</span>` : '')
+    + (z==='bf' && !backUp && (cls+=(dpt=dynPT(c, mine?G.myId:oppId())) ? ' hasdpt' : '', dpt) ? `<span class="badge dpt${dpt.t<=0 && !dpt.printed?' dead':''}" title="Current power/toughness">${dpt.p}/${dpt.t}</span>` : '')
     + (z==='bf' && !backUp && spellTracker(c) ? `<span class="badge spl" title="Instants and sorceries cast this turn">Spells ${(cast&&cast.is)||0}</span>` : '') + (z==='st' && c.xr ? '<span class="badge tok" style="border-color:var(--bad);color:var(--bad)">exile after</span>' : '') + (z==='st' && !backUp && c.md && c.md.length ? `<span class="badge mdb">${c.md.length>1?'Modes':'Mode'} ${c.md.join('+')}</span>` : '') + (z==='bf' && (c.tp||c.tt) ? `<span class="badge tmp" title="Until end of turn">${boostText(c)}</span>` : '') + (z==='bf' && (c.exert || c.stun>0) ? `<span class="badge zz">${c.exert?'Zzz':''}${c.exert&&c.stun>0?' · ':''}${c.stun>0?'Stun '+c.stun:''}</span>` : '') + (c.ch ? `<span class="badge chap">Chapter ${roman(c.ch.n)}</span>` : c.pact ? '<span class="badge chap pact">Pact</span>' : c.ab ? `<span class="badge chap">${c.ab.gyall||c.ab.trig||c.ab.flret||c.ab.dealt||c.ab.bdraw?'Trigger':'Ability'}</span>` : c.imp && (z==='bf'||z==='st') ? '<span class="badge tok" style="border-color:var(--brass);color:var(--brass)">impending</span>' : c.anim ? '<span class="badge tok" style="border-color:var(--brass);color:var(--brass)">creature</span>' : c.tok ? '<span class="badge tok">token</span>' : c.made ? '<span class="badge tok">created</span>' : '') + (c.fd && c.fdk && z==='bf' ? `<span class="badge note" style="border-color:var(--brass);color:var(--brass);right:4%">${esc(c.fdk)} · 2/2</span>` : c.note ? `<span class="badge note">${esc(c.note)}</span>` : '')
     + (z==='bf' && c.o && c.o !== (mine?G.myId:oppId()) ? '<span class="badge ctl">borrowed</span>' : '');
   if(z==='bf' && !backUp){ const lt=landTypes(c, mine?G.myId:oppId(), FX||landEffects()); if(lt) b+=landBanner(lt); }
