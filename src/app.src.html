@@ -371,10 +371,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v1.80';
+const VERSION = 'v1.81';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v1.81','Oct 14','Leyline of Abundance (and other "whenever you tap a creature for mana, add an additional …" cards): tapping a creature for mana adds the extra mana at once, as the rules say for mana abilities, and the log notes it. Abilities on the stack are now removed with "Counter this ability".'],
   ['v1.80','Oct 13','Mishra\'s Bauble: when the active player moves on from the upkeep, the delayed draw trigger resolves by itself and its card is drawn.'],
   ['v1.79','Oct 13','Mishra\'s Bauble: its ability sacrifices it, goes on the stack and asks you to click a player. When it resolves you see the top card of that player\'s library. At the next turn\'s upkeep the turn stops (even with auto-draw on) and the delayed draw goes on the stack; resolving it draws your card.'],
   ['v1.78','Oct 13','Cycling and landcycling: right-click a card in your hand to cycle it. It goes to your graveyard and a panel asks for the rest of the cost: mana symbols light up as your mana pool covers them, and life is taken off when you pay. The ability then goes on the stack; resolving it draws your card, or opens your library to find the land (or other card) for landcycling.'],
@@ -704,10 +705,14 @@ function payCost(cost){
   for(const k of cost.split(',')){ if(!MANA.includes(k)){ let n=+k||0; while(n-- > 0){ const pick=pool.C>0 ? 'C' : MANA.slice().sort((x,y)=>pool[y]-pool[x])[0]; if(pool[pick]<1) return false; pool[pick]--; } } }
   m.mana=pool; return true;
 }
+/* "Whenever you tap a creature for mana, add an additional {G}" (Leyline of Abundance, Badgermole Cub): a triggered mana ability, so it doesn't use the stack */
+function extraMana(c){ const add=[];
+  for(const x of G.me.bf){ if(x.fd || (!x.k && !x.cu)) continue; for(const m of (frontText(x)||'').matchAll(/Whenever you tap a creature for mana, add (?:an )?additional ((?:\{[WUBRGC]\})+)/gi)){ const o=costSyms(m[1]).join(''); addMana(o); add.push(`${cdata(x).n.split(',')[0]} adds ${m[1]}`); } }
+  if(add.length) log(`${G.me.name} taps ${cname(c)} for mana; ${add.join(', ')} (a mana ability: it doesn't use the stack).`); }
 function useAbility(c, a){
   if(a.rem && !(c.c>0)){ toast('It has no counters left to remove.'); return false; }
   if(!payCost(a.cost)){ toast(`That costs ${costLabel(a.cost)}. Put it in your mana pool first, then try again.`); return false; }
-  c.tap=true; addMana(a.out); if(a.rem) c.c--; if(a.exert){ c.exert=true; log(`${G.me.name} exerts ${cname(c)}. It will not untap next turn.`); } return true;
+  c.tap=true; addMana(a.out); if(isCreature(c) || c.anim) extraMana(c); if(a.rem) c.c--; if(a.exert){ c.exert=true; log(`${G.me.name} exerts ${cname(c)}. It will not untap next turn.`); } return true;
 }
 const manaLabel = o => MANA.filter(k=>o.includes(k)).map(k=>{ const n=o.split(k).length-1; return (n>1?n+' ':'')+MNAME[k]; }).join(' + ');
 function addMana(o){ const m=G.me; if(!m.mana) m.mana=noMana(); for(const ch of o) if(ch in m.mana) m.mana[ch]++; }
@@ -2028,7 +2033,7 @@ function cardMenu(id, x, y){
     ['Morph (face down 2/2)',()=>{ move(id,'bf',{fd:true,fdk:'Morph',silent:true}); log(`${G.me.name} casts a card face down as a 2/2 creature (morph).`); ch(); }], [isLand(c)?'Play land tapped':'Put onto the battlefield tapped',go('bf',{tap:true}),isLand(c)?'Shift-click':''], !isLand(c)&&['Put straight onto the battlefield',go('bf')], ['Play face down',go('bf',{fd:true})],
     ['Reveal to opponent',()=>log(`${G.me.name} reveals ${cname(c)} from hand.`)], ['Discard',()=>discard([id]),'G'], '-', ...dest.filter(i=>i&&i[0]!=='To graveyard'&&i[0]!=='To battlefield') ];
   else if(z==='st' && c.pact) items=[ ['Pay for the pact…',()=>pactPanel(id)], ['Counter this trigger',()=>{ const g=find(id); if(g) G.me.st.splice(g.i,1); if(PACT===id) closePact(); log(`${G.me.name} counters the pact trigger from ${c.pact.src}.`); changed(); resumeAfterPact(); }], ['Target…',()=>startMode('arrow',id),'R'] ];
-  else if(z==='st' && (c.ch || c.ab)) items=[ [c.ch?'Resolve this chapter':'Resolve this ability',()=>resolve(id)], ['Remove it without resolving (countered)',()=>{ G.me.st.splice(find(id).i,1); log(`${cname(c)} is removed from the stack without resolving.`); if(c.ab && c.ab.flret){ const r=find(c.ab.flret); if(r && r.c.fl){ delete r.c.fl; log(`${cname(r.c)} stays in exile.`); } } ch(); }], ['Target…',()=>startMode('arrow',id),'R'] ];
+  else if(z==='st' && (c.ch || c.ab)) items=[ [c.ch?'Resolve this chapter':'Resolve this ability',()=>resolve(id)], ['Counter this ability (it leaves the stack)',()=>{ G.me.st.splice(find(id).i,1); log(`${cname(c)} is countered and leaves the stack.`); if(c.ab && c.ab.flret){ const r=find(c.ab.flret); if(r && r.c.fl){ delete r.c.fl; log(`${cname(r.c)} stays in exile.`); } } ch(); }], ['Target…',()=>startMode('arrow',id),'R'] ];
   else if(z==='st') items=[
     ['Resolve',()=>resolve(id)], ['Countered: to graveyard',()=>{ log(`${cname(c)} is countered.`); move(id,'gy',{silent:true}); ch(); }],
     ['Copy this spell',()=>{ G.me.st.push(mk(c.k,Object.assign({tok:true,ts:Date.now()}, c.md ? {md:c.md.slice()} : {}))); log(`${G.me.name} copies ${cname(c)}.`); ch(); }], ['Target…',()=>startMode('arrow',id),'R'],
