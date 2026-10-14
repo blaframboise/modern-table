@@ -400,10 +400,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v1.92';
+const VERSION = 'v1.93';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v1.93','Oct 14','NO MANA WAS SPENT now shows on the stack only while a card that cares is on the battlefield (Vexing Bauble, Boromir, Lavinia, Roiling Vortex). Evoked spells keep their Evoked tag either way.'],
   ['v1.92','Oct 14','Shortcuts and help is now one short page: the basics in groups, and the rule that anything that does not happen by itself can be done from a right-click menu or by dragging. If something takes too many steps, Send feedback is right there in that window.'],
   ['v1.91','Oct 14','Evoke, channel, scry and Karn. Right-click a card with evoke (Solitude, Endurance, Fury, Mulldrifter) to cast it for its evoke cost; an exile cost asks which card. Its sacrifice trigger goes on the stack under its enter trigger. Spells cast without spending mana (evoked, 0-cost, Force of Will style) show NO MANA WAS SPENT on the stack. Channel (Boseiju, Otawara) is in the hand menu too. Destroy and return-to-hand spells and abilities now do it when they resolve, and Boseiju offers its target\'s controller the land search. Scry and surveil (Opt, Consider, Underground Mortuary) open a window to send each card to the top, bottom or graveyard, in order. With Karn, Argent Defender, Torpor Orb or Hushbringer out, enter triggers of artifacts and creatures do not go on the stack: both players are told, with Put it on the stack anyway.'],
   ['v1.90','Oct 14','On the hand notepad, the number of copies is written in the red margin in front of the card name.'],
@@ -900,6 +901,8 @@ function altCostSpec(s, cond){ s=s.trim().replace(/\.$/,''); const mana=(s.match
   return {text:s, cond:cond||'', mana, ex: ex ? {n:NUMW2[ex[1].toLowerCase()]||1, desc:ex[2].trim()} : null, life: life ? +life[1] : 0, other: !mana && !ex && !life}; }
 const evokeOf = c => { if(c.fd || (!c.k && !c.cu) || isLand(c)) return null; const m=(frontText(c)||'').replace(/\([^)]*\)/g,'').match(/(?:^|\n)Evoke\s*[—–-]?\s*([^\n]+)/i); return m ? altCostSpec(m[1]) : null; };
 const altCostsOf = c => { if(c.fd || (!c.k && !c.cu) || isLand(c)) return []; return [...(frontText(c)||'').replace(/\([^)]*\)/g,'').matchAll(/(?:^|\n|\.\s)(?:(If [^,]+), )?you may ([^.]+?) rather than pay this spell's mana cost/gi)].map(m=>altCostSpec(m[2], m[1])); };
+/* cards that care whether mana was spent: the banner and log note only show while one is on either battlefield */
+const noManaWatch = () => { for(const bf of [G.me.bf, (G.opp&&G.opp.bf)||[]]) for(const x of bf){ if(!x.fd && (x.k||x.cu) && /\bif no mana was spent to cast it\b/i.test(frontText(x)||'')) return cdata(x).n.split(',')[0]; } return null; };
 const noManaCast = (c, x, cn) => { if(isLand(c)) return false; const mc=(cdata(c).mc||'').split(' // ')[c.flip?1:0]||'', syms=cn ? cn.syms : costSyms(mc); return syms.every(k=>k==='0' || (/^[XYZ]$/.test(k) && !(x>0))); };
 function castAlt(id, sp, kind){ const f=find(id); if(!f) return; const c=f.c, from=f.z;
   castGate(id, ()=>{ const picked=[];
@@ -909,7 +912,7 @@ function castAlt(id, sp, kind){ const f=find(id); if(!f) return; const c=f.c, fr
       if(sp.life){ G.me.life-=sp.life; paid.push(`${sp.life} life (now ${G.me.life})`); }
       if(ex.length) paid.push(`exiling ${ex.join(', ')} from their hand`);
       if(sp.other) paid.push(`${sp.text} (done by hand)`);
-      castSpellNow(id, {silent:true, nm:!sp.mana}, ()=>{ if(kind==='evoke') c.ev=1; log(`${G.me.name} casts ${cname(c)} ${kind==='evoke' ? 'for its evoke cost' : 'without paying its mana cost'}, paying ${paid.join(' and ')}.${sp.mana ? '' : ' No mana was spent.'}${kind==='evoke' ? ' It will be sacrificed when it enters.' : ''}`); }); };
+      castSpellNow(id, {silent:true, nm:!sp.mana}, ()=>{ if(kind==='evoke') c.ev=1; log(`${G.me.name} casts ${cname(c)} ${kind==='evoke' ? 'for its evoke cost' : 'without paying its mana cost'}, paying ${paid.join(' and ')}.${!sp.mana && noManaWatch() ? ` No mana was spent (${noManaWatch()} is out).` : ''}${kind==='evoke' ? ' It will be sacrificed when it enters.' : ''}`); }); };
     const pick=()=>{ if(!sp.ex || picked.length>=sp.ex.n){ fin(); return; }
       const cs=G.me.hand.filter(x=>x.id!==id && !picked.includes(x.id) && !x.fd && matchesDesc(x, sp.ex.desc));
       if(!cs.length){ toast(`You have no ${sp.ex.desc} card in your hand to exile.`); return; }
@@ -2092,7 +2095,7 @@ function cardHTML(c, z, mine, cls=''){
   if(z==='bf' && c.bw && c.att && !backUp) b+='<span class="chban" title="Bestowed: an Aura while attached">BESTOWED</span>';
   if(z==='st' && c.bw && !backUp) b+='<span class="badge mdb">Bestow</span>';
   if(z==='st' && c.ev && !backUp) b+='<span class="badge mdb">Evoked</span>';
-  if(z==='st' && c.nm && !backUp) b+='<span class="nmban" title="No mana was spent to cast this spell">NO MANA<br>WAS SPENT</span>';
+  if(z==='st' && c.nm && !backUp && NMW) b+='<span class="nmban" title="No mana was spent to cast this spell">NO MANA<br>WAS SPENT</span>';
   if(z==='bf' && c.chosen && !backUp) b+=`<span class="chban" title="Chosen">${esc(c.chosen)}</span>`;
   if(z==='bf' && c.lft){ cls+=' lft'; b+='<span class="lftban">NEW!</span>'; }
   if(z==='bf' && showSick(c)){ const ah=abilHaste(mine ? G.me.bf : ((G.opp&&G.opp.bf)||[])); b+=`<span class="kc sick${c.o && c.o !== (mine?G.myId:oppId()) ? ' low' : ''}${ah?' abil':''}" title="${ah ? `Summoning sick, but it can use its abilities (${esc(ah)})` : 'Summoning sick'}">${SICK_SVG}</span>`; }
@@ -2129,8 +2132,10 @@ function avatarHTML(p, pid, mine){
     <div class="life"><button data-life="-1" data-pl="${pid}" aria-label="Lose 1 life">−</button><b>${p.life}</b><button data-life="1" data-pl="${pid}" aria-label="Gain 1 life">+</button></div>
     <div class="dk">${esc(p.deck||'No deck yet')}${p.mull?` · ${p.mull} mulligan${p.mull>1?'s':''}`:''}</div><div class="mana">${MANA.map(k=>{ const n=(p.mana||{})[k]||0; return `<span class="mp ${n?'on':''} ${mine?'mine':''}" ${mine?`data-mana="${k}"`:''} title="${MNAME[k]} mana${mine?': click to spend one, Shift-click or right-click to add one':''}">${n>1?`<b>${n}</b>`:''}<i class="ms ms-${k}">${k}<img src="https://svgs.scryfall.io/card-symbols/${k}.svg" alt="" draggable="false" onerror="this.remove()"></i></span>`; }).join('')}</div><div class="chips">${chips}<span class="winmark ${p.wins?'on':''}" data-win="${pid}" title="Click to mark a game win. Right-click to take one back."><i></i>${p.wins>=2?'Match won':p.wins?'1 game won':'Game win'}</span></div>`;
 }
+let NMW=null;   /* name of a card that cares whether mana was spent, set each render */
 function render(){
   if($('#table').hidden) return;
+  NMW=noManaWatch();
   const m=G.me, o=G.opp;
   FX=landEffects();
   HELD={}; for(const c of [...m.ex, ...((o&&o.ex)||[])]) if(c.by) HELD[c.by.id]=(HELD[c.by.id]||0)+1;
