@@ -394,10 +394,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v1.94';
+const VERSION = 'v1.95';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v1.95','Oct 14','Exiled cards you may still play: the PLAYABLE UNTIL END OF NEXT TURN box stays on the land row, and once it becomes PLAYABLE THIS TURN it moves up to the creature row, closer to the middle as its time runs out. Two boxes no longer crowd the same row.'],
   ['v1.94','Oct 14','Chalice of the Void enters with X charge counters, and while it is out a spell on the stack whose mana value matches shows CMC = X for both players, so Chalice\'s controller knows to counter it. Duskwatch Recruiter, Ancient Stirrings, Collected Company and other look-at-the-top cards open a window to take the right card; the rest go to the bottom. Tyvar\'s −2 mills three and offers a creature to return. Disciple of Freyalise asks which creature to sacrifice, then gains the life and draws. Kraul Harpooner targets a flyer as it enters, gets its bonus and asks whether to fight. Nature\'s Rhythm can be cast from your graveyard for its harmonize cost, tapping a creature to pay less. Also fixed: a card your opponent just played could show as a bare name until their next move.'],
   ['v1.93','Oct 14','NO MANA WAS SPENT now shows on the stack only while a card that cares is on the battlefield (Vexing Bauble, Boromir, Lavinia, Roiling Vortex). Evoked spells keep their Evoked tag either way.'],
   ['v1.92','Oct 14','Shortcuts and help is now one short page: the basics in groups, and the rule that anything that does not happen by itself can be done from a right-click menu or by dragging. If something takes too many steps, Send feedback is right there in that window.'],
@@ -1728,7 +1729,7 @@ function playExiled(id, tapped){
 }
 const playItems = (c, id) => isLand(c) ? [['Play land (from exile)',()=>playExiled(id)], ['Play land tapped',()=>playExiled(id,true)]] : [['Cast (goes to the stack)',()=>playExiled(id)]];
 const PLTXT={next:'MAY BE PLAYED UNTIL END OF NEXT TURN', this:'MAY BE PLAYED UNTIL END OF THIS TURN'};
-const playBoxes = (ex, mine) => ['this','next'].map(k=>{ const cs=(ex||[]).filter(c=>c.pl===k); return cs.length ? `<div class="playbox ${k}"><h6>${PLTXT[k]}</h6><div>${cs.map(c=>cardHTML(c,'ex',mine)).join('')}</div></div>` : ''; }).join('');
+const playBoxes = (ex, mine, kinds) => (kinds||['this','next']).map(k=>{ const cs=(ex||[]).filter(c=>c.pl===k); return cs.length ? `<div class="playbox ${k}"><h6>${PLTXT[k]}</h6><div>${cs.map(c=>cardHTML(c,'ex',mine)).join('')}</div></div>` : ''; }).join('');
 /* spells cast this turn: the storm count, and instants and sorceries for Ral */
 function noteCast(c){ const m=G.me; if(!m.cast) m.cast={n:0,is:0}; m.cast.n++; if(!c.fd && isSpell(c)) m.cast.is++; if(!c.fd && !isCreature(c)) m.cast.nc=(m.cast.nc||0)+1; }
 const isStormText = o => /(^|\n|, )storm\b/i.test(o) || /\b(has|have|gains?|with) storm\b/i.test(o);
@@ -2210,7 +2211,7 @@ function render(){
   FX=landEffects();
   HELD={}; for(const c of [...m.ex, ...((o&&o.ex)||[])]) if(c.by) HELD[c.by.id]=(HELD[c.by.id]||0)+1;
   const warpHTML=(ex,mine)=>ex.filter(c=>c.warp).map(c=>cardHTML(c,'ex',mine,'warped')).join('');
-  const mr=rowsHTML(m.bf,true); $('#myFront').innerHTML=mr.front; $('#myBack').innerHTML=mr.back + warpHTML(m.ex,true) + flBox(m.ex,true) + playBoxes(m.ex,true) + compBox(m.side.filter(c=>c.comp), true) + (m.energySeen ? markerHTML(m.ctr.energy||0, G.myId) : '');
+  const mr=rowsHTML(m.bf,true); $('#myFront').innerHTML=mr.front + playBoxes(m.ex,true,['this']); $('#myBack').innerHTML=mr.back + warpHTML(m.ex,true) + flBox(m.ex,true) + playBoxes(m.ex,true,['next']) + compBox(m.side.filter(c=>c.comp), true) + (m.energySeen ? markerHTML(m.ctr.energy||0, G.myId) : '');
   $('#myHand').innerHTML = m.hand.map(c=>cardHTML(c,'hand',true)).join('') + (m.trk ? `<div class="twrap">${trackPad(m.trk, true)}<span class="thint">Click a name to cross it off</span></div>` : ''); $('#myHand').classList.toggle('hastrk', !!m.trk);
   const back = '<div class="card">'+BACK+'</div>';
   $('#myPiles').innerHTML = '<div class="railh me"><b>You</b></div>' + pileHTML('ex','Exile',m.ex,m.ex.length,true, m.ex.length?cardHTML(m.ex[m.ex.length-1],'ex',true):'')
@@ -2218,7 +2219,7 @@ function render(){
     + pileHTML('lib','Library',m.lib,m.lib.length,true, m.lib.length?back:'')
     + (m.side.length ? pileHTML('side','Sideboard',m.side,m.side.length,true, back) : '');
   if(o){
-    const or=rowsHTML(o.bf||[],false); $('#oppFront').innerHTML=or.front; $('#oppBack').innerHTML=or.back + warpHTML(o.ex||[],false) + flBox(o.ex,false) + playBoxes(o.ex,false) + compBox(o.comp||[], false) + (o.energySeen ? markerHTML((o.ctr||{}).energy||0, oppId()) : '');
+    const or=rowsHTML(o.bf||[],false); $('#oppFront').innerHTML=or.front + playBoxes(o.ex,false,['this']); $('#oppBack').innerHTML=or.back + warpHTML(o.ex||[],false) + flBox(o.ex,false) + playBoxes(o.ex,false,['next']) + compBox(o.comp||[], false) + (o.energySeen ? markerHTML((o.ctr||{}).energy||0, oppId()) : '');
     const oh=$('#oppHand'); oh.classList.toggle('shown', !!o.hand);
     oh.innerHTML = (o.trk && o.trk.list && o.trk.list.length ? `<span class="tnote" data-tnote title=""><b>${o.trk.list.length}</b></span>` : '') + `<span class="hn">${esc(o.name||'Opponent')}'s hand <b>${o.handN}</b>${o.hand?' · revealed':''}</span>` + (o.hand ? o.hand.map(c=>cardHTML(c,'hand',false)).join('') : back.repeat(Math.min(o.handN,30)));
     $('#oppPiles').innerHTML = `<div class="railh"><b>${esc(o.name||'Opponent')}</b></div>` + pileHTML('hand','Hand',null,o.handN,false, o.handN?back:'') + pileHTML('lib','Library',null,o.libN,false, o.libN?back:'')
