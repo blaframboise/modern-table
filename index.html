@@ -137,10 +137,10 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .tpad::before{content:"";position:absolute;left:0;right:0;top:0;height:11px;border-radius:3px 3px 0 0;background:#5b6b78}
 .tpad::after{content:"";position:absolute;top:11px;bottom:0;left:16px;width:1px;background:#d9534f99}
 .tpad .h{font-size:13px;line-height:1;margin:0 0 2px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tpad ul{list-style:none;margin:0;padding:0;max-height:calc(var(--ch)*.82);overflow-y:auto;scrollbar-width:none}
-.tpad li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .3s}
-.tpad.mine li{cursor:pointer}.tpad.mine li:hover{color:#1b4fa8;text-decoration:line-through}
-.tpad li.gone{text-decoration:line-through;text-decoration-thickness:2px;opacity:0}
+.tpad ul{list-style:none;margin:0 0 0 -22px;padding:0 0 0 22px;max-height:calc(var(--ch)*.82);overflow-y:auto;scrollbar-width:none}
+.tpad li{position:relative;transition:opacity .3s}.tpad li .nm{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tpad li .ct{position:absolute;left:-21px;width:16px;text-align:center;color:#c0392b}
+.tpad.mine li{cursor:pointer}.tpad.mine li:hover .nm{color:#1b4fa8;text-decoration:line-through}
+.tpad li.gone .nm{text-decoration:line-through}.tpad li.gone{text-decoration-thickness:2px;opacity:0}
 .twrap{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:flex-start;gap:3px;z-index:6}
 .twrap .thint{font:600 10px var(--ui);color:var(--dim);letter-spacing:.04em;padding-left:6px}
 #myHand.hastrk{padding-right:calc(clamp(130px,calc(var(--cw)*1.45),170px) + 30px)}#myHand{position:relative}
@@ -396,10 +396,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v1.89';
+const VERSION = 'v1.90';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v1.90','Oct 14','On the hand notepad, the number of copies is written in the red margin in front of the card name.'],
   ['v1.89','Oct 14','When a player Thoughtseizes themselves, their opponent sees which card was discarded and can start a notepad of the rest of that hand.'],
   ['v1.88','Oct 14','Hand disruption: Thoughtseize, Inquisition, Duress, Grief and the like ask you to click a player, reveal that hand when they resolve (to both players), and let you pick a legal card to discard. Then you can keep a notepad of the cards still in that hand: it sits next to your hand, you cross names off as you see them played, and your opponent can look at it by pointing at the little notepad in their hand strip.'],
   ['v1.87','Oct 14','Triggers go on the stack by themselves: "When this enters …" and "At the beginning of your upkeep / combat / end step …" (your upkeep stops if one is waiting). When they resolve they do the simple parts: Ouroboroid puts its counters on each creature, Craterhoof and Tyvar the Pummeler pump your team until end of turn, and draws, life, searches and untaps work as before. Formidable Speaker asks for its discard before searching.'],
@@ -1028,7 +1029,7 @@ function openReveal(cards, pid, who, info){ let pick=null; const own=pid===G.myI
 }
 function crossTrack(i){ const t=G.me.trk; if(!t || !t.list[i]) return; const nm=t.list[i].n; t.list.splice(i,1); log(`${G.me.name} crosses ${nm} off their notepad${t.list.length?` (${t.list.length} left)`:'; the notepad is empty'}.`); if(!t.list.length) G.me.trk=null; changed(); }
 function trackPad(t, mine){ const g=[]; t.list.forEach((x,i)=>{ const e=g.find(y=>y.n===x.n); if(e) e.c++; else g.push({n:x.n, k:x.k, i, c:1}); });   // repeats written once, with a count
-  return `<div class="tpad${mine?' mine':''}"><div class="h">${esc(t.who)}'s hand · T${t.n||1}</div><ul>${g.map(x=>`<li data-tk="${esc(x.k||x.n)}" ${mine?`data-tcross="${x.i}"`:''}>${esc(x.n)}${x.c>1?` ×${x.c}`:''}</li>`).join('')}</ul></div>`; }
+  return `<div class="tpad${mine?' mine':''}"><div class="h">${esc(t.who)}'s hand · T${t.n||1}</div><ul>${g.map(x=>`<li data-tk="${esc(x.k||x.n)}" ${mine?`data-tcross="${x.i}"`:''} data-ct="${x.c}">${x.c>1?`<span class="ct">${x.c}</span>`:''}<span class="nm">${esc(x.n)}</span></li>`).join('')}</ul></div>`; }
 /* Triggers: "When this … enters, …" (etbTrigs) and "At the beginning of your upkeep / combat on your turn / your end step / each end step, …" (phaseTrigs)
    put an ab.etb / ab.ph marker on my stack with that line; autoResolve carries out the simple parts. Lines with an intervening "if" only get a log reminder
    at the start of a step, so the upkeep doesn't stop every turn for them. */
@@ -2444,7 +2445,7 @@ document.addEventListener('click', e=>{
     if(card.dataset.o==='me') cardMenu(card.dataset.id, e.clientX, e.clientY);
     else if(card.dataset.z==='gy') gyTargetMenu(card.dataset.id, oppId(), e.clientX, e.clientY);
     return; }
-  const tc=t.closest('[data-tcross]'); if(tc){ const li=tc; if(!/×\d/.test(li.textContent)) li.classList.add('gone'); setTimeout(()=>crossTrack(+li.dataset.tcross), 280); return; }
+  const tc=t.closest('[data-tcross]'); if(tc){ const li=tc; if(+li.dataset.ct<2) li.classList.add('gone'); setTimeout(()=>crossTrack(+li.dataset.tcross), 280); return; }
   const pk=t.closest('[data-pk]'); if(pk){ if(!pk.disabled) pactAction(pk.dataset.pk); return; }
   const cy=t.closest('[data-cy]'); if(cy){ if(!cy.disabled) cycAction(cy.dataset.cy); return; }
   const lifeB=t.closest('[data-life]'); if(lifeB){ const d=(+lifeB.dataset.life)*(e.shiftKey?5:1); if(lifeB.dataset.pl===G.myId) setLife(d); else if(G.opp){ send({t:'adj', life:d}); log(`${G.me.name} changes ${G.opp.name}'s life by ${d>0?'+':''}${d}.`); } return; }
