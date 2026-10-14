@@ -90,7 +90,9 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .pile label b{color:var(--brass);font-variant-numeric:tabular-nums}
 .pile.drop,.row.drop,.handrow.drop,#stack.drop{outline:2px solid var(--brass);outline-offset:-2px}
 #board{display:flex;flex-direction:column;min-width:0;background:radial-gradient(90% 70% at 50% 50%,#1e3a3f,var(--felt) 60%,var(--felt2))}
-.row{height:var(--ch);display:flex;align-items:center;gap:6px;padding:0 10px;overflow-x:auto;overflow-y:hidden;flex:none;scrollbar-width:thin}
+/* each row has see-through room above and below (--rp) that overlaps its neighbours, so tapped cards, attackers and glows are not cut off; the layout height is unchanged */
+.row{--rp:calc(var(--ch)*.22);height:calc(var(--ch) + 2*var(--rp));display:flex;align-items:center;gap:6px;padding:var(--rp) 10px;margin:calc(-1*var(--rp)) 0;background-clip:content-box;overflow-x:auto;overflow-y:hidden;flex:none;scrollbar-width:thin}
+#mid>*{position:relative;z-index:4}
 .row .gap{flex:1;min-width:12px}
 .row.front{justify-content:safe center}
 #oppBack,#oppFront{background:#0000001c}
@@ -164,7 +166,7 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .pile .dtag{position:absolute;right:4px;top:5px;font:800 10px var(--ui);letter-spacing:.06em;color:var(--ink);background:#000c;border:1px solid var(--dim);border-radius:99px;padding:1px 6px;z-index:2;pointer-events:none;white-space:nowrap}
 .pile .dtag.on{color:#1b1205;background:var(--brass);border-color:var(--brass)}.pile .dtag.low{top:26px}
 #stormTag{cursor:pointer;color:var(--ink);border-color:var(--brass)}#stormTag b{color:var(--brass);letter-spacing:0;font-variant-numeric:tabular-nums;margin-left:3px}
-.playbox{flex:none;align-self:stretch;margin:4px 0;padding:2px 7px 4px;border:1px solid var(--brass);border-radius:8px;background:#d9b25f14;box-shadow:0 0 14px 3px #d9b25f99,inset 0 0 12px #d9b25f2e;display:flex;flex-direction:column;gap:2px;--cw:calc(var(--ch)*.55)}
+.playbox{flex:none;align-self:center;height:calc(var(--ch) - 8px);margin:4px 0;padding:2px 7px 4px;border:1px solid var(--brass);border-radius:8px;background:#d9b25f14;box-shadow:0 0 14px 3px #d9b25f99,inset 0 0 12px #d9b25f2e;display:flex;flex-direction:column;gap:2px;--cw:calc(var(--ch)*.55)}
 .playbox.next{border-style:dashed;box-shadow:0 0 10px 1px #d9b25f55,inset 0 0 10px #d9b25f1c}
 .playbox h6{margin:0;font:800 9.500px var(--ui);letter-spacing:.1em;color:var(--brass);white-space:nowrap;text-align:center}
 .playbox>div{display:flex;gap:4px;flex:1;min-height:0;align-items:center;justify-content:center}
@@ -402,10 +404,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v1.95';
+const VERSION = 'v1.96';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v1.96','Oct 14','Nothing on the battlefield gets cut off at the top or bottom any more: tapped cards, attackers and the gold glows around boxes now show in full, with the same card size as before.'],
   ['v1.95','Oct 14','Exiled cards you may still play: the PLAYABLE UNTIL END OF NEXT TURN box stays on the land row, and once it becomes PLAYABLE THIS TURN it moves up to the creature row, closer to the middle as its time runs out. Two boxes no longer crowd the same row.'],
   ['v1.94','Oct 14','Chalice of the Void enters with X charge counters, and while it is out a spell on the stack whose mana value matches shows CMC = X for both players, so Chalice\'s controller knows to counter it. Duskwatch Recruiter, Ancient Stirrings, Collected Company and other look-at-the-top cards open a window to take the right card; the rest go to the bottom. Tyvar\'s −2 mills three and offers a creature to return. Disciple of Freyalise asks which creature to sacrifice, then gains the life and draws. Kraul Harpooner targets a flyer as it enters, gets its bonus and asks whether to fight. Nature\'s Rhythm can be cast from your graveyard for its harmonize cost, tapping a creature to pay less. Also fixed: a card your opponent just played could show as a bare name until their next move.'],
   ['v1.93','Oct 14','NO MANA WAS SPENT now shows on the stack only while a card that cares is on the battlefield (Vexing Bauble, Boromir, Lavinia, Roiling Vortex). Evoked spells keep their Evoked tag either way.'],
