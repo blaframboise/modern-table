@@ -159,7 +159,7 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .mdlist button{display:flex;gap:10px;align-items:flex-start;text-align:left;padding:10px 12px;background:#12262b;white-space:normal;line-height:1.35}
 .mdlist button b{color:var(--brass);flex:none}.mdlist button.on{border-color:var(--brass);background:#d9b25f26;box-shadow:0 0 0 1px var(--brass)}
 .badge.mdb{left:4%;bottom:6%;border-color:#fff;color:#fff;background:#000;white-space:nowrap}
-.kc.sick{position:absolute;right:3%;top:3%;pointer-events:none}.kc.sick.low{top:17%}
+.kc.sick{position:absolute;right:3%;top:3%;pointer-events:none}.kc.sick.abil{box-shadow:0 0 0 2px var(--good),0 0 8px 2px #3ddc8488;border-radius:50%}.kc.sick.low{top:17%}
 .lftban{position:absolute;left:0;right:0;top:42%;text-align:center;font:800 calc(var(--cw)*.15)/1 var(--ui);letter-spacing:.12em;color:#06240f;background:var(--good);border-top:1px solid #d6ffe6;border-bottom:1px solid #0f5a2c;padding:calc(var(--cw)*.03) 0;box-shadow:0 2px 6px #0009;pointer-events:none}
 .lorehex{position:absolute;right:3%;bottom:4%;width:calc(var(--cw)*.27);height:calc(var(--cw)*.31);pointer-events:none;filter:drop-shadow(0 1px 3px #000c)}
 .lorehex::before{content:"";position:absolute;inset:0;background:#8a7355;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
@@ -380,10 +380,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v1.85';
+const VERSION = 'v1.86';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v1.86','Oct 14','"Add two mana of any one color" (Shang-Chi) adds two. Mana that may only be spent a certain way (Shang-Chi, Delighted Halfling) is noted in the log. With Shang-Chi or Tyvar, Jubilant Brawler out, a summoning-sick creature\'s hourglass is ringed in green: it can still use its abilities.'],
   ['v1.85','Oct 14','Fetch lands say Fetch in their menu. When a search puts a land onto the battlefield, the picker offers how it enters: shock lands get Put onto the battlefield tapped or untapped (pay 2 life, taken off for you), "enters tapped unless…" lands get both choices, and lands that always enter tapped come in tapped. When you pick one card, copies of the same card show as one tile with a count.'],
   ['v1.84','Oct 14','Abilities and spells now do the simple parts themselves when they resolve: library searches open a picker of the right cards (fetch lands, Green Sun\'s Zenith, Nature\'s Rhythm, Fiend Artisan, Urza\'s Saga), "draw a card", "gain/lose N life" and "untap" happen automatically. Spells and abilities with {X} ask for X. Costs like "put a -1/-1 counter on this", "sacrifice another creature" and "tap an untapped creature you control" are paid for you. Devoted Druid with Vizier of Remedies can repeat its loop N times in one go.'],
   ['v1.83','Oct 14','An earthbent land\'s power/toughness box reads 0/0, like a printed card; its +1/+1 counters show separately, as on any creature.'],
@@ -696,15 +697,17 @@ function resolve(id){ const f=find(id); if(!f) return; const c=f.c;
 function manaAbilities(c){
   const lt = isLand(c) ? landTypes(c, G.me.bf.some(x=>x.id===c.id) ? G.myId : oppId(), landEffects()) : null;
   if(lt && lt.main) return [...lt.main, ...lt.plus].map(t=>({out:BASIC[t], cost:'', exert:false, rem:false}));
-  const out=[], cond=[], txt=cdata(c).o||'', add=(list,o,cost,exert,rem)=>{ if(o && !list.some(a=>a.out===o && a.cost===cost)) list.push({out:o, cost, exert, rem}); };
+  const out=[], cond=[], txt=cdata(c).o||'', add=(list,o,cost,exert,rem,only)=>{ if(o && !list.some(a=>a.out===o && a.cost===cost)) list.push(Object.assign({out:o, cost, exert, rem}, only ? {only} : {})); };
   for(const m of txt.matchAll(/\badd ([^.\n]*)/gi)){ const cl=m[1];
     const pre=txt.slice(txt.lastIndexOf('\n', m.index)+1, m.index), ci=pre.lastIndexOf(':'), costPart=ci>=0 ? pre.slice(0,ci) : '';
     const cost=[...costPart.matchAll(/\{([WUBRGC]|\d+)\}/g)].map(x=>x[1]).join(','), exert=/\bexert\b/i.test(costPart), rem=/\bremove an? [\w+\/-]+ counter from\b/i.test(costPart);
     // "If it has a luck counter on it, instead add one mana of any color" (Gemstone Caverns): only with a counter, and then it replaces the plain ability
     const iff=/counters? on (?:it|him|her), instead $/i.test(pre), list=iff ? cond : out; if(iff && !(c.c>0)) continue;
-    if(/any (one )?color|any type|any of/i.test(cl)){ 'WUBRG'.split('').forEach(k=>add(list,k,cost,exert,rem)); continue; }
+    const ln=txt.slice(txt.lastIndexOf('\n', m.index)+1, (txt.indexOf('\n', m.index)+1 || txt.length+1)-1), only=((ln.match(/Spend this mana only ([^.]+)/i)||[])[1]||'');
+    const nAny=cl.match(/^(one|two|three|four|five) mana of any (?:one )?colou?r/i), k2=nAny ? (NUMW2[nAny[1].toLowerCase()]||1) : 1;
+    if(/any (one )?color|any type|any of/i.test(cl)){ 'WUBRG'.split('').forEach(k=>add(list,k.repeat(k2),cost,exert,rem,only)); continue; }
     const syms=[...cl.matchAll(/\{([WUBRGC])\}/g)].map(x=>x[1]); if(!syms.length) continue;
-    if(/ or /i.test(cl)) syms.forEach(k=>add(list,k,cost,exert,rem)); else add(list,syms.join(''),cost,exert,rem); }
+    if(/ or /i.test(cl)) syms.forEach(k=>add(list,k,cost,exert,rem,only)); else add(list,syms.join(''),cost,exert,rem,only); }
   if(cond.length){ if(lt) for(const t of lt.plus) add(cond,BASIC[t],'',false,false); return cond; }
   const tl=faceType(c), sub={Plains:'W',Island:'U',Swamp:'B',Mountain:'R',Forest:'G'}; for(const k in sub) if(new RegExp('\\b'+k+'\\b').test(tl)) add(out,sub[k],'',false,false);
   if(lt) for(const t of lt.plus) add(out,BASIC[t],'',false,false);
@@ -726,7 +729,7 @@ function extraMana(c, quiet){ const add=[];
 function useAbility(c, a, noExtra){
   if(a.rem && !(c.c>0)){ toast('It has no counters left to remove.'); return false; }
   if(!payCost(a.cost)){ toast(`That costs ${costLabel(a.cost)}. Put it in your mana pool first, then try again.`); return false; }
-  c.tap=true; addMana(a.out); if(!noExtra && (isCreature(c) || c.anim)) extraMana(c); if(a.rem) c.c--; if(a.exert){ c.exert=true; log(`${G.me.name} exerts ${cname(c)}. It will not untap next turn.`); } return true;
+  c.tap=true; addMana(a.out); if(a.only && !noExtra) log(`${G.me.name} taps ${cname(c)} for ${[...a.out].map(k=>'{'+k+'}').join('')}: spend ${a.out.length>1?'this mana':'it'} only ${a.only}.`); if(!noExtra && (isCreature(c) || c.anim)) extraMana(c); if(a.rem) c.c--; if(a.exert){ c.exert=true; log(`${G.me.name} exerts ${cname(c)}. It will not untap next turn.`); } return true;
 }
 const manaLabel = o => MANA.filter(k=>o.includes(k)).map(k=>{ const n=o.split(k).length-1; return (n>1?n+' ':'')+MNAME[k]; }).join(' + ');
 function addMana(o){ const m=G.me; if(!m.mana) m.mana=noMana(); for(const ch of o) if(ch in m.mana) m.mana[ch]++; }
@@ -1354,6 +1357,7 @@ function activate(id, a, evDone, extra){
 }
 /* player aids, nothing enforced: c.sick marks a permanent that came under my control since my turn began (shown on creatures without haste);
    c.lft marks the land I played from my hand this turn */
+const abilHaste = bf => { const x=bf.find(x=>!x.fd && (x.k||x.cu) && /You may activate abilities of creatures you control as though those creatures had haste/i.test(frontText(x)||'')); return x ? cdata(x).n.split(',')[0] : ''; };
 const hasHaste = c => !!c.eb || (c.kw||[]).includes('haste') || (!c.fd && /(^|\n|, )haste\b|\b(?:has|have) haste\b/i.test(frontText(c)));
 const showSick = c => !!c.sick && !c.imp && (c.fd || isCreature(c) || c.anim) && !hasHaste(c);
 const SICK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.500 2.500h11v2.800c0 2.700-2 4.600-4 6.700 2 2.100 4 4 4 6.700v2.800h-11v-2.800c0-2.700 2-4.600 4-6.700-2-2.100-4-4-4-6.700z"/></svg>';
@@ -1890,7 +1894,7 @@ function cardHTML(c, z, mine, cls=''){
   if(z==='st' && c.bw && !backUp) b+='<span class="badge mdb">Bestow</span>';
   if(z==='bf' && c.chosen && !backUp) b+=`<span class="chban" title="Chosen">${esc(c.chosen)}</span>`;
   if(z==='bf' && c.lft){ cls+=' lft'; b+='<span class="lftban">NEW!</span>'; }
-  if(z==='bf' && showSick(c)) b+=`<span class="kc sick${c.o && c.o !== (mine?G.myId:oppId()) ? ' low' : ''}" title="Summoning sick">${SICK_SVG}</span>`;
+  if(z==='bf' && showSick(c)){ const ah=abilHaste(mine ? G.me.bf : ((G.opp&&G.opp.bf)||[])); b+=`<span class="kc sick${c.o && c.o !== (mine?G.myId:oppId()) ? ' low' : ''}${ah?' abil':''}" title="${ah ? `Summoning sick, but it can use its abilities (${esc(ah)})` : 'Summoning sick'}">${SICK_SVG}</span>`; }
   if(z==='hand' && mine && !backUp){ const cn=costNow(c); if(cn && cn.delta) b+=`<span class="costbox${cn.delta>0?' up':''}" title="Cost now (printed ${esc(cn.printed)})">${symHTML(cn.syms)}</span>`; }
   if(z==='side' && c.comp) b+='<span class="compban">COMPANION</span>';
   if(z==='gy'){ const tg=gyTargetsOn(c.id); if(tg.length){ cls+=' gtg'; b+=`<span class="tgban">Targeted · ${esc(tg.map(e=>e.sn).join(', '))}</span>`; } }
