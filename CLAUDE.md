@@ -12,9 +12,9 @@ Owner: Ben (GitHub `blaframboise`). The game is served by GitHub Pages from `mai
 - `draft/sets/*.json`, `tools/make_draft_sets.py`: booster odds per set for the Draft Table.
 
 ## Versioning
-`const VERSION = 'v1.NN'` in `src/app.src.html`. Bump NN by one for any feature or behaviour change. Do NOT bump it for a decks-only refresh.
+`const VERSION = 'v2.NN'` in `src/app.src.html` (v2.0 on 2026-10-14 marked the table resolving rules itself; v1 ran to v1.99). Bump NN by one for any feature or behaviour change: v2.0 → v2.01 → v2.02 … Do NOT bump it for a decks-only refresh.
 
-With every version bump, add one line at the top of the `NEWS` array in `src/app.src.html` (`['v1.NN','Mon D','what changed']`). It feeds the "What's new" list on the front page and in the table menu, and is written for players: plain language, no function names.
+With every version bump, add one line at the top of the `NEWS` array in `src/app.src.html` (`['v2.NN','Mon D','what changed']`). It feeds the "What's new" list on the front page and in the table menu, and is written for players: plain language, no function names.
 
 ## Draft Table (`/draft/`)
 Booster draft for up to 8 players; bots fill empty seats. Its own version: `const VERSION = 'v0.NN'` in `src/draft.src.html`, bumped the same way.
