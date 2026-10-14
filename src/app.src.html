@@ -388,10 +388,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v1.88';
+const VERSION = 'v1.89';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v1.89','Oct 14','When a player Thoughtseizes themselves, their opponent sees which card was discarded and can start a notepad of the rest of that hand.'],
   ['v1.88','Oct 14','Hand disruption: Thoughtseize, Inquisition, Duress, Grief and the like ask you to click a player, reveal that hand when they resolve (to both players), and let you pick a legal card to discard. Then you can keep a notepad of the cards still in that hand: it sits next to your hand, you cross names off as you see them played, and your opponent can look at it by pointing at the little notepad in their hand strip.'],
   ['v1.87','Oct 14','Triggers go on the stack by themselves: "When this enters …" and "At the beginning of your upkeep / combat / end step …" (your upkeep stops if one is waiting). When they resolve they do the simple parts: Ouroboroid puts its counters on each creature, Craterhoof and Tyvar the Pummeler pump your team until end of turn, and draws, life, searches and untaps work as before. Formidable Speaker asks for its discard before searching.'],
   ['v1.86','Oct 14','"Add two mana of any one color" (Shang-Chi) adds two. Mana that may only be spent a certain way (Shang-Chi, Delighted Halfling) is noted in the log. With Shang-Chi or Tyvar, Jubilant Brawler out, a summoning-sick creature\'s hourglass is ringed in green: it can still use its abilities.'],
@@ -634,7 +635,11 @@ function onMsg(m){
   else if(m.t==='reveal'){ const src=String(m.src||'').slice(0,80), by=String(m.by||'Opponent').slice(0,40); log(`${src}: ${G.me.name} reveals their hand to ${by}: ${G.me.hand.map(cname).join(', ') || 'no cards'}.`); send({t:'handshow', src, who:G.me.name, cards:G.me.hand.map(c=>({id:c.id, k:c.k, cu:c.cu||null}))}); }
   else if(m.t==='handshow' || m.t==='handview'){ const cards=(Array.isArray(m.cards)?m.cards:[]).slice(0,40), who=String(m.who||'Opponent').slice(0,40), src=String(m.src||'').slice(0,80);
     ensureCards(cards.map(c=>c.k).filter(Boolean)).then(()=>{ if(m.t==='handshow'){ const info=G.pendRv || {src, desc:'', wc:''}; G.pendRv=null; openReveal(cards, oppId(), who, info); }
-      else modal(`${src}: ${who} reveals their hand`, `<div class="grid">${cards.map(c=>cardHTML({id:c.id,k:c.k,cu:c.cu},'gy',true)).join('') || '<span class="hint">No cards.</span>'}</div>`, [['OK',()=>closeModal(),'go']], {wide:true}); }); }
+      else G.hvOpen=true, modal(`${src}: ${who} reveals their hand`, `<div class="grid">${cards.map(c=>cardHTML({id:c.id,k:c.k,cu:c.cu},'gy',true)).join('') || '<span class="hint">No cards.</span>'}</div>`, [['OK',()=>{ G.hvOpen=false; closeModal(); },'go']], {wide:true}); }); }
+  else if(m.t==='handdone'){ const who=String(m.who||'Opponent').slice(0,40), src=String(m.src||'').slice(0,80), rest=(Array.isArray(m.rest)?m.rest:[]).slice(0,40).map(x=>({k:String(x.k||'').slice(0,80), n:String(x.n||'').slice(0,80)})), pk=String(m.pick||'').slice(0,80);
+    if(G.hvOpen){ G.hvOpen=false; closeModal(); }
+    modal(`${src}: ${who}'s hand`, `<span class="hint">${pk ? `${esc(who)} discarded ${esc(pk)}.` : `${esc(who)} chose nothing to discard.`}${rest.length ? ` ${rest.length} card${rest.length>1?'s':''} still there: ${rest.map(x=>esc(x.n)).join(', ')}. A notepad next to your hand can list them; both players can see it.` : ' Their hand is now empty.'}</span>`,
+      rest.length ? [['No need to track these cards',()=>closeModal(),'ghost'], ['I would like to track these cards',()=>{ closeModal(); G.me.trk={who, pid:oppId(), src, n:G.turn.n||0, list:rest}; log(`${G.me.name} starts a notepad of ${who}'s hand (${rest.length} card${rest.length>1?'s':''}).`); changed(); },'go']] : [['OK',()=>closeModal(),'go']]); }
   else if(m.t==='discardpick'){ const f=find(m.id); if(f && f.z==='hand') discard([m.id]); }
   else if(m.t==='peek'){ const top=G.me.lib[0]; send({t:'peektop', src:String(m.src||'').slice(0,80), card: top ? {k:top.k, cu:top.cu||null} : null}); }
   else if(m.t==='peektop'){ const cd=m.card, src=String(m.src||'').slice(0,80), on=G.opp?G.opp.name:'Opponent'; if(!cd){ toast(`${on}'s library is empty.`); } else ensureCards(cd.k ? [cd.k] : []).then(()=>showCard({id:'peek-'+Date.now(), k:cd.k, cu:cd.cu}, `${src}: top of ${on}'s library`)); }
@@ -1007,7 +1012,9 @@ function openReveal(cards, pid, who, info){ let pick=null; const own=pid===G.myI
   function after(p){ closeModal();
     if(p){ if(own){ log(`${info.src}: ${G.me.name} chooses ${cname(d(p))} from their own hand.`); discard([p.id]); } else { send({t:'discardpick', id:p.id, src:info.src, by:G.me.name}); log(`${info.src}: ${G.me.name} chooses ${cname(d(p))} for ${who} to discard.`); } }
     else log(`${info.src}: ${G.me.name} chooses nothing.`);
-    const rest=cards.filter(x=>!p || x.id!==p.id); if(!rest.length) return;
+    const rest=cards.filter(x=>!p || x.id!==p.id);
+    if(own){ if(G.opp) send({t:'handdone', who:G.me.name, src:info.src, pick:p ? cdata(d(p)).n : '', rest:rest.map(x=>({k:x.k, n:cdata(d(x)).n}))}); return; }   // the opponent may track a hand that was public and is hidden again
+    if(!rest.length) return;
     modal(`Track ${own?'your':who+"'s"} hand?`, `<span class="hint">A notepad next to your hand can list the ${rest.length} card${rest.length>1?'s':''} still there: ${rest.map(x=>esc(cdata(d(x)).n)).join(', ')}. Both players can see it; you cross names off as they are played.</span>`,
       [['No need to track these cards',()=>closeModal(),'ghost'], ['I would like to track these cards',()=>{ closeModal(); G.me.trk={who, pid, src:info.src, n:G.turn.n||0, list:rest.map(x=>({k:x.k, n:cdata(d(x)).n}))}; log(`${G.me.name} starts a notepad of ${own?'their own':who+"'s"} hand (${rest.length} card${rest.length>1?'s':''}).`); changed(); },'go']]); }
 }
