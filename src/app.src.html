@@ -272,7 +272,7 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .mp{display:inline-flex;align-items:center;gap:2px;filter:grayscale(1);opacity:.32;border-radius:99px;padding:1px 3px}
 .mp.on{filter:none;opacity:1}.mp.mine{cursor:pointer}.mp.mine:hover{background:#ffffff14}
 .mp b{font-size:13px;font-variant-numeric:tabular-nums}
-.sbwrap{display:flex;gap:22px;align-items:flex-start;margin-top:8px}#sbMain{flex:1;min-width:0}#sbSide{flex:none;--zw:112px;width:calc(var(--zw) + 6px);position:sticky;top:0}.sbwrap h4{margin:0 0 6px;font:600 11px var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}.sbwrap h4 b{color:var(--brass);margin-left:4px}
+.sbwrap{display:flex;gap:14px;align-items:flex-start;margin-top:8px}#sbMain,#sbSide{border:1px solid var(--line);border-radius:8px;background:#0f1c2099;padding:10px 14px 14px}#sbMain{flex:1;min-width:0}#sbSide{flex:none;--zw:112px;width:calc(var(--zw) + 30px);position:sticky;top:0}.sbwrap h4{margin:0 0 10px;padding-bottom:7px;border-bottom:1px solid var(--line);font:600 11px var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}.sbregs .zreg + .zreg{border-left:1px solid var(--line);padding-left:22px;margin-left:-4px}.sbwrap h4 b{color:var(--brass);margin-left:4px}
 .sbcol{display:flex;flex-direction:column}.sbcol .card{width:var(--zw);--cw:var(--zw);cursor:pointer}.sbcol .card + .card{margin-top:calc(var(--zw) * -1.18)}.sbcol .card:hover,#sbMain .card:hover{transform:none;box-shadow:0 0 0 2px var(--brass)}#sbMain .card{cursor:pointer}
 .sbregs{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:flex-start;--zw:104px}.sbstack{position:relative}.sbstack + .sbstack{margin-top:calc(var(--zw) * -1.18)}.sbstack .card{width:var(--zw);--cw:var(--zw)}.sbn{position:absolute;right:5px;top:4px;font:800 12px var(--ui);color:#1b1205;background:var(--brass);border-radius:99px;padding:1px 7px;pointer-events:none}
 .smana{grid-column:1/-1;display:flex;flex-direction:column;gap:2px;margin-top:3px;padding-top:3px;border-top:1px dashed var(--line)}.srow{display:flex;gap:4px;align-items:center;min-width:0}.srow .mp{opacity:1;filter:none;box-shadow:0 0 0 1px var(--brass)}.slab{font-size:11px;line-height:1.2;color:var(--brass);min-width:0;margin-left:3px}
@@ -411,10 +411,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v3.06';
+const VERSION = 'v3.07';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.07','Oct 15',"Sideboarding: the main deck and the sideboard each sit in their own framed panel, like the Draft Table."],
   ['v3.06','Oct 15',"Cascade is a trigger: casting a cascade spell puts its cascade trigger on the stack above it, and the cards are exiled when you click the trigger to resolve it (so it can be answered first)."],
   ['v3.05','Oct 15',"Arena of Glory's exerted {R}{R} goes to the special mana row, so the creature it pays for gets haste. Sideboarding shows your cards: the main deck laid out like the Draft Table (creatures, other spells and lands, in columns by mana value) and the sideboard as one overlapping column on the right, sorted by type, color and mana value. Click a card to move it across."],
   ['v3.04','Oct 15',"A busy stack has a visible scroll bar and a count, and it scrolls to the newest item (the top of the stack) whenever something is added."],
