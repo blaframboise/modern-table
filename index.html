@@ -409,10 +409,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v2.03';
+const VERSION = 'v2.04';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v2.04','Oct 14',"Landfall: whenever a land enters under your control (played, fetched, or put onto the battlefield), each landfall card you control puts its trigger on the stack. Sazh's Chocobo gets its counter, Tifa Lockhart doubles her power until end of turn, and Avatar of Burgeoning Echoes empowers Jace 2; its gift to your planeswalkers (−10: a +1/+1 counter on target creature for each land you control) shows in their menu."],
   ['v2.03','Oct 14',"A keyword key under the match score on the left: whenever creatures on the table carry keyword icons (from counters, or gold-ringed from cards like Scion of Draco), it lists each icon with its name."],
   ['v2.02','Oct 14',"Leyline of the Guildpact makes your nonland permanents all colors, and Scion of Draco gives each of your creatures the keywords for its colors (vigilance for white, hexproof for blue, lifelink for black, first strike for red, trample for green). Granted keywords show as gold-ringed icons down the left of the card, pointing at a card says where they come from, and a creature with vigilance stays untapped when it attacks."],
   ['v2.01','Oct 14',"Domain Zoo and more. Counterspells counter when they resolve; for 'unless its controller pays' the other player gets Pay, Paid another way or Don't pay. Lightning Bolt and other damage spells mark the damage or take the life. Territorial Kavu and Nishoba Brawler show their domain power, Wild Nacatl its bonuses, and Kavu's attack trigger asks which mode when it attacks (any 'whenever this attacks' trigger goes on the stack). Fatal Push checks revolt for you, Surgical Extraction exiles every copy, Leyline Binding exiles its target until it leaves, flashback is in the graveyard menu, Ragavan has dash and a Dealt combat damage item (Treasure, and your opponent's top card exiled for you), Psychic Frog's costs open pickers, Quantum Riddler draws one extra, Containment Priest exiles creatures that enter without being cast, Wear // Tear can be fused, Brotherhood's End and Galvanic Discharge work. Spells with a target ask for it as you cast them."],
@@ -907,6 +908,7 @@ function entersWith(c){
 }
 function entered(c){
   if(c.fd || (!c.k && !c.cu)) return;
+  if(isLand(c) && G.me.bf.includes(c)) landfall(c);
   if(chooseKind(c)) setTimeout(()=>choosePrompt(c.id), 0);
   const trg=[], ev=c.ev; delete c.ev;
   if(ev) trg.push(['evoke sacrifice', ()=>evokeSac(c)]);
@@ -1067,6 +1069,15 @@ const dashCost = c => { const m=(frontText(c)||'').match(/(?:^|\n)Dash\s*((?:\{[
 const flashbackCost = c => { const m=(frontText(c)||'').match(/(?:^|\n)Flashback\s*[—–-]?\s*((?:\{[^}]+\})+)/); return m ? m[1] : ''; };
 /* Containment Priest: "If a nontoken creature would enter and it wasn't cast, exile it instead." */
 const priestOut = () => { for(const bf of [G.me.bf, (G.opp&&G.opp.bf)||[]]) for(const x of bf){ if(!x.fd && (x.k||x.cu) && /If a nontoken creature would enter(?: the battlefield)? and it wasn't cast, exile it instead/i.test(frontText(x)||'')) return cdata(x).n; } return null; };
+/* Landfall: "Whenever a land you control enters, …" on my permanents → a trigger on my stack for each */
+function landfall(land){ const out=[];
+  for(const x of G.me.bf){ if(x.fd || (!x.k && !x.cu)) continue; const m=(frontText(x)||'').match(/(?:^|\n)(?:Landfall\s*[—–-]\s*)?Whenever a land (?:you control )?enters(?: the battlefield)?(?: under your control)?, ([^\n]+)/i); if(!m) continue; const d=cdata(x), sn=d.n.split(',')[0];
+    G.me.st.push(mk(null,{tok:true, ts:Date.now(), ab:{id:x.id, tr:true}, cu:{n:`${sn}: landfall`, t:'Triggered ability', o:m[0].trim(), img:d.img||''}})); out.push(sn); }
+  if(out.length) log(`${cname(land)} enters: landfall trigger${out.length>1?'s':''} for ${out.join(', ')} go${out.length>1?'':'es'} on the stack.`); }
+/* abilities given to planeswalkers: Planeswalkers you control have "[−10]: …" (Avatar of Burgeoning Echoes) */
+function grantedPwAbils(c){ if(!isPW(c) || !G.me.bf.includes(c)) return []; const out=[];
+  for(const x of G.me.bf){ if(x.fd || (!x.k && !x.cu) || x.id===c.id) continue; for(const m of (frontText(x)||'').matchAll(/Planeswalkers you control have "\[?([+−-]?\d+)\]?: ([^"]+)"/gi)) out.push({cost:m[1].replace('-','−'), eff:m[2].trim(), from:cdata(x).n.split(',')[0]}); }
+  return out; }
 /* Karn, Argent Defender ("Artifacts and creatures entering don't cause abilities to trigger"), Torpor Orb, Hushbringer: an artifact or creature
    entering doesn't put its enter triggers (or its evoke sacrifice) on the stack. Both players are told; Put it on the stack anyway is for anything agreed. */
 const ETBSTOP=/\b(Artifacts and creatures|Creatures) entering (?:the battlefield )?(?:or dying )?don't cause abilities to trigger/i;
@@ -1415,7 +1426,7 @@ async function simpleEffects(c, text, srcId){
   const srcC=srcId && find(srcId) ? find(srcId).c : null, tg=(c.tg || m.arrows.filter(a=>a.a===c.id).map(a=>a.b)).slice(); let hit=[], waited=false, sacPow;
   { const lt=lookTopSpec(text); if(lt){ waited=true; await lookTopWin(lt, by); text=text.replace(lt.src,' '); } }
   const self='(?:this creature|it|'+escRe(nm||'@@')+'|'+escRe((nm||'@@').split(',')[0])+')';
-  for(let sen of (text||'').replace(/\([^)]*\)/g,'').split(/(?<=\.)\s+|\n/)){ sen=sen.trim().replace(/^(?:When|Whenever|At) [^,]+, /i,''); let r;
+  for(let sen of (text||'').replace(/\([^)]*\)/g,'').split(/(?<=\.)\s+|\n/)){ sen=sen.trim().replace(/^[A-Z][A-Za-z' ]{2,30} — (?=(?:When|Whenever|At) )/,'').replace(/^(?:When|Whenever|At) [^,]+, /i,''); let r;
     if((r=sen.match(/^(scry|surveil) (\d+)(?:, then draw (a|one|two) cards?)?\.?$/i))){ waited=true; await scryWin(+r[2], r[1].toLowerCase(), by); if(r[3]) draw(NUMW2[r[3].toLowerCase()]||1); continue; }
     if(/^choose an exiled card an opponent owns with a void counter on it\.?$/i.test(sen)){ const n=((G.opp&&G.opp.ex)||[]).filter(x=>x.by && x.by.mode==='play' && x.by.pid===G.myId).length; log(`${by}: ${m.name} chooses an exiled card with a void counter (${n} available) to play this turn without paying its mana cost.`); toast(n ? 'Cast it from the Exiled by cards box on the right.' : 'There is no exiled card with a void counter.'); continue; }
     if(/^you may play it this turn without paying its mana cost\.?$/i.test(sen)) continue;
@@ -1441,6 +1452,10 @@ async function simpleEffects(c, text, srcId){
     if((r=sen.match(/^discard a card\.?$/i))){ sacPow=null; if(!m.hand.length){ log(`${by}: ${m.name} has no card to discard.`); continue; } waited=true; const pk=await pickP(`${by}: discard a card`, m.hand.slice(), 'No card'); if(pk && find(pk.id) && find(pk.id).z==='hand'){ await discard([pk.id]); sacPow=1; } continue; }
     if((r=sen.match(/^if you do, draw (a|one|two) cards?\.?$/i))){ if(sacPow) draw(NUMW2[r[1].toLowerCase()]||1); continue; }
     if((r=sen.match(/^create a Treasure token and exile the top card of that player's library\.?$/i))){ makeTokens('Treasure', 1, by); if(G.opp) send({t:'ragavan', by, who:m.name}); continue; }
+    if(nm && new RegExp('^double (?:this creature|it|'+escRe(nm)+'|'+escRe(nm.split(',')[0])+')(?:\'s|’s)? power until end of turn\.?$','i').test(sen)){ const f0=srcId && find(srcId); if(f0 && f0.z==='bf'){ const p=powerOf(f0.c); boost(f0.c, p, 0); log(`${by}: ${cname(f0.c)}'s power doubles to ${powerOf(f0.c)} until end of turn.`); changed(); } continue; }
+    if((r=sen.match(/^empower Jace (\d+)\.?$/i))){ empowerJace(+r[1], srcC); changed(); continue; }
+    if((r=sen.match(/^put a \+1\/\+1 counter on target creature for each (.+?)\.?$/i))){ const k=countPhrase(r[1].replace(/^land /,'lands '), G.myId, srcId) ?? 0, t=tg.find(x=>{ const a=findAny(x); return a && a.z==='bf' && isCreature(a.c); });
+      if(!t){ log(`${by}: no creature was chosen.`); continue; } if(find(t)){ find(t).c.c=(find(t).c.c||0)+k; log(`${by}: ${k} +1/+1 counter${k===1?'':'s'} on ${cname(find(t).c)}.`); changed(); } else log(`${by}: put ${k} +1/+1 counters on ${G.opp?G.opp.name:'the opponent'}'s ${cname(findAny(t).c)} (they add them).`); continue; }
     if(LIVINGEND.test(sen)){ livingEnd(by); if(G.opp) send({t:'livingend', by, who:m.name}); continue; }
     if((r=sen.match(/^create (a|an|one|two|three|four|\d+) (Food|Treasure|Clue|Blood) tokens?\.?$/i))){ makeTokens(r[2][0].toUpperCase()+r[2].slice(1).toLowerCase(), NUMW2[r[1].toLowerCase()]||+r[1]||1, by); continue; }
     if(/^up to one target player puts all the cards from their graveyard on the bottom of their library in a random order\.?$/i.test(sen)){ const p=tg.find(x=>x==='p1'||x==='p2'); if(!p){ log(`${by}: no player was chosen.`); continue; } if(p===G.myId) gyBottom(by); else send({t:'gybottom', by, who:m.name}); continue; }
@@ -1800,6 +1815,7 @@ function abilitiesOf(c){
   if(c.fd || (!c.k && !c.cu)) return []; const out=[], nm=faceName(c,c.flip?1:0), pw=isPW(c);
   if(isLand(c)){ const lt=landTypes(c, G.me.bf.some(x=>x.id===c.id) ? G.myId : oppId(), landEffects()); if(lt && lt.main) return []; }
   const push=(cost,eff)=>{ cost=cost.trim(); eff=eff.trim(); if(!cost || !eff || /^add\b/i.test(eff) || /\bthis card\b/i.test(cost) || /\bempower Jace\b/i.test(eff)) return; if(!out.some(a=>a.cost===cost && a.eff===eff)) out.push({cost, eff}); };
+  for(const a of grantedPwAbils(c)) push(a.cost, a.eff);
   for(let line of frontText(c).split('\n')){
     line=line.trim(); let m;
     if(!line.includes(':') && (m=line.match(/^(Equip|Crew|Reconfigure|Fortify)\b\s*(?:—\s*)?(.+)$/))){ out.push({cost:m[2].trim(), eff:m[1], kw:true}); continue; }
