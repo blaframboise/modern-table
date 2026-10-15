@@ -406,10 +406,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v3.0';
+const VERSION = 'v3.01';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.01','Oct 15',"Tokens the table creates show their real token art from Scryfall: Ocelot Pride's Cat, Voice of Victory's Warriors, Treasure, Clue and Food. It uses the token printed with the card when Scryfall knows it, otherwise a matching token from the same set. Right-click a creature with lifelink after it deals damage to gain that much life (it counts for Ocelot Pride)."],
   ['v3.0','Oct 15',"Auto-pay. A spell or ability takes its cost from your mana pool by itself. If the pool is short, a payment window waits while you tap more lands: each symbol lights up as it is covered, and Cancel puts the card back. Hybrid and Phyrexian symbols can be switched in the window (mana or 2 life), and what you paid feeds triggers like Wistfulness's. Mana with strings attached gets its own row under the pool: Arena of Glory's gives a creature spell haste, Cavern of Souls' makes it uncounterable, Eldrazi Temple's only pays for Eldrazi. Auto-pay can be turned off in the table menu."],
   ['v2.06','Oct 15',"Lands that enter tapped do it by themselves when you play them. Fast lands, slow lands and check lands look at your other lands; shock lands ask whether to pay 2 life; anything the table can't judge asks you. Shift-click still plays a land tapped on purpose."],
   ['v2.05','Oct 14',"Boros Energy. Energy is gained and spent by the cards themselves (Guide of Souls, Wrath of the Skies). Creature tokens from card text are created for you, and Voice of Victory's and Dalkovan Encampment's attacking Warriors are sacrificed at the end step. Triggers when another creature enters (Guide of Souls, Haliya) and when you attack (Guide of Souls asks to pay {E}{E}{E} when you have it, then you pick the attacker). The table tracks life gained this turn for Ocelot Pride and Haliya, and shows CITY'S BLESSING for good once you have ascend and ten permanents. Solitude, March of Otherworldly Light, Celestial Purge and Prismatic Ending (asks how many colors you spent) exile; Wrath of the Skies, Meltdown and Thraben Charm work; Goblin Bombardment asks for its target; Seasoned Pyromancer, Spell Snare, Grafdigger's Cage, Voice of Victory, Ranger-Captain of Eos and Clarion Conqueror work; Ajani asks to flip when another Cat dies."],
@@ -521,7 +522,7 @@ function toDB(c){
   return { n:c.name, mc:c.mana_cost || (f ? f.map(x=>x.mana_cost).filter(Boolean).join(' // ') : ''), t:c.type_line || '',
     o:c.oracle_text || (f ? f.map(x=>x.name+'\n'+(x.oracle_text||'')).join('\n\n') : ''),
     pt:c.power!=null ? c.power+'/'+c.toughness : (f && f[0].power!=null ? f[0].power+'/'+f[0].toughness : ''),
-    loy:c.loyalty || (f && f[0].loyalty) || '', lay:c.layout||'', loy2:(f && f[1] && f[1].loyalty) || '', cl:c.colors || (f && f[0].colors) || null, img:im.normal || '', back:(!c.image_uris && f && f[1] && f[1].image_uris) ? f[1].image_uris.normal : '', id:c.id };
+    loy:c.loyalty || (f && f[0].loyalty) || '', lay:c.layout||'', loy2:(f && f[1] && f[1].loyalty) || '', cl:c.colors || (f && f[0].colors) || null, img:im.normal || '', back:(!c.image_uris && f && f[1] && f[1].image_uris) ? f[1].image_uris.normal : '', id:c.id, set:c.set||'', parts:(c.all_parts||[]).filter(p=>p.component==='token').map(p=>({id:p.id, n:p.name})) };
 }
 function saveDB(){ const o={}; let n=0; for(const k in DB){ if(!DB[k].tmp && n++<5000) o[k]=DB[k]; } store.set('mt_cards_v1', o); }
 /* a load already under way for some of these cards is waited for too, so callers that render afterwards see the data */
@@ -531,7 +532,7 @@ async function ensureCards(names, onProgress){
   const p=ensureCards0(names, onProgress), mine=ks.filter(k=>pending.has(k) && !pendProm[k]); for(const k of mine) pendProm[k]=p;
   try{ await Promise.all([p, ...waits]); } finally { for(const k of mine) if(pendProm[k]===p) delete pendProm[k]; } }
 async function ensureCards0(names, onProgress){
-  const want = [...new Set(names.filter(Boolean))].filter(n => { const k=keyOf(n); return (!DB[k] || DB[k].tmp || (DB[k].back && DB[k].loy2===undefined)) && !pending.has(k); });
+  const want = [...new Set(names.filter(Boolean))].filter(n => { const k=keyOf(n); return (!DB[k] || DB[k].tmp || (DB[k].back && DB[k].loy2===undefined) || DB[k].set===undefined) && !pending.has(k); });
   if(!want.length) return;
   want.forEach(n => pending.add(keyOf(n)));
   let done = 0;
@@ -1006,7 +1007,23 @@ async function topBottom(id, by, who){ const f=find(id); if(!f || f.z!=='st'){ l
   const g=find(id); if(!g || g.z!=='st') return; move(id,'lib',{silent:true, pos:top?'top':'bottom'}); G.noUndo=true; log(`${by}: ${G.me.name} puts ${nm} on the ${top?'top':'bottom'} of their library.`); changed(); }
 /* tokens with fixed text */
 const TOKTXT={Food:['Token Artifact — Food','{2}, {T}, Sacrifice this artifact: You gain 3 life.'], Treasure:['Token Artifact — Treasure','{T}, Sacrifice this artifact: Add one mana of any color.'], Clue:['Token Artifact — Clue','{2}, Sacrifice this artifact: Draw a card.'], Blood:['Token Artifact — Blood','{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card.']};
-function makeTokens(kind, n, by){ const t=TOKTXT[kind], made=[]; for(let i=0;i<n;i++){ const tk=mk(null,{tok:true, cu:{n:kind, t:t[0], o:t[1], img:''}}); tk.tokT=G.turn.n; G.me.bf.push(tk); made.push(tk); } setTimeout(()=>{ for(const tk of made) entered(tk); changed(); }, 0); log(`${by}: ${G.me.name} creates ${n===1?'a '+kind+' token':n+' '+kind+' tokens'}.`); changed(); }
+/* token art: the token Scryfall links to the source card (all_parts), else a Scryfall search for a token with that name, colour and P/T,
+   the source card's token set first ("t" + its set code). What is found is remembered per set in mt_tokart; nothing found keeps the plain token. */
+const TOKART = store.get('mt_tokart', {});
+async function tokenArt(made, src, name, pt, cl){
+  if(!made || !made.length || !name) return; const sd=src ? cdata(src) : null, set=(sd && sd.set)||'', key=[set, name, pt||'', cl ? cl.join('')||'c' : ''].join('|').toLowerCase(), nm=name.toLowerCase();
+  let img=TOKART[key];
+  if(img===undefined){ img=''; let err=false;
+    try{ const part=sd && (sd.parts||[]).find(p=>String(p.n).toLowerCase()===nm);
+      if(part){ await ensureCards(['id:'+part.id]); const d=DB['id:'+part.id]; if(d && d.img && (!pt || !d.pt || d.pt===pt)) img=d.img; }
+      if(!img){ const [p,t]=(pt||'').split('/'), q=`t:token t:"${name}"`+(pt ? ` pow=${p} tou=${t}` : '')+(cl ? (cl.length ? ` c=${cl.join('')}` : ' c=c') : '');
+        for(const qq of (set ? [q+` e:t${set}`, q] : [q])){ const ks=await scrySearch(qq, true).catch(()=>{ err=true; return []; }), ok=k=>DB[k] && DB[k].img; const k=ks.find(k=>ok(k) && String(DB[k].n).toLowerCase()===nm) || ks.find(ok); if(k){ img=DB[k].img; break; } await sleep(110); } }
+    }catch(e){ err=true; console.warn('token art', e); }
+    if(img || !err){ TOKART[key]=img; store.set('mt_tokart', TOKART); } }
+  if(!img) return; const t0=made[0].cu||{}, same=G.me.bf.filter(x=>x.tok && x.cu && x.cu.n===t0.n && x.cu.pt===t0.pt && x.cu.t===t0.t);   // copies made meanwhile (Ocelot Pride with the city's blessing)
+  let ch=false; for(const tk of [...made, ...same]){ if(find(tk.id) && tk.cu && !tk.cu.img){ tk.cu.img=img; ch=true; } } if(ch) changed(); }
+const srcCard = id => { const f=id && findAny(id); return f ? f.c : null; };
+function makeTokens(kind, n, by, src){ const t=TOKTXT[kind], made=[]; for(let i=0;i<n;i++){ const tk=mk(null,{tok:true, cu:{n:kind, t:t[0], o:t[1], img:''}}); tk.tokT=G.turn.n; G.me.bf.push(tk); made.push(tk); } setTimeout(()=>{ for(const tk of made) entered(tk); changed(); }, 0); log(`${by}: ${G.me.name} creates ${n===1?'a '+kind+' token':n+' '+kind+' tokens'}.`); changed(); tokenArt(made, src, kind, '', []); return made; }
 /* "if {G}{G} was spent to cast it" (Wistfulness and the other incarnations): c.spent lists the pairs the player said they paid */
 const spentConds = c => [...new Set([...(frontText(c)||'').matchAll(/if \{([WUBRG])\}\{\1\} was spent to cast it/gi)].map(m=>m[1].toUpperCase()))];
 const spentOk = (c, l) => { const m=l.match(/if \{([WUBRG])\}\{\1\} was spent to cast it/i); return !m || (c.spent||[]).includes(m[1].toUpperCase()); };
@@ -1096,7 +1113,7 @@ const COLN={white:'W',blue:'U',black:'B',red:'R',green:'G'};
 function makeCreatureTokens(n, p, t, words, opts, by){ const ws=words.split(/\s+/), cl=ws.filter(w=>COLN[w.toLowerCase()]).map(w=>COLN[w.toLowerCase()]), types=ws.filter(w=>!COLN[w.toLowerCase()] && !/^(and|colorless)$/i.test(w)).join(' '), made=[];
   for(let i=0;i<n;i++){ const tk=mk(null,{tok:true, cu:{n:types, t:`Token ${opts.art?'Artifact ':''}Creature — ${types}`, o:opts.kw||'', pt:`${p}/${t}`, img:'', cl}}); tk.tokT=G.turn.n; if(opts.tapatk){ tk.tap=true; tk.atk=true; } else tk.sick=true; G.me.bf.push(tk); made.push(tk); }
   log(`${by}: ${G.me.name} creates ${n===1?'a':n} ${p}/${t} ${words} creature token${n===1?'':'s'}${opts.tapatk?' that '+(n===1?'is':'are')+' tapped and attacking':''}.`);
-  for(const tk of made) entered(tk); changed(); return made; }
+  for(const tk of made) entered(tk); changed(); tokenArt(made, opts.src, types, `${p}/${t}`, cl); return made; }
 /* "Whenever [this creature or] another creature [or artifact] you control enters, …" (Guide of Souls, Haliya) */
 function othersEnter(c){ const out=[], cr=isCreature(c), art=/\bArtifact\b/.test(faceType(c)); if(!cr && !art) return out;
   for(const x of G.me.bf){ if(x.fd || (!x.k && !x.cu)) continue; const nm=faceName(x,0), sn=nm.split(',')[0];
@@ -1501,12 +1518,12 @@ async function simpleEffects(c, text, srcId){
       if(pk && find(pk.id)){ const k=NUMW2[r[1].toLowerCase()]||+r[1]||1; pk.c=(pk.c||0)+k; if(r[2] && KW.includes(r[2].toLowerCase()) && !(pk.kw||[]).includes(r[2].toLowerCase())) pk.kw=[...(pk.kw||[]), r[2].toLowerCase()]; log(`${by}: ${cname(pk)} gets ${k} +1/+1 counter${k>1?'s':''}${r[2]?' and a '+r[2]+' counter':''}.`); changed(); } continue; }
     if(/^it becomes an? [A-Z][a-z]+ in addition to its other types\.?$/i.test(sen)) continue;
     if((r=sen.match(/^create (a|an|one|two|three|four|five|X|\d+) (tapped and attacking )?(\d+)\/(\d+) ([a-z ]+?) (artifact )?creature tokens?( that are tapped and attacking)?(?: with ([a-z ,]+?|"[^"]+"))?\.?$/i))){
-      const n=r[1].toUpperCase()==='X' ? (c.x||0) : (NUMW2[r[1].toLowerCase()]||+r[1]||1); made=makeCreatureTokens(n, r[3], r[4], r[5], {tapatk:!!(r[2]||r[7]), art:!!r[6], kw:r[8] ? r[8].replace(/^"|"$/g,'').replace(/^([a-z])/, x=>x.toUpperCase()) : ''}, by); continue; }
+      const n=r[1].toUpperCase()==='X' ? (c.x||0) : (NUMW2[r[1].toLowerCase()]||+r[1]||1); made=makeCreatureTokens(n, r[3], r[4], r[5], {tapatk:!!(r[2]||r[7]), art:!!r[6], kw:r[8] ? r[8].replace(/^"|"$/g,'').replace(/^([a-z])/, x=>x.toUpperCase()) : '', src:srcCard(srcId)||srcCard(c.id)}, by); continue; }
     if(/^sacrifice (?:them|it|those tokens) at the beginning of the next end step\.?$/i.test(sen)){ for(const tk of made) tk.sacEnd=1; continue; }
     if((r=String(text).match(/^(?:[^\n]*?)Whenever you attack this turn, ([\s\S]+)$/i)) && /^whenever you attack this turn,/i.test(sen)){ (m.wya=(m.wya||[]).filter(e=>e.n===G.turn.n)).push({n:G.turn.n, src:by, txt:r[1].trim()}); log(`${by}: the next time ${m.name} attacks this turn, ${r[1].trim().replace(/\.$/,'')}.`); break; }
     if((r=sen.match(/^then if you have the city's blessing, for each token you control that entered (?:the battlefield )?this turn, create a token that's a copy of it\.?$/i))){ if(!m.city) continue; const ts=m.bf.filter(x=>x.tok && x.tokT===G.turn.n); for(const x of ts){ const tk=mk(null,{tok:true, cu:Object.assign({}, x.cu||{}), k:x.k}); tk.tokT=G.turn.n; tk.sick=true; m.bf.push(tk); } log(`${by}: city's blessing, ${m.name} copies ${ts.length} token${ts.length===1?'':'s'} that entered this turn.`); changed(); continue; }
     if((r=sen.match(/^discard two cards, then draw two cards\.?$/i))){ waited=true; const hc=m.hand.slice(); let ids = hc.length<=2 ? hc.map(x=>x.id) : await pickManyP(`${by}: discard two cards`, hc, 'Discard them'); if(hc.length>2 && ids.length!==2){ ids = ids.slice(0,2); } sacPow=ids.filter(i=>{ const f=find(i); return f && !isLand(f.c); }).length; await discard(ids); draw(2); continue; }
-    if((r=sen.match(/^for each nonland card discarded this way, create an? (\d+)\/(\d+) ([a-z ]+?) creature token\.?$/i))){ if(sacPow>0) made=makeCreatureTokens(sacPow, r[1], r[2], r[3], {}, by); continue; }
+    if((r=sen.match(/^for each nonland card discarded this way, create an? (\d+)\/(\d+) ([a-z ]+?) creature token\.?$/i))){ if(sacPow>0) made=makeCreatureTokens(sacPow, r[1], r[2], r[3], {src:srcCard(srcId)||srcCard(c.id)}, by); continue; }
     if((r=sen.match(/^(?:converge — )?exile target (.+?) if its mana value is less than or equal to the number of colors of mana spent to cast this spell\.?$/i))){ const t=fitTargets(tg, r[1])[0]; if(!t){ log(`${by}: no target was chosen.`); continue; } waited=true; const k=await askN(`${by}: how many colors of mana did you spend?`, Math.max(1, c.x||1)); const a=findAny(t), mv=manaValue(a.c);
       if(k!=null && mv<=k){ hit=hitTargets([t], by, 'exile'); } else log(`${by}: ${cname(a.c)} has mana value ${mv}, more than ${k} color${k===1?'':'s'}, so it isn't exiled.`); continue; }
     if((r=sen.match(/^exile (?:up to one )?(?:other )?target ([^.]+?)(?: with mana value (X|\d+) or less)?\.?$/i)) && !/\b(?:graveyard|until|from|if)\b/i.test(sen)){ const ft=fitTargets(tg, r[1]); if(!ft.length){ log(`${by}: no target fits "${r[1]}".`); continue; } const lim=r[2] ? (r[2].toUpperCase()==='X' ? (c.x||0) : +r[2]) : null;
@@ -1536,14 +1553,14 @@ async function simpleEffects(c, text, srcId){
     if((r=sen.match(/^put (a|an|one|two|three|\d+) \+1\/\+1 counters? on (?:this creature|it|this permanent)\.?$/i)) || (nm && (r=sen.match(new RegExp('^put (a|an|one|two|three|\\d+) \\+1\\/\\+1 counters? on '+escRe(nm.split(',')[0])+'\\.?$','i'))))){ const f0=srcId && find(srcId); if(f0 && f0.z==='bf'){ const k=NUMW2[r[1].toLowerCase()]||+r[1]||1; f0.c.c=(f0.c.c||0)+k; log(`${by}: ${k} +1/+1 counter${k>1?'s':''} on ${cname(f0.c)}.`); changed(); } continue; }
     if((r=sen.match(/^discard a card\.?$/i))){ sacPow=null; if(!m.hand.length){ log(`${by}: ${m.name} has no card to discard.`); continue; } waited=true; const pk=await pickP(`${by}: discard a card`, m.hand.slice(), 'No card'); if(pk && find(pk.id) && find(pk.id).z==='hand'){ await discard([pk.id]); sacPow=1; } continue; }
     if((r=sen.match(/^if you do, draw (a|one|two) cards?\.?$/i))){ if(sacPow) draw(NUMW2[r[1].toLowerCase()]||1); continue; }
-    if((r=sen.match(/^create a Treasure token and exile the top card of that player's library\.?$/i))){ makeTokens('Treasure', 1, by); if(G.opp) send({t:'ragavan', by, who:m.name}); continue; }
+    if((r=sen.match(/^create a Treasure token and exile the top card of that player's library\.?$/i))){ makeTokens('Treasure', 1, by, srcCard(srcId)||srcCard(c.id)); if(G.opp) send({t:'ragavan', by, who:m.name}); continue; }
     if(nm && new RegExp('^double (?:this creature|it|'+escRe(nm)+'|'+escRe(nm.split(',')[0])+')(?:\'s|’s)? power until end of turn\.?$','i').test(sen)){ const f0=srcId && find(srcId); if(f0 && f0.z==='bf'){ const p=powerOf(f0.c); boost(f0.c, p, 0); log(`${by}: ${cname(f0.c)}'s power doubles to ${powerOf(f0.c)} until end of turn.`); changed(); } continue; }
     if((r=sen.match(/^empower Jace (\d+)\.?$/i))){ empowerJace(+r[1], srcC); changed(); continue; }
     if((r=sen.match(/^put a \+1\/\+1 counter on target creature for each (.+?)\.?$/i))){ const k=countPhrase(r[1].replace(/^land /,'lands '), G.myId, srcId) ?? 0, t=tg.find(x=>{ const a=findAny(x); return a && a.z==='bf' && isCreature(a.c); });
       if(!t){ log(`${by}: no creature was chosen.`); continue; } if(find(t)){ find(t).c.c=(find(t).c.c||0)+k; log(`${by}: ${k} +1/+1 counter${k===1?'':'s'} on ${cname(find(t).c)}.`); changed(); } else log(`${by}: put ${k} +1/+1 counters on ${G.opp?G.opp.name:'the opponent'}'s ${cname(findAny(t).c)} (they add them).`); continue; }
     if((r=sen.match(/^your opponents can't cast (noncreature )?spells this turn\.?$/i))){ if(G.opp) send({t:'lock', nc:!!r[1], by}); log(`${by}: ${G.opp?G.opp.name:'the opponent'} can't cast ${r[1]?'noncreature ':''}spells this turn.`); continue; }
     if(LIVINGEND.test(sen)){ livingEnd(by); if(G.opp) send({t:'livingend', by, who:m.name}); continue; }
-    if((r=sen.match(/^create (a|an|one|two|three|four|\d+) (Food|Treasure|Clue|Blood) tokens?\.?$/i))){ makeTokens(r[2][0].toUpperCase()+r[2].slice(1).toLowerCase(), NUMW2[r[1].toLowerCase()]||+r[1]||1, by); continue; }
+    if((r=sen.match(/^create (a|an|one|two|three|four|\d+) (Food|Treasure|Clue|Blood) tokens?\.?$/i))){ makeTokens(r[2][0].toUpperCase()+r[2].slice(1).toLowerCase(), NUMW2[r[1].toLowerCase()]||+r[1]||1, by, srcCard(srcId)||srcCard(c.id)); continue; }
     if(/^up to one target player puts all the cards from their graveyard on the bottom of their library in a random order\.?$/i.test(sen)){ const p=tg.find(x=>x==='p1'||x==='p2'); if(!p){ log(`${by}: no player was chosen.`); continue; } if(p===G.myId) gyBottom(by); else send({t:'gybottom', by, who:m.name}); continue; }
     if(/^choose up to one target creature spell or planeswalker spell\.?$/i.test(sen)) continue;
     if(/^its owner puts it on the top or bottom of their library\.?$/i.test(sen)){ const t=tg.find(x=>{ const a=findAny(x); return a && a.z==='st'; }); if(!t){ log(`${by}: no spell was chosen.`); continue; } if(find(t)){ waited=true; await topBottom(t, by); } else send({t:'topbottom', id:t, by, who:m.name}); continue; }
@@ -2522,6 +2539,8 @@ function impDone(c){ if(c.imp && !(c.c>0)){ c.imp=0; c.c=0; log(`The last time c
 function addCounter(id, d){ const f=find(id); if(!f) return; const c=f.c, was=c.c||0; c.c=Math.max(c.imp?0:minCounters(c),was+d); impDone(c);
   if(d>0 && f.z==='bf' && !c.fd && c.c>was && isSaga(c)){ const last=chapters(c).last; if(!last || c.c<=last){ addChapter(c, c.c); log(`${cname(c)} gets a lore counter (${roman(c.c)}). Chapter ${roman(c.c)} goes on the stack.`); } }
   changed(); }
+/* lifelink by hand: the players judge combat; this gains the life (default: its power) and logs it, so Ocelot Pride and the like see it */
+async function lifelinkGain(c){ const n=await askN(`${cdata(c).n.split(',')[0]} dealt how much damage? (lifelink)`, Math.max(0, powerOf(c))); if(n==null || !(n>0)) return; G.me.life+=n; log(`${cname(c)} has lifelink: ${G.me.name} gains ${n} life (now ${G.me.life}).`); changed(); }
 function setLife(d){ G.me.life+=d; clearTimeout(setLife.t); setLife.acc=(setLife.acc||0)+d; setLife.t=setTimeout(()=>{ const a=setLife.acc; setLife.acc=0; if(a) log(`${G.me.name}'s life: ${G.me.life} (${a>0?'+':''}${a}).`); }, 900); changed(); }
 function setTurn(t, fresh){ const prev=G.turn; G.turn=t; send({t:'turn', turn:t, fresh:!!fresh}); if(turnCleanup(prev, t)) changed(); else { render(); save(); } }
 function startMyTurn(){
@@ -2890,6 +2909,7 @@ function cardMenu(id, x, y){
     [c.exert?'Remove exert':'Exert (skips its next untap)',()=>{ c.exert=!c.exert; if(c.exert) log(`${G.me.name} exerts ${cname(c)}. It will not untap next turn.`); ch(); }],
     ['Add a stun counter',()=>{ c.stun=(c.stun||0)+1; log(`${cname(c)} gets a stun counter (${c.stun}).`); ch(); }], c.stun>0&&['Remove a stun counter',()=>{ c.stun--; ch(); }],
     [ctrLabel(c) ? `Add a ${ctrLabel(c)} counter` : 'Add a counter (+1)',()=>addCounter(id,1),'C'], [ctrLabel(c) ? `Remove a ${ctrLabel(c)} counter` : 'Remove a counter (−1)',()=>addCounter(id,-1),'X'],
+    (!c.fd && (isCreature(c) || c.anim) && hasKw(c, G.myId, 'lifelink'))&&['Lifelink: it dealt damage, gain that much life…',()=>lifelinkGain(c)],
     (!c.fd && (isCreature(c) || c.anim || (c.kw&&c.kw.length)))&&['Keyword counter… (flying, lifelink, first strike)',()=>kwMenu(c,x,y)],
     ['Boost until end of turn…',async()=>{ const v=await ask('Boost until end of turn', '+1/+1', 'Power/toughness change, e.g. +2/+0 or -1/-1'); const g=v&&v.replace(/−/g,'-').match(/([+-]?\d+)\s*\/\s*([+-]?\d+)/); if(g){ boost(c,parseInt(g[1],10),parseInt(g[2],10)); log(`${cname(c)} gets ${sgn(parseInt(g[1],10))}/${sgn(parseInt(g[2],10))} until end of turn.`); ch(); } }], (c.tp||c.tt)&&['Clear boost',()=>{ delete c.tp; delete c.tt; ch(); }],
     ['Set counters…',async()=>{ const n=await askN('Set counters', c.c||0); if(n!=null){ c.c=Math.max(minCounters(c),n); ch(); } }],
