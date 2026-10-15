@@ -274,7 +274,8 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .mp b{font-size:13px;font-variant-numeric:tabular-nums}
 .sbwrap{display:flex;gap:14px;align-items:flex-start;margin-top:8px}#sbMain,#sbSide{border:1px solid var(--line);border-radius:8px;background:#0f1c2099;padding:10px 14px 14px}#sbMain{flex:1;min-width:0}#sbSide{flex:none;--zw:112px;width:calc(var(--zw) + 30px);position:sticky;top:0}.sbwrap h4{margin:0 0 10px;padding-bottom:7px;border-bottom:1px solid var(--line);font:600 11px var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}.sbregs .zreg + .zreg{border-left:1px solid var(--line);padding-left:22px;margin-left:-4px}.sbwrap h4 b{color:var(--brass);margin-left:4px}
 .sbcol{display:flex;flex-direction:column}.sbcol .card{width:var(--zw);--cw:var(--zw);cursor:pointer}.sbcol .card + .card{margin-top:calc(var(--zw) * -1.18)}.sbcol .card:hover,#sbMain .card:hover{transform:none;box-shadow:0 0 0 2px var(--brass)}#sbMain .card{cursor:pointer}
-.sbregs{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:flex-start;--zw:104px}.sbstack{position:relative}.sbstack + .sbstack{margin-top:calc(var(--zw) * -1.18)}.sbstack .card{width:var(--zw);--cw:var(--zw)}.sblands{flex-basis:100%;border-left:none!important;margin-left:0!important;padding:10px 0 0 0!important;border-top:1px solid var(--line)}.sbfan{display:flex;align-items:flex-start;--zw:92px;padding-left:2px}.sbl{position:relative}.sbl + .sbl{margin-left:calc(var(--zw) * -.42)}.sbl:hover{z-index:3}.sbl .card{width:var(--zw);--cw:var(--zw)}.sbl .sbn{left:5px;right:auto;top:auto;bottom:6px}
+.sbregs{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:flex-start;--zw:104px}.sbstack{position:relative}.sbstack + .sbstack{margin-top:calc(var(--zw) * -1.18)}.sbstack .card{width:var(--zw);--cw:var(--zw)}.sbcolm .sbc{position:relative}.sbcolm .sbc .card{width:var(--zw);--cw:var(--zw)}.sbcolm .sbc + .sbc{margin-top:calc(var(--zw) * -1.18)}.sbcolm .sbc.dup{margin-top:calc(var(--zw) * -1.33)}.sbcolm .sbc:hover{z-index:2}.sbcolm .sbn{top:3px;right:5px}
+.sblands{flex-basis:100%;border-left:none!important;margin-left:0!important;padding:10px 0 0 0!important;border-top:1px solid var(--line)}.sbfan{display:flex;align-items:flex-start;--zw:92px;padding-left:2px}.sbl{position:relative}.sbl + .sbl{margin-left:calc(var(--zw) * -.42)}.sbl:hover{z-index:3}.sbl .card{width:var(--zw);--cw:var(--zw)}.sbl .sbn{left:5px;right:auto;top:auto;bottom:6px}
 .sbn{position:absolute;right:5px;top:4px;font:800 12px var(--ui);color:#1b1205;background:var(--brass);border-radius:99px;padding:1px 7px;pointer-events:none}
 .smana{grid-column:1/-1;display:flex;flex-direction:column;gap:2px;margin-top:3px;padding-top:3px;border-top:1px dashed var(--line)}.srow{display:flex;gap:4px;align-items:center;min-width:0}.srow .mp{opacity:1;filter:none;box-shadow:0 0 0 1px var(--brass)}.slab{font-size:11px;line-height:1.2;color:var(--brass);min-width:0;margin-left:3px}
 #payPanel{border-color:var(--brass);box-shadow:0 10px 30px #000a}#payPanel .pch{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--dim)}#payPanel .pch button{display:inline-flex;align-items:center;gap:4px;padding:3px 9px}#payPanel .pch button.on{border-color:var(--good);box-shadow:0 0 0 1px var(--good);color:var(--ink)}#payPanel .pch .ms{width:18px;height:18px;font-size:10px}
@@ -412,10 +413,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v3.08';
+const VERSION = 'v3.09';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.09','Oct 15',"Sideboarding: all spells sit together in columns by mana value, each column in color order (W U B R G, multicolored, colorless) and then alphabetical, with copies of a card stacked tightly and counted (×4). Lands stay in their row along the bottom."],
   ['v3.08','Oct 15',"Sideboarding: lands sit in one row along the bottom of the main deck, fanned sideways (one card per land with a count), out of the way of the spells."],
   ['v3.07','Oct 15',"Sideboarding: the main deck and the sideboard each sit in their own framed panel, like the Draft Table."],
   ['v3.06','Oct 15',"Cascade is a trigger: casting a cascade spell puts its cascade trigger on the stack above it, and the cards are exiled when you click the trigger to resolve it (so it can be answered first)."],
@@ -3073,15 +3075,15 @@ function helpModal(){
 /* sideboarding: the main deck laid out like a library search (Draft Table style), the sideboard as one overlapping column on the right,
    sorted by type (creatures, other spells, lands), color (W U B R G, multicolored, colorless) and mana value; a click moves one card across */
 const colKey = c => { const cl=spellColors(c); return !cl.length ? 6 : cl.length>1 ? 5 : 'WUBRG'.indexOf(cl[0]); };
-function sbDeckHTML(cards){   // like the Draft Table: creatures, non-creature spells (columns by mana value, colour order inside), lands (one card per name, ×N)
-  const byCol=(a,b)=>colKey(a)-colKey(b) || cdata(a).n.localeCompare(cdata(b).n), reg=[['Creatures',[]],['Non-creature spells',[]],['Lands',[]]];
-  for(const c of cards) reg[isCreature(c)?0:isLand(c)?2:1][1].push(c);
+function sbDeckHTML(cards){   // spells in columns by mana value (colour order, then name, inside), lands in a row along the bottom (one card per name, ×N)
+  const byCol=(a,b)=>colKey(a)-colKey(b) || cdata(a).n.localeCompare(cdata(b).n), reg=[['Spells',[]],['Lands',[]]];
+  for(const c of cards) reg[isLand(c)?1:0][1].push(c);
   return '<div class="sbregs">'+reg.filter(r=>r[1].length).map(([label,list])=>{
     let cols;
     if(label==='Lands'){ const g=new Map(); for(const c of list.sort(byCol)){ const n=cdata(c).n; if(!g.has(n)) g.set(n,[]); g.get(n).push(c); }
       return `<div class="zreg sblands"><h5>${label}<b>${list.length}</b></h5><div class="sbfan">${[...g].map(([n,cs])=>`<div class="sbl">${cardHTML(cs[0],'lib',true)}${cs.length>1?`<span class="sbn">×${cs.length}</span>`:''}</div>`).join('')}</div></div>`; }
     else { const m=new Map(); for(const c of list){ const v=Math.min(7, manaValue(c)); if(!m.has(v)) m.set(v,[]); m.get(v).push(c); }
-      cols=[...m].sort((a,b)=>a[0]-b[0]).map(([v,l])=>`<div class="zcol"><div class="zch">${v>=7?'7+':v} <span>· ${l.length}</span></div>${l.sort(byCol).map(c=>cardHTML(c,'lib',true)).join('')}</div>`).join(''); }
+      cols=[...m].sort((a,b)=>a[0]-b[0]).map(([v,l])=>{ l.sort(byCol); const nm=c=>cdata(c).n; return `<div class="zcol sbcolm"><div class="zch">${v>=7?'7+':v} <span>· ${l.length}</span></div>${l.map((c,i)=>{ const dup=i>0 && nm(l[i-1])===nm(c), last=i===l.length-1 || nm(l[i+1])!==nm(c); let n=0; if(last) while(i-n>=0 && nm(l[i-n])===nm(c)) n++; return `<div class="sbc${dup?' dup':''}">${cardHTML(c,'lib',true)}${n>1?`<span class="sbn">×${n}</span>`:''}</div>`; }).join('')}</div>`; }).join(''); }
     return `<div class="zreg"><h5>${label}<b>${list.length}</b></h5><div class="zcols">${cols}</div></div>`; }).join('')+'</div>'; }
 function sideboardModal(){
   const m=G.me, ord=c=>isCreature(c)?0:isLand(c)?2:1, colK=colKey;
