@@ -231,6 +231,9 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .winmark i{width:16px;height:16px;border-radius:50%;border:2px solid var(--brass);display:inline-block;box-sizing:border-box}
 .winmark.on{color:var(--ink)}.winmark.on i{background:var(--brass);box-shadow:0 0 8px #d9b25f88}
 .winmark:hover i{border-color:var(--ink)}
+#midRail{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:0;overflow:hidden}
+#kwKey{width:var(--cw);display:flex;flex-direction:column;gap:3px}#kwKey h6{margin:0 0 1px;font:700 9.5px var(--ui);letter-spacing:.14em;color:var(--dim);text-align:center}
+#kwKey .kr{display:flex;align-items:center;gap:6px;font-size:11px;line-height:1.1;color:var(--ink)}#kwKey .kr .kc{--cw:90px;width:17px;height:17px;flex:none}#kwKey .kr .kc svg{width:11px;height:11px}#kwKey .kn{font-size:9.5px;color:var(--dim);line-height:1.25;margin-top:2px}
 #winsBox{width:var(--cw);display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 0;border-block:1px solid var(--line)}
 #winsBox b{font-family:var(--display);font-size:26px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;color:var(--opp)}#winsBox b.me{color:var(--brass)}
 #winsBox span{font-size:10px;letter-spacing:.2em;color:var(--dim)}
@@ -356,7 +359,7 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </div>
 
 <div id="table" class="screen" hidden>
-  <aside id="left"><div class="piles" id="oppPiles"></div><div id="winsBox" title="Games won this match"></div><div class="piles" id="myPiles"></div></aside>
+  <aside id="left"><div class="piles" id="oppPiles"></div><div id="midRail"><div id="winsBox" title="Games won this match"></div><div id="kwKey" hidden></div></div><div class="piles" id="myPiles"></div></aside>
   <main id="board">
     <div id="oppHand" class="handrow opp"></div>
     <div id="oppBack" class="row opp"></div>
@@ -398,10 +401,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v2.02';
+const VERSION = 'v2.03';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v2.03','Oct 14',"A keyword key under the match score on the left: whenever creatures on the table carry keyword icons (from counters, or gold-ringed from cards like Scion of Draco), it lists each icon with its name."],
   ['v2.02','Oct 14',"Leyline of the Guildpact makes your nonland permanents all colors, and Scion of Draco gives each of your creatures the keywords for its colors (vigilance for white, hexproof for blue, lifelink for black, first strike for red, trample for green). Granted keywords show as gold-ringed icons down the left of the card, pointing at a card says where they come from, and a creature with vigilance stays untapped when it attacks."],
   ['v2.01','Oct 14',"Domain Zoo and more. Counterspells counter when they resolve; for 'unless its controller pays' the other player gets Pay, Paid another way or Don't pay. Lightning Bolt and other damage spells mark the damage or take the life. Territorial Kavu and Nishoba Brawler show their domain power, Wild Nacatl its bonuses, and Kavu's attack trigger asks which mode when it attacks (any 'whenever this attacks' trigger goes on the stack). Fatal Push checks revolt for you, Surgical Extraction exiles every copy, Leyline Binding exiles its target until it leaves, flashback is in the graveyard menu, Ragavan has dash and a Dealt combat damage item (Treasure, and your opponent's top card exiled for you), Psychic Frog's costs open pickers, Quantum Riddler draws one extra, Containment Priest exiles creatures that enter without being cast, Wear // Tear can be fused, Brotherhood's End and Galvanic Discharge work. Spells with a target ask for it as you cast them."],
   ['v2.0','Oct 14',"The table now knows the rules of most of your cards. Triggers go on the stack by themselves, searches and choices open their own windows, and cards like High Noon, Karn or Teferi warn you before you break them. Anything it doesn't handle, you can still do by hand."],
@@ -2510,6 +2514,9 @@ function render(){
   const bn=$('#banner');
   const mw=m.wins||0, ow=(o&&o.wins)||0;
   $('#winsBox').innerHTML = (o||!G.solo ? `<b>${ow}</b>` : '') + `<span>WINS</span><b class="me">${mw}</b>`;
+  { const seen=new Map(); for(const [bf,pid] of [[m.bf,G.myId],[(o&&o.bf)||[],oppId()]]) for(const c of bf){ if(c.fd) continue; for(const k of (c.kw||[])) if(!seen.has(k)) seen.set(k,false); for(const g of grantedKw(c, pid)) seen.set(g.k, seen.get(g.k)===false ? false : true); }
+    const kk=$('#kwKey'), order=KW.filter(k=>seen.has(k)); kk.hidden=!order.length;
+    kk.innerHTML = order.length ? `<h6>KEYWORDS</h6>${order.map(k=>`<div class="kr"><span class="kc${seen.get(k)?' gr':''}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]||''}</svg></span>${esc(k[0].toUpperCase()+k.slice(1))}</div>`).join('')}${[...seen.values()].some(v=>v) ? '<div class="kn">Gold ring: from another card</div>' : ''}` : ''; }
   if(mw>=2 || ow>=2){ bn.hidden=false; bn.innerHTML = `<h3>${esc(mw>=2 ? m.name : o.name)} wins the match ${Math.max(mw,ow)}–${Math.min(mw,ow)}</h3><span class="hint">Marked by mistake? Right-click the win circle to take it back.</span><div><button data-newmatch class="go">Start a new match</button></div>`; }
   else if(m.deck && !(t.n && m.kept)){
     const on=o?o.name:'Opponent', hs=p=>!p.dealt?'not drawn yet':(p.kept?'kept':'deciding')+(p.mull?`, ${p.mull} mulligan${p.mull>1?'s':''}`:''), solo=alone();
