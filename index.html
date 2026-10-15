@@ -410,10 +410,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v2.05';
+const VERSION = 'v2.06';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v2.06','Oct 15',"Lands that enter tapped do it by themselves when you play them. Fast lands, slow lands and check lands look at your other lands; shock lands ask whether to pay 2 life; anything the table can't judge asks you. Shift-click still plays a land tapped on purpose."],
   ['v2.05','Oct 14',"Boros Energy. Energy is gained and spent by the cards themselves (Guide of Souls, Wrath of the Skies). Creature tokens from card text are created for you, and Voice of Victory's and Dalkovan Encampment's attacking Warriors are sacrificed at the end step. Triggers when another creature enters (Guide of Souls, Haliya) and when you attack (Guide of Souls asks to pay {E}{E}{E} when you have it, then you pick the attacker). The table tracks life gained this turn for Ocelot Pride and Haliya, and shows CITY'S BLESSING for good once you have ascend and ten permanents. Solitude, March of Otherworldly Light, Celestial Purge and Prismatic Ending (asks how many colors you spent) exile; Wrath of the Skies, Meltdown and Thraben Charm work; Goblin Bombardment asks for its target; Seasoned Pyromancer, Spell Snare, Grafdigger's Cage, Voice of Victory, Ranger-Captain of Eos and Clarion Conqueror work; Ajani asks to flip when another Cat dies."],
   ['v2.04','Oct 14',"Landfall: whenever a land enters under your control (played, fetched, or put onto the battlefield), each landfall card you control puts its trigger on the stack. Sazh's Chocobo gets its counter, Tifa Lockhart doubles her power until end of turn, and Avatar of Burgeoning Echoes empowers Jace 2; its gift to your planeswalkers (−10: a +1/+1 counter on target creature for each land you control) shows in their menu."],
   ['v2.03','Oct 14',"A keyword key under the match score on the left: whenever creatures on the table carry keyword icons (from counters, or gold-ringed from cards like Scion of Draco), it lists each icon with its name."],
@@ -770,7 +771,7 @@ function move(id, zone, o={}){
 }
 function draw(n=1, quiet){ const m=G.me; let k=0; if(n>0 && m.hand.length<=1){ const rq=m.bf.filter(x=>!x.fd && (x.k||x.cu) && /As long as you have one or fewer cards in hand, if you would draw one or more cards, you draw that many cards plus one instead/i.test(frontText(x)||'')); if(rq.length){ n+=rq.length; if(!quiet) log(`${rq.map(x=>cdata(x).n).join(', ')}: ${m.name} has one or fewer cards in hand, so they draw ${n} instead.`); } } while(n-- > 0 && m.lib.length){ m.hand.push(m.lib.shift()); k++; } if(!quiet) log(`${m.name} draws ${k===1?'a card':k+' cards'}.`); if(!k && !quiet) toast('Your library is empty.'); return k; }
 function shuffleLib(quiet){ G.noUndo=true; shuffle(G.me.lib); if(!quiet) log(`${G.me.name} shuffles their library.`); }
-function playFromHand(id){ const f=find(id); if(!f) return; if(isLand(f.c)){ move(id,'bf'); changed(); } else castSpell(id); }
+function playFromHand(id){ const f=find(id); if(!f) return; if(isLand(f.c)){ move(id,'bf'); changed(); landEnters(id); } else castSpell(id); }
 function resolve(id){ const f=find(id); if(!f) return; const c=f.c;
   if(c.pact){ pactPanel(id); return; }
   gyResolve(c); blinkResolve(c);
@@ -1441,11 +1442,23 @@ function matchesDesc(c, desc){ if(!desc) return true; const tl=faceTypeOf(c,0), 
     if(COLW[w]) return cols.includes(COLW[w]); if(w==='colorless') return !cols.length; if(w==='permanent') return !/\b(Instant|Sorcery)\b/.test(tl); if(w==='card') return true; return new RegExp('\\b'+w.replace(/s$/,'')+'s?\\b','i').test(tl); };
   return desc.split(/\s*,\s*(?:or\s+)?|\s+or\s+/i).filter(Boolean).some(alt => alt.split(/\s+/).filter(Boolean).every(one)); }
 /* how a land put onto the battlefield may enter: shock ("you may pay 2 life. If you don't, it enters tapped"), "enters tapped unless …", or always tapped */
-function landEntry(c){ if(!isLand(c) || c.fd) return null; const o=(frontText(c)||'').replace(/\([^)]*\)/g,''), nm=faceName(c,0).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function landEntry(c){ if(!isLand(c) || c.fd) return null; const o=(frontText(c)||'').replace(/\([^)]*\)/g,''), nm=faceName(c,c.flip?1:0).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   let m=o.match(/you may pay (\d+) life\. If you don't, it enters (?:the battlefield )?tapped/i); if(m) return {kind:'shock', life:+m[1]};
   m=o.match(new RegExp('(?:This land|'+nm+') enters (?:the battlefield )?tapped unless ([^.]+)\\.','i')); if(m) return {kind:'unless', cond:m[1]};
   if(new RegExp('(?:^|\\n)(?:This land|'+nm+') enters (?:the battlefield )?tapped\\.','i').test(o)) return {kind:'tapped'};
   return null; }
+/* a land played from hand (or its land side, or from exile): enters tapped by its own text; "unless …" is judged when the table can, else asked; shocks ask for the life */
+function judgeUnless(c, cond){ const others=G.me.bf.filter(x=>x.id!==c.id && !x.fd), lands=others.filter(isLand), fx=landEffects(); let m;
+  const hasT = w => others.some(x=>new RegExp('\\b'+w+'\\b','i').test(faceType(x)) || (isLand(x) && (lt=>!!lt && [...(lt.main||[]), ...(lt.plus||[])].some(t=>t.toLowerCase()===w.toLowerCase()))(landTypes(x, G.myId, fx))));
+  if((m=cond.match(/^you control an? (\w+)(?:,? or an? (\w+))?$/i))) return hasT(m[1]) || (!!m[2] && hasT(m[2]));
+  if((m=cond.match(/^you control (one|two|three|four|\d+) or (fewer|more) other lands$/i))){ const k=NUMW2[m[1].toLowerCase()]||+m[1]; return m[2].toLowerCase()==='fewer' ? lands.length<=k : lands.length>=k; }
+  return null; }
+async function landEnters(id){ const f=find(id); if(!f || f.z!=='bf') return; const c=f.c, le=landEntry(c); if(!le) return; const nm=cname(c);
+  if(le.kind==='tapped'){ c.tap=true; log(`${nm} enters tapped.`); changed(); return; }
+  if(le.kind==='shock'){ const pay=await yesNo(faceName(c,c.flip?1:0), `Pay ${le.life} life so it enters untapped? (You have ${G.me.life}.)`, `Pay ${le.life} life`, 'Enter tapped'); const g=find(id); if(!g || g.z!=='bf') return;
+    if(pay){ G.me.life-=le.life; log(`${G.me.name} pays ${le.life} life (now ${G.me.life}); ${nm} enters untapped.`); } else { g.c.tap=true; log(`${nm} enters tapped.`); } changed(); return; }
+  if(le.kind==='unless'){ let ok=judgeUnless(c, le.cond); if(ok==null) ok=await yesNo(faceName(c,c.flip?1:0), `It enters tapped unless ${le.cond}. Is that true?`, 'Yes: untapped', 'No: tapped'); const g=find(id); if(!g || g.z!=='bf') return;
+    if(!ok){ g.c.tap=true; log(`${nm} enters tapped (${le.cond.replace(/^you /,G.me.name+' doesn\'t ').replace(/^a player /,'no player ')}).`); } else log(`${nm} enters untapped (${le.cond}).`); changed(); } }
 function libSearch(sp, by, x){
   const m=G.me, mv = sp.mv==='X' ? x : sp.mv!=null ? +sp.mv : null, n = sp.n==='X' ? (x||0) : sp.n;
   const cs=m.lib.filter(c=>matchesDesc(c, sp.desc) && (mv==null || manaValue(c)<=mv) && (!sp.basicType || BASICS.some(t=>new RegExp('\\b'+t+'\\b').test(faceTypeOf(c,0))))).sort((a,b)=>cname(a).localeCompare(cname(b)));
@@ -2057,7 +2070,7 @@ function exilePlayable(n){
 }
 function playExiled(id, tapped){
   const f=find(id); if(!f || f.z!=='ex') return; const c=f.c;
-  if(isLand(c)){ move(id,'bf',{silent:true,tap:!!tapped}); log(`${G.me.name} plays ${cname(c)} from exile${tapped?' tapped':''}.`); } else { castSpell(id); return; }
+  if(isLand(c)){ move(id,'bf',{silent:true,tap:!!tapped}); log(`${G.me.name} plays ${cname(c)} from exile${tapped?' tapped':''}.`); if(!tapped) landEnters(id); } else { castSpell(id); return; }
   changed(); modalRefresh&&modalRefresh();
 }
 const playItems = (c, id) => isLand(c) ? [['Play land (from exile)',()=>playExiled(id)], ['Play land tapped',()=>playExiled(id,true)]] : [['Cast (goes to the stack)',()=>playExiled(id)]];
@@ -2335,7 +2348,7 @@ const faceName = (c,i) => { const p=(cdata(c).n||'').split(' // '); return p[i]|
 const faceTypeOf = (c,i) => { const p=(cdata(c).t||'').split(' // '); return p[i]||p[0]||''; };
 function playBack(id, zone, tapped){
   const f=find(id); if(!f) return; const c=f.c, nm=faceName(c,1);
-  if(zone==='bf'){ c.flip=true; move(id,'bf',{silent:true,tap:!!tapped}); log(`${G.me.name} plays ${cname(c)} as a land (${nm})${tapped?' tapped':''}.`); }
+  if(zone==='bf'){ c.flip=true; move(id,'bf',{silent:true,tap:!!tapped}); log(`${G.me.name} plays ${cname(c)} as a land (${nm})${tapped?' tapped':''}.`); if(!tapped) landEnters(id); }
   else { move(id,'st',{silent:true}); c.flip=true; log(`${G.me.name} casts ${nm}, the other side of ${cname(c)}.`); }
   changed();
 }
