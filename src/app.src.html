@@ -171,7 +171,7 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .playbox.next{border-style:dashed;box-shadow:0 0 10px 1px #d9b25f55,inset 0 0 10px #d9b25f1c}
 .playbox h6{margin:0;font:800 9.500px var(--ui);letter-spacing:.1em;color:var(--brass);white-space:nowrap;text-align:center}
 .playbox>div{display:flex;gap:4px;flex:1;min-height:0;align-items:center;justify-content:center}
-.playbox .plban,.pile .plban,.pile .wrpban,.pile .nmban{display:none}.playbox .card{box-shadow:0 2px 6px #0008}
+.playbox .plban,.pile .plban,.pile .wrpban,.pile .nmban,.pile .ribban{display:none}.playbox .card{box-shadow:0 2px 6px #0008}
 .card.pl{box-shadow:0 0 0 2px var(--brass),0 0 14px 3px #d9b25faa}
 .plban{position:absolute;left:0;right:0;top:44%;text-align:center;font:800 calc(var(--cw)*.095) var(--ui);letter-spacing:.08em;color:var(--brass);background:#000c;border-top:1px solid var(--brass);border-bottom:1px solid var(--brass);padding:2px 0;pointer-events:none}
 .mdlist{display:flex;flex-direction:column;gap:6px;max-width:580px}
@@ -196,11 +196,11 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .ce-ok{font-weight:800;color:var(--dim)}.ce-ok.on{color:var(--good)}.ce-head.on .ce-bar i{background:var(--good)}
 #ceGrid .card{width:132px}#ceGrid .cewrap{position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:3px}#ceGrid .cemv{font:800 11px var(--ui);color:var(--dim)}#ceGrid .cewrap.on .cemv{color:var(--brass)}
 .badge.chap.pact{border-color:var(--bad);color:#ffd3cf;background:#2a0907}
-#pactPanel{position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:65;width:min(440px,92vw);background:#0b1417f7;border:1px solid var(--bad);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 0 0 1px #e2574c44,0 16px 40px #000c}
-#pactPanel.cyc{border-color:var(--brass);box-shadow:0 10px 30px #000a}
-#pactPanel h3{font-size:19px;padding-right:28px}#pactPanel .px{position:absolute;right:8px;top:8px;padding:2px 9px;background:transparent}
-#pactPanel .pcost{display:flex;gap:6px;align-items:center;flex-wrap:wrap}#pactPanel .pcost .ms{width:30px;height:30px;font-size:15px;filter:grayscale(1);opacity:.35;transition:opacity .15s}#pactPanel .pcost .ms.ok{filter:none;opacity:1;box-shadow:0 0 0 2px var(--good)}
-#pactPanel .pst{font-weight:800;color:var(--dim)}#pactPanel .pst.ok{color:var(--good)}#pactPanel .pbtns{display:flex;gap:8px;flex-wrap:wrap}#pactPanel .pbtns button{font-size:12.500px}
+:is(#pactPanel,#payPanel){position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:65;width:min(440px,92vw);background:#0b1417f7;border:1px solid var(--bad);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 0 0 1px #e2574c44,0 16px 40px #000c}
+:is(#pactPanel,#payPanel).cyc{border-color:var(--brass);box-shadow:0 10px 30px #000a}
+:is(#pactPanel,#payPanel) h3{font-size:19px;padding-right:28px}:is(#pactPanel,#payPanel) .px{position:absolute;right:8px;top:8px;padding:2px 9px;background:transparent}
+:is(#pactPanel,#payPanel) .pcost{display:flex;gap:6px;align-items:center;flex-wrap:wrap}:is(#pactPanel,#payPanel) .pcost .ms{width:30px;height:30px;font-size:15px;filter:grayscale(1);opacity:.35;transition:opacity .15s}:is(#pactPanel,#payPanel) .pcost .ms.ok{filter:none;opacity:1;box-shadow:0 0 0 2px var(--good)}
+:is(#pactPanel,#payPanel) .pst{font-weight:800;color:var(--dim)}:is(#pactPanel,#payPanel) .pst.ok{color:var(--good)}:is(#pactPanel,#payPanel) .pbtns{display:flex;gap:8px;flex-wrap:wrap}:is(#pactPanel,#payPanel) .pbtns button{font-size:12.500px}
 .cpban{position:absolute;left:0;right:0;top:20%;text-align:center;font:800 calc(var(--cw)*.095)/1.1 var(--ui);letter-spacing:.1em;color:#fff;background:linear-gradient(#3b2a66,#24183f);border-top:1px solid #b9a7ff;border-bottom:1px solid #120c22;padding:calc(var(--cw)*.025) 2px;box-shadow:0 2px 6px #0009;pointer-events:none;text-transform:uppercase}
 .card.gtg{box-shadow:0 0 0 2px var(--bad),0 0 14px 4px #e2574caa}
 .tgban{position:absolute;left:0;right:0;top:56%;text-align:center;font:800 calc(var(--cw)*.085)/1.15 var(--ui);letter-spacing:.06em;color:#fff;background:#8f1f17e6;border-top:1px solid #ffb3ab;border-bottom:1px solid #3a0b08;padding:2px 2px;pointer-events:none;text-transform:uppercase}
@@ -270,6 +270,10 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .mp{display:inline-flex;align-items:center;gap:2px;filter:grayscale(1);opacity:.32;border-radius:99px;padding:1px 3px}
 .mp.on{filter:none;opacity:1}.mp.mine{cursor:pointer}.mp.mine:hover{background:#ffffff14}
 .mp b{font-size:13px;font-variant-numeric:tabular-nums}
+.smana{grid-column:1/-1;display:flex;flex-direction:column;gap:2px;margin-top:3px;padding-top:3px;border-top:1px dashed var(--line)}.srow{display:flex;gap:4px;align-items:center;min-width:0}.srow .mp{opacity:1;filter:none;box-shadow:0 0 0 1px var(--brass)}.slab{font-size:11px;line-height:1.2;color:var(--brass);min-width:0;margin-left:3px}
+#payPanel{border-color:var(--brass);box-shadow:0 10px 30px #000a}#payPanel .pch{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--dim)}#payPanel .pch button{display:inline-flex;align-items:center;gap:4px;padding:3px 9px}#payPanel .pch button.on{border-color:var(--good);box-shadow:0 0 0 1px var(--good);color:var(--ink)}#payPanel .pch .ms{width:18px;height:18px;font-size:10px}
+.ms.lifec{background:#e2574c;color:#fff;font-size:12px}
+.ribban{position:absolute;left:0;right:0;top:30%;text-align:center;font:800 calc(var(--cw)*.095)/1.15 var(--ui);letter-spacing:.06em;color:#1b1205;background:#d9b25fee;border-top:1px solid #fffa;border-bottom:1px solid #fffa;padding:calc(var(--cw)*.02) 0;box-shadow:0 2px 6px #0009;pointer-events:none}
 .ms{position:relative;width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;font:800 11px var(--ui);color:#1b1205;font-style:normal;flex:none}
 .ms img{position:absolute;inset:0;width:100%;height:100%}
 .ms-W{background:#f3ecc6}.ms-U{background:#a9d6ee}.ms-B{background:#b5a9a4}.ms-R{background:#eea58c}.ms-G{background:#97cfa6}.ms-C{background:#cfcfcf}
@@ -397,15 +401,16 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
   <div id="modebar" hidden></div>
 </div>
 
-<div id="pactPanel" hidden></div><div id="shown" hidden></div><div id="zoom" hidden></div><div id="ctx" hidden></div><div id="modal" hidden></div><div id="toast"></div>
+<div id="pactPanel" hidden></div><div id="payPanel" hidden></div><div id="shown" hidden></div><div id="zoom" hidden></div><div id="ctx" hidden></div><div id="modal" hidden></div><div id="toast"></div>
 
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v2.06';
+const VERSION = 'v3.0';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.0','Oct 15',"Auto-pay. A spell or ability takes its cost from your mana pool by itself. If the pool is short, a payment window waits while you tap more lands: each symbol lights up as it is covered, and Cancel puts the card back. Hybrid and Phyrexian symbols can be switched in the window (mana or 2 life), and what you paid feeds triggers like Wistfulness's. Mana with strings attached gets its own row under the pool: Arena of Glory's gives a creature spell haste, Cavern of Souls' makes it uncounterable, Eldrazi Temple's only pays for Eldrazi. Auto-pay can be turned off in the table menu."],
   ['v2.06','Oct 15',"Lands that enter tapped do it by themselves when you play them. Fast lands, slow lands and check lands look at your other lands; shock lands ask whether to pay 2 life; anything the table can't judge asks you. Shift-click still plays a land tapped on purpose."],
   ['v2.05','Oct 14',"Boros Energy. Energy is gained and spent by the cards themselves (Guide of Souls, Wrath of the Skies). Creature tokens from card text are created for you, and Voice of Victory's and Dalkovan Encampment's attacking Warriors are sacrificed at the end step. Triggers when another creature enters (Guide of Souls, Haliya) and when you attack (Guide of Souls asks to pay {E}{E}{E} when you have it, then you pick the attacker). The table tracks life gained this turn for Ocelot Pride and Haliya, and shows CITY'S BLESSING for good once you have ascend and ten permanents. Solitude, March of Otherworldly Light, Celestial Purge and Prismatic Ending (asks how many colors you spent) exile; Wrath of the Skies, Meltdown and Thraben Charm work; Goblin Bombardment asks for its target; Seasoned Pyromancer, Spell Snare, Grafdigger's Cage, Voice of Victory, Ranger-Captain of Eos and Clarion Conqueror work; Ajani asks to flip when another Cat dies."],
   ['v2.04','Oct 14',"Landfall: whenever a land enters under your control (played, fetched, or put onto the battlefield), each landfall card you control puts its trigger on the stack. Sazh's Chocobo gets its counter, Tifa Lockhart doubles her power until end of turn, and Avatar of Burgeoning Echoes empowers Jace 2; its gift to your planeswalkers (−10: a +1/+1 counter on target creature for each land you control) shows in their menu."],
@@ -587,7 +592,7 @@ const deckCount = l => l.reduce((a,[,c]) => a+c, 0);
 const deckText = d => d.main.map(([n,c])=>c+' '+n).join('\n') + (d.side.length ? '\n\nSideboard\n'+d.side.map(([n,c])=>c+' '+n).join('\n') : '');
 
 /* ================= state ================= */
-const S = Object.assign({name:'', autoDraw:true}, store.get('mt_settings', {}));
+const S = Object.assign({name:'', autoDraw:true, autoPay:true}, store.get('mt_settings', {}));
 const newPlayer = () => ({ name:S.name||'Player', deck:'', life:20, ctr:{poison:0,energy:0}, lib:[], hand:[], bf:[], gy:[], ex:[], st:[], side:[], reveal:false, arrows:[], mull:0, wins:0, roll:null, dealt:false, kept:false, mana:noMana(), energySeen:false, drew:0, cast:{n:0,is:0}, cares:null });
 const G = { myId:'p1', solo:false, code:'', me:newPlayer(), opp:null, turn:{active:null, phase:2, n:0}, log:[], net:'', idc:0, peer:null, conn:null, mode:null, hover:null };
 const oppId = () => G.myId==='p1' ? 'p2' : 'p1';
@@ -601,7 +606,7 @@ const cname = c => c.fd ? 'a face-down card' : '[['+(cdata(c).n||'a card')+'|'+(
 function pub(){
   const m=G.me, p = c => c.fd ? Object.assign({}, c, {k:null, cu:null, note:''}) : c;
   return { name:m.name, deck:m.deck, life:m.life, ctr:m.ctr, libN:m.lib.length, handN:m.hand.length, sideN:m.side.length,
-    hand:(m.reveal || m.ctl) ? m.hand : null, comp:m.side.filter(c=>c.comp), compDone:!!m.compDone, skipRoll:!!m.skipRoll, wonGame:m.wonGame||0, ctl:!!m.ctl, ctlNext:!!m.ctlNext, city:!!m.city, bf:m.bf.map(p), gy:m.gy, ex:m.ex.map(p), st:m.st.map(p), arrows:m.arrows, mull:m.mull, wins:m.wins||0, roll:m.roll||null, dealt:!!m.dealt, kept:!!m.kept, mana:m.mana||noMana(), energySeen:!!m.energySeen, cast:m.cast||{n:0,is:0}, cares:m.cares||null, gtg:m.gtg||[], baub:m.baub||[], trk:m.trk||null };
+    hand:(m.reveal || m.ctl) ? m.hand : null, comp:m.side.filter(c=>c.comp), compDone:!!m.compDone, skipRoll:!!m.skipRoll, wonGame:m.wonGame||0, ctl:!!m.ctl, ctlNext:!!m.ctlNext, city:!!m.city, bf:m.bf.map(p), gy:m.gy, ex:m.ex.map(p), st:m.st.map(p), arrows:m.arrows, mull:m.mull, wins:m.wins||0, roll:m.roll||null, dealt:!!m.dealt, kept:!!m.kept, mana:m.mana||noMana(), smana:m.smana||[], energySeen:!!m.energySeen, cast:m.cast||{n:0,is:0}, cares:m.cares||null, gtg:m.gtg||[], baub:m.baub||[], trk:m.trk||null };
 }
 /* undo: a snapshot of my own side is kept before each change. Shuffles and anything that crosses to the other player close the history. */
 const UNDO=[]; let lastSnap=null, lastLogi=0;
@@ -732,7 +737,7 @@ function move(id, zone, o={}){
   let vdBy=null; if(zone==='gy' && !c.tok){ const src=gyReplace(c.o||G.myId); if(src){ zone='ex'; ripNote(src, cname(c)); o=Object.assign({}, o, {silent:true}); } else if((vdBy=voidBy(c.o||G.myId))){ zone='ex'; voidNote(vdBy.n, cname(c)); o=Object.assign({}, o, {silent:true}); } }
   if(zone==='st' && (o.xr || (from==='gy' && c.fbk))) c.xr=1;
   if(from==='gy') delete c.fbk;
-  if(zone!=='st'){ delete c.md; delete c.nm; } if(zone!=='st' && zone!=='bf'){ delete c.ev; delete c.spent; delete c.dash; }
+  if(zone!=='st'){ delete c.md; delete c.nm; delete c.unc; } if(zone!=='st' && zone!=='bf'){ delete c.ev; delete c.spent; delete c.dash; delete c.hst; }
   m[from].splice(f.i,1); if(from==='ex'){ delete c.offer; delete c.by; delete c.warp; delete c.pl; delete c.fl; } if(zone!=='st') delete c.bt;
   if(from==='bf' && zone==='gy' && isCreature(c) && /\bCat\b/.test(faceType(c))) catDied(c);
   if(from==='bf' && zone!=='bf') G.me.leftT=G.turn.n;
@@ -757,7 +762,7 @@ function move(id, zone, o={}){
       : zone==='st' ? `casts ${nm}` + (from!=='hand' ? ` from ${ZN[from]}` : '')
       : zone==='lib' ? `puts ${nm} on the ${o.pos==='bottom'?'bottom':'top'} of the library from ${ZN[from]}`
       : `moves ${nm} from ${ZN[from]} to ${ZN[zone]}`;
-    log(`${m.name} ${verb}.`);
+    log(`${m.name} ${verb}${zone==='st' && o.note ? o.note : ''}.`);
   }
   if(zone==='bf' && from!=='bf' && !o.later) entered(c);
 }
@@ -774,17 +779,17 @@ function resolve(id){ const f=find(id); if(!f) return; const c=f.c;
 function manaAbilities(c){
   const lt = isLand(c) ? landTypes(c, G.me.bf.some(x=>x.id===c.id) ? G.myId : oppId(), landEffects()) : null;
   if(lt && lt.main) return [...lt.main, ...lt.plus].map(t=>({out:BASIC[t], cost:'', exert:false, rem:false}));
-  const out=[], cond=[], txt=cdata(c).o||'', add=(list,o,cost,exert,rem,only)=>{ if(o && !list.some(a=>a.out===o && a.cost===cost)) list.push(Object.assign({out:o, cost, exert, rem}, only ? {only} : {})); };
+  const out=[], cond=[], txt=cdata(c).o||'', add=(list,o,cost,exert,rem,only,rider)=>{ if(o && !list.some(a=>a.out===o && a.cost===cost)) list.push(Object.assign({out:o, cost, exert, rem}, only ? {only} : {}, rider ? {rider} : {})); };
   for(const m of txt.matchAll(/\badd ([^.\n]*)/gi)){ const cl=m[1];
     const pre=txt.slice(txt.lastIndexOf('\n', m.index)+1, m.index), ci=pre.lastIndexOf(':'), costPart=ci>=0 ? pre.slice(0,ci) : '';
     const cost=[...costPart.matchAll(/\{([WUBRGC]|\d+)\}/g)].map(x=>x[1]).join(','), exert=/\bexert\b/i.test(costPart), rem=/\bremove an? [\w+\/-]+ counter from\b/i.test(costPart);
     // "If it has a luck counter on it, instead add one mana of any color" (Gemstone Caverns): only with a counter, and then it replaces the plain ability
     const iff=/counters? on (?:it|him|her), instead $/i.test(pre), list=iff ? cond : out; if(iff && !(c.c>0)) continue;
-    const ln=txt.slice(txt.lastIndexOf('\n', m.index)+1, (txt.indexOf('\n', m.index)+1 || txt.length+1)-1), only=((ln.match(/Spend this mana only ([^.]+)/i)||[])[1]||'');
+    const ln=txt.slice(txt.lastIndexOf('\n', m.index)+1, (txt.indexOf('\n', m.index)+1 || txt.length+1)-1), only=((ln.match(/Spend this mana only ([^.]+)/i)||[])[1]||''), rider=riderOf(ln);
     const nAny=cl.match(/^(one|two|three|four|five) mana of any (?:one )?colou?r/i), k2=nAny ? (NUMW2[nAny[1].toLowerCase()]||1) : 1;
-    if(/any (one )?color|any type|any of/i.test(cl)){ 'WUBRG'.split('').forEach(k=>add(list,k.repeat(k2),cost,exert,rem,only)); continue; }
+    if(/any (one )?color|any type|any of/i.test(cl)){ 'WUBRG'.split('').forEach(k=>add(list,k.repeat(k2),cost,exert,rem,only,rider)); continue; }
     const syms=[...cl.matchAll(/\{([WUBRGC])\}/g)].map(x=>x[1]); if(!syms.length) continue;
-    if(/ or /i.test(cl)) syms.forEach(k=>add(list,k,cost,exert,rem,only)); else add(list,syms.join(''),cost,exert,rem,only); }
+    if(/ or /i.test(cl)) syms.forEach(k=>add(list,k,cost,exert,rem,only,rider)); else add(list,syms.join(''),cost,exert,rem,only,rider); }
   if(cond.length){ if(lt) for(const t of lt.plus) add(cond,BASIC[t],'',false,false); return cond; }
   const tl=faceType(c), sub={Plains:'W',Island:'U',Swamp:'B',Mountain:'R',Forest:'G'}; for(const k in sub) if(new RegExp('\\b'+k+'\\b').test(tl)) add(out,sub[k],'',false,false);
   if(lt) for(const t of lt.plus) add(out,BASIC[t],'',false,false);
@@ -792,7 +797,7 @@ function manaAbilities(c){
 }
 const manaOptions = c => [...new Set(manaAbilities(c).map(a=>a.out))];
 const costLabel = cost => cost.split(',').map(k=>MNAME[k]||k).join(' + ');
-const abilityLabel = a => (a.cost ? 'Pay '+costLabel(a.cost)+', tap for ' : 'Tap for ')+manaLabel(a.out)+(a.exert ? ' (exerts)' : '')+(a.rem ? ' (removes a counter)' : '');
+const abilityLabel = a => (a.cost ? 'Pay '+costLabel(a.cost)+', tap for ' : 'Tap for ')+manaLabel(a.out)+(a.exert ? ' (exerts)' : '')+(a.rem ? ' (removes a counter)' : '')+(a.rider==='haste' ? ' (a creature spell paid with it gains haste)' : '');
 function payCost(cost){
   if(!cost) return true; const m=G.me; if(!m.mana) m.mana=noMana(); const pool=Object.assign({}, m.mana);
   for(const k of cost.split(',')){ if(MANA.includes(k)){ if(pool[k]<1) return false; pool[k]--; } }
@@ -806,7 +811,7 @@ function extraMana(c, quiet){ const add=[];
 function useAbility(c, a, noExtra){
   if(a.rem && !(c.c>0)){ toast('It has no counters left to remove.'); return false; }
   if(!payCost(a.cost)){ toast(`That costs ${costLabel(a.cost)}. Put it in your mana pool first, then try again.`); return false; }
-  c.tap=true; addMana(a.out); if(a.only && !noExtra) log(`${G.me.name} taps ${cname(c)} for ${[...a.out].map(k=>'{'+k+'}').join('')}: spend ${a.out.length>1?'this mana':'it'} only ${a.only}.`); if(!noExtra && (isCreature(c) || c.anim)) extraMana(c); if(a.rem) c.c--; if(a.exert){ c.exert=true; log(`${G.me.name} exerts ${cname(c)}. It will not untap next turn.`); } return true;
+  c.tap=true; if(a.only || a.rider){ const m=G.me, src=cdata(c).n.split(',')[0]; m.smana=m.smana||[]; for(const k of a.out) if(MANA.includes(k)) m.smana.push({k, src, only:a.only||'', rider:a.rider||'', chosen:c.chosen||''}); if(!noExtra) log(`${G.me.name} taps ${cname(c)} for ${[...a.out].map(k=>'{'+k+'}').join('')}${a.only ? `: spend ${a.out.length>1?'this mana':'it'} only ${a.only}` : ''}${a.rider==='haste' ? ' (a creature spell paid with it gains haste)' : ''}.`); } else addMana(a.out); if(!noExtra && (isCreature(c) || c.anim)) extraMana(c); if(a.rem) c.c--; if(a.exert){ c.exert=true; log(`${G.me.name} exerts ${cname(c)}. It will not untap next turn.`); } return true;
 }
 const manaLabel = o => MANA.filter(k=>o.includes(k)).map(k=>{ const n=o.split(k).length-1; return (n>1?n+' ':'')+MNAME[k]; }).join(' + ');
 function addMana(o){ const m=G.me; if(!m.mana) m.mana=noMana(); for(const ch of o) if(ch in m.mana) m.mana[ch]++; }
@@ -965,7 +970,7 @@ function lookTopWin(sp, by){ return new Promise(res=>{ const m=G.me, cards=m.lib
 const harmonizeOf = c => { if(c.fd || (!c.k && !c.cu)) return ''; const m=(frontText(c)||'').match(/(?:^|\n)Harmonize\s*((?:\{[^}]+\})+)/i); return m ? m[1] : ''; };
 async function castHarmonize(id){ const f=find(id); if(!f || f.z!=='gy') return; const c=f.c, cost=harmonizeOf(c), cs=G.me.bf.filter(x=>isCreature(x) && !x.fd && !x.tap);
   const pk = cs.length ? await pickP(`${cdata(c).n}: harmonize ${cost}. Tap a creature to pay generic mana equal to its power?`, cs, "Don't tap one") : null;
-  castSpell(id, {xr:1, silent:true}, ()=>{ let note=''; if(pk){ const g=find(pk.id); if(g && g.z==='bf' && !g.c.tap){ g.c.tap=true; const p=powerOf(g.c); note=`, tapping ${cname(g.c)} to pay ${p} less generic mana`; } }
+  castSpell(id, {xr:1, silent:true, payCost:cost, less:pk ? powerOf(pk) : 0}, ()=>{ let note=''; if(pk){ const g=find(pk.id); if(g && g.z==='bf' && !g.c.tap){ g.c.tap=true; const p=powerOf(g.c); note=`, tapping ${cname(g.c)} to pay ${p} less generic mana`; } }
     log(`${G.me.name} casts ${cname(c)} from their graveyard for its harmonize cost ${cost}${note}. It will be exiled.`); }); }
 /* pick several cards (Valakut Awakening) */
 function pickManyP(title, cards, go){ return new Promise(res=>{ let done=false; const sel=[]; const fin=v=>{ if(done) return; done=true; closeModal(); res(v); };
@@ -1021,8 +1026,10 @@ function handAbils(c){ if(c.fd || (!c.k && !c.cu)) return []; const nm=faceName(
 /* graveyard abilities whose cost exiles the card ("{3}{U}{U}, Exile this card from your graveyard: Draw two cards.") */
 function gyAbils(c){ if(c.fd || (!c.k && !c.cu)) return []; const nm=faceName(c,0);
   return [...(frontText(c)||'').replace(/\([^)]*\)/g,'').matchAll(new RegExp('(?:^|\\n)([^:\\n]*\\bExile (?:this card|'+escRe(nm)+') from your graveyard[^:\\n]*):\\s*([^\\n]+)','gi'))].map(m=>({cost:m[1].trim(), mana:(m[1].match(/^(\{[^}]+\})+/)||[''])[0], eff:m[2].trim()})); }
-function useGyAbil(id, i){ const f=find(id); if(!f || f.z!=='gy') return; const c=f.c, a=gyAbils(c)[i]; if(!a) return; const d=cdata(c), nm=d.n.split(',')[0], paid=[];
-  if(a.mana){ const cv=pactCover(a.mana); if(cv.all){ payCost(cv.syms.join(',')); paid.push(`${a.mana} from the mana pool`); } else paid.push(`${a.mana} (not in the pool: pay it by hand)`); }
+function useGyAbil(id, i, pd){ const f=find(id); if(!f || f.z!=='gy') return; const c=f.c, a=gyAbils(c)[i]; if(!a) return; const d=cdata(c), nm=d.n.split(',')[0], paid=[];
+  if(a.mana && !pd && autoPayOn()){ payFor(normSyms(costSyms(a.mana)), {abil:true, card:c, id, from:'gy'}, {title:`Activate ${nm}`, verb:'activate', done:r=>useGyAbil(id, i, r)}); return; }
+  if(a.mana && pd){ paid.push(pd.other ? `${a.mana} (paid another way)` : pd.text || a.mana); }
+  else if(a.mana){ const cv=pactCover(a.mana); if(cv.all){ payCost(cv.syms.join(',')); paid.push(`${a.mana} from the mana pool`); } else paid.push(`${a.mana} (not in the pool: pay it by hand)`); }
   move(id,'ex',{silent:true}); paid.push('exiled from the graveyard');
   G.me.st.push(mk(null,{tok:true, ts:Date.now(), ab:{id}, cu:{n:`${nm}: ability`, t:'Activated ability', o:`${a.cost}: ${a.eff}`, img:d.img||''}}));
   log(`${G.me.name} activates ${cname(c)} from their graveyard: ${a.eff} (${paid.join(', ')}).`); changed(); }
@@ -1042,6 +1049,7 @@ function counterMine(id, exile, by, who){ const f=find(id); if(!f || f.z!=='st')
   if(c.ab || c.ch || c.pact || (c.tok && !isSpell(c))){ G.me.st.splice(f.i,1); G.me.arrows=G.me.arrows.filter(a=>a.a!==id); } else move(id, exile?'ex':'gy', {silent:true});
   log(`${who?who+"'s ":''}${by} counters ${G.me.name}'s ${nm}${exile && !(c.ab||c.ch) ? ' (exiled)' : ''}.`); changed(); }
 async function counterAsk(msg){ const id=msg.id, by=String(msg.by||'A spell').slice(0,60), who=String(msg.who||'Opponent').slice(0,40), pay=Math.max(0,Math.min(20,+msg.pay||0)), f=find(id); if(!f || f.z!=='st') return;
+  if(f.c.unc){ log(`${who}'s ${by} can't counter ${cname(f.c)}: it can't be countered.`); changed(); return; }
   if(pay>0){ const cost=`{${pay}}`, cv=pactCover(cost);
     const r=await new Promise(res=>{ let done=false; const fin=v=>{ if(done) return; done=true; closeModal(); res(v); }; if(!$('#modal').hidden) closeModal();
       modal(`${who}'s ${by}`, `<span class="hint">${esc(by)} counters ${esc(cdata(f.c).n)} unless you pay ${cost}. ${cv.all ? 'Your mana pool covers it.' : 'Your mana pool does not cover it yet: tap lands first, or pay another way.'}</span>`,
@@ -1146,14 +1154,15 @@ const chaliceHit = c => { const v=stackMV(c); return v==null ? null : CHAL.find(
 const noManaCast = (c, x, cn) => { if(isLand(c)) return false; const mc=(cdata(c).mc||'').split(' // ')[c.flip?1:0]||'', syms=cn ? cn.syms : costSyms(mc); return syms.every(k=>k==='0' || (/^[XYZ]$/.test(k) && !(x>0))); };
 function castAlt(id, sp, kind, spent){ const f=find(id); if(!f) return; const c=f.c, from=f.z;
   castGate(id, ()=>{ const picked=[];
-    const fin=()=>{ const g=find(id); if(!g || g.z!==from) return; const paid=[], ex=[];
+    const fin=pd=>{ const g=find(id); if(!g || g.z!==from) return; const paid=[], ex=[];
+      if(sp.mana && !pd && autoPayOn()){ payFor(normSyms(costSyms(sp.mana)), {spell:true, card:c, id, from}, {title:`Cast ${cdata(c).n.split(' // ')[0]}${kind==='evoke'?' (evoke)':''}`, verb:'cast', done:r=>fin(r)}); return; }
       for(const x of picked){ const h=find(x); if(h && h.z==='hand'){ ex.push(cname(h.c)); move(x,'ex',{silent:true}); } }
-      if(sp.mana){ const cv=pactCover(sp.mana); if(cv.all){ payCost(cv.syms.join(',')); paid.push(sp.mana+' from the mana pool'); } else paid.push(sp.mana); }
+      if(sp.mana && pd) paid.push(pd.other ? sp.mana+' (another way)' : pd.text || sp.mana); else if(sp.mana){ const cv=pactCover(sp.mana); if(cv.all){ payCost(cv.syms.join(',')); paid.push(sp.mana+' from the mana pool'); } else paid.push(sp.mana); }
       if(sp.life){ G.me.life-=sp.life; paid.push(`${sp.life} life (now ${G.me.life})`); }
       if(ex.length) paid.push(`exiling ${ex.join(', ')} from their hand`);
       if(sp.other && !sp.sacw) paid.push(`${sp.text} (done by hand)`);
       if(sp.sac){ const x=find(sp.sac); if(x && x.z==='bf'){ paid.push(`sacrificing ${cname(x.c)}`); move(sp.sac,'gy',{silent:true}); } }
-      castSpellNow(id, {silent:true, nm:!sp.mana, spent:spent||[]}, ()=>{ if(kind==='evoke') c.ev=1; log(`${G.me.name} casts ${cname(c)} ${kind==='evoke' ? 'for its evoke cost' : 'without paying its mana cost'}, paying ${paid.join(' and ')}.${!sp.mana && noManaWatch() ? ` No mana was spent (${noManaWatch()} is out).` : ''}${kind==='evoke' ? ' It will be sacrificed when it enters.' : ''}`); }); };
+      castSpellNow(id, {silent:true, nm:!sp.mana || (pd && pd.mana===0), spent:spent || (pd && pd.cols ? spentConds(c).filter(k=>pd.cols[k]>=2) : pd && pd.other ? null : []), paid:pd ? Object.assign({}, pd, {text:'', other:false}) : undefined}, ()=>{ if(kind==='evoke') c.ev=1; log(`${G.me.name} casts ${cname(c)} ${kind==='evoke' ? 'for its evoke cost' : 'without paying its mana cost'}, paying ${paid.join(' and ')}.${!sp.mana && noManaWatch() ? ` No mana was spent (${noManaWatch()} is out).` : ''}${kind==='evoke' ? ' It will be sacrificed when it enters.' : ''}`); }); };
     const pick=()=>{ if(sp.sacw && !sp.sac){ const cs=G.me.bf.filter(x=>isCreature(x) && !x.fd && (!sp.sacw.nontoken || !x.tok) && matchesDesc(x, sp.sacw.desc)); if(!cs.length){ toast(`You have no ${sp.sacw.nontoken?'nontoken ':''}${sp.sacw.desc} creature to sacrifice.`); return; } pickCard(`${cdata(c).n.split(',')[0]}: sacrifice a${sp.sacw.nontoken?' nontoken':/^[aeiou]/i.test(sp.sacw.desc)?'n':''} ${sp.sacw.desc} creature`, cs, x=>{ sp=Object.assign({}, sp, {sac:x.id}); pick(); }); return; }
       if(!sp.ex || picked.length>=sp.ex.n){ fin(); return; }
       const cs=G.me.hand.filter(x=>x.id!==id && !picked.includes(x.id) && !x.fd && matchesDesc(x, sp.ex.desc));
@@ -1171,8 +1180,10 @@ const channelOf = c => { if(c.fd || (!c.k && !c.cu)) return null; const m=(front
   if(red && mana){ less=G.me.bf.filter(x=>isCreature(x) && !x.fd && /\bLegendary\b/.test(faceType(x))).length*(+red[1]);
     if(less){ const syms=costSyms(mana), gen=syms.filter(k=>/^\d+$/.test(k)).reduce((a,k)=>a+(+k),0), rest=syms.filter(k=>!/^\d+$/.test(k)), g=Math.max(0, gen-less); mana=(g ? `{${g}}` : '')+rest.map(k=>`{${k}}`).join(''); } }
   return {cost:m[1].trim(), mana, less, eff:m[2].replace(/\s*This ability costs \{\d+\} less[^.]*\.\s*/i,' ').trim()}; };
-function channel(id, i){ const f=find(id); if(!f || f.z!=='hand') return; const c=f.c, ch=handAbils(c)[i||0]; if(!ch) return; const d=cdata(c), nm=d.n.split(',')[0], paid=[];
-  if(ch.mana){ const cv=pactCover(ch.mana); if(cv.all){ payCost(cv.syms.join(',')); paid.push(`${ch.mana} from the mana pool`); } else paid.push(`${ch.mana} (not in the pool: pay it by hand)`); }
+function channel(id, i, pd){ const f=find(id); if(!f || f.z!=='hand') return; const c=f.c, ch=handAbils(c)[i||0]; if(!ch) return; const d=cdata(c), nm=d.n.split(',')[0], paid=[];
+  if(ch.mana && !pd && autoPayOn()){ payFor(normSyms(costSyms(ch.mana)), {abil:true, card:c, id, from:'hand'}, {title:`${ch.chan?'Channel':'Activate'} ${nm}`, verb:'activate', done:r=>channel(id, i, r)}); return; }
+  if(ch.mana && pd){ paid.push(pd.other ? `${ch.mana} (paid another way)` : pd.text || ch.mana); }
+  else if(ch.mana){ const cv=pactCover(ch.mana); if(cv.all){ payCost(cv.syms.join(',')); paid.push(`${ch.mana} from the mana pool`); } else paid.push(`${ch.mana} (not in the pool: pay it by hand)`); }
   if(ch.less) paid.push(`${ch.less} less for legendary creatures`);
   move(id,'gy',{silent:true}); paid.push('discarded');
   const mkr=mk(null,{tok:true, ts:Date.now(), ab:{id, chan:true}, cu:{n:`${nm}: ${ch.chan?'channel':'ability'}`, t:'Activated ability', o:`${ch.cost}: ${ch.eff}`, img:d.img||''}}); G.me.st.push(mkr);
@@ -1257,7 +1268,7 @@ async function discard(ids, note){
   discardTrigs(cs.length); changed(); modalRefresh&&modalRefresh();
   for(const [c,mc] of mad){
     const yes=await askYesNo(`${faceName(c,0)}: madness`, `Cast this card from exile for ${mc}?`, `Cast it for ${mc}`, 'No, put it into the graveyard'), f=find(c.id); if(!f || f.z!=='ex') continue;
-    if(yes) castSpell(c.id,{silent:true},()=>log(`${m.name} casts ${cname(c)} from exile for its madness cost ${mc}.`));
+    if(yes) castSpell(c.id,{silent:true, payCost:(mc.match(/^(?:\{[^}]+\})+/)||[''])[0]},()=>log(`${m.name} casts ${cname(c)} from exile for its madness cost ${mc}.`));
     else { move(c.id,'gy',{silent:true}); log(`${m.name} does not cast ${cname(c)}; it goes to the graveyard.`); changed(); }
   }
 }
@@ -1639,7 +1650,7 @@ let CYC=null;
 function startCycle(id, i){
   const f=find(id); if(!f || f.z!=='hand') return; const c=f.c, cy=cyclingOf(c)[i]; if(!cy) return;
   move(id,'gy',{silent:true}); const g=find(id); log(`${G.me.name} cycles ${cname(c)} (${cy.label}${cy.mana?' '+cy.mana:''}${cy.life?(cy.mana?', ':' — ')+'pay '+cy.life+' life':''}): it goes to ${g && g.z==='ex' ? 'exile' : 'the graveyard'}.`);
-  CYC={id, cy, name:cdata(c).n, img:cdata(c).img||''}; changed(); paintCyc(); }
+  CYC={id, cy, name:cdata(c).n, img:cdata(c).img||''}; if(autoPayOn() && cy.mana && !cy.life && !cy.other && pactCover(cy.mana).all){ cycAction('pay'); return; } changed(); paintCyc(); }
 function paintCyc(){
   const el=$('#pactPanel'); if(!CYC || PACT){ if(!PACT) el.hidden=true; return; } const cy=CYC.cy, cv=cy.mana ? pactCover(cy.mana) : {syms:[], ok:[], all:true}; el.hidden=false; el.classList.add('cyc');
   el.innerHTML=`<h3>${esc(CYC.name)}: ${esc(cy.label.toLowerCase())}</h3>
@@ -1934,7 +1945,9 @@ function activate(id, a, evDone, extra){
   if(loy && /[−-]/.test(loy[1]) && (c.c||0) < +loy[2]){ toast('It does not have that much loyalty.'); return; }
   if(rn && (c.c||0) < rn){ toast('It does not have enough counters to remove.'); return; }
   const what=cname(c), syms=[...cost.matchAll(/\{([WUBRGC]|\d+)\}/g)].map(x=>x[1]).join(',');
-  if(syms && G.me.mana && MANA.some(k=>G.me.mana[k]) && payCost(syms)) paid.push('mana from the pool');
+  { const asy=abilSyms(cost, extra && extra.x); if(asy.length && autoPayOn() && !(extra && extra.paidOK)){ payFor(asy, {abil:true, card:c, id, from:'bf'}, {title:`Activate ${nm}`, verb:'activate', done:r=>activate(id, a, evDone, Object.assign({}, extra||{}, {paidOK:r}))}); return; } }
+  if(extra && extra.paidOK){ const pd=extra.paidOK; if(pd.other) paid.push('mana paid another way'); else if(pd.text) paid.push(pd.text); }
+  else if(syms && G.me.mana && MANA.some(k=>G.me.mana[k]) && payCost(syms)) paid.push('mana from the pool');
   if(/\{T\}/.test(cost)){ c.tap=true; paid.push('tapped'); } if(/\{Q\}/.test(cost)){ c.tap=false; paid.push('untapped'); }
   if(/\bexert\b/i.test(cost)){ c.exert=true; paid.push('exerted'); }
   if(loy){ c.c=(c.c||0)+(/[−-]/.test(loy[1]) ? -(+loy[2]) : +loy[2]); paid.push('loyalty now '+c.c); }
@@ -1958,7 +1971,7 @@ function activate(id, a, evDone, extra){
 /* player aids, nothing enforced: c.sick marks a permanent that came under my control since my turn began (shown on creatures without haste);
    c.lft marks the land I played from my hand this turn */
 const abilHaste = bf => { const x=bf.find(x=>!x.fd && (x.k||x.cu) && /You may activate abilities of creatures you control as though those creatures had haste/i.test(frontText(x)||'')); return x ? cdata(x).n.split(',')[0] : ''; };
-const hasHaste = c => !!c.eb || (c.kw||[]).includes('haste') || (!c.fd && /(^|\n|, )haste\b|\b(?:has|have) haste\b/i.test(frontText(c)));
+const hasHaste = c => !!c.eb || (!!c.hst && c.hst===G.turn.n) || (c.kw||[]).includes('haste') || (!c.fd && /(^|\n|, )haste\b|\b(?:has|have) haste\b/i.test(frontText(c)));
 const showSick = c => !!c.sick && !c.imp && (c.fd || isCreature(c) || c.anim) && !hasHaste(c);
 const SICK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.500 2.500h11v2.800c0 2.700-2 4.600-4 6.700 2 2.100 4 4 4 6.700v2.800h-11v-2.800c0-2.700 2-4.600 4-6.700-2-2.100-4-4-4-6.700z"/></svg>';
 /* modal spells (Choose one —, Choose two —, Escalate, Entwine, Spree): the modes are picked as the spell is cast and kept on the stack card as c.md (1-based) */
@@ -1996,13 +2009,13 @@ function warpTick(prev, next){   // my warped permanents, at the start of an end
     : next.n>prev.n ? c => c.wp.n<next.n-1 || (c.wp.n===next.n-1 && !c.wp.end) : null;
   const cs = due ? G.me.bf.filter(c=>c.wp && G.turn.n && due(c)) : []; for(const c of cs) warpOut(c, 'End step: '); return cs.length>0; }
 function castWarp(id){ const f=find(id); if(!f) return; const c=f.c, w=warpCost(c);
-  castSpell(id, {silent:true}, ()=>{ c.wp={n:G.turn.n||0, end:G.turn.phase===5}; log(`${G.me.name} casts ${cname(c)} for its warp cost ${w}. It will go to the warp zone at the next end step.`); }); }
+  castSpell(id, {silent:true, payCost:w}, ()=>{ c.wp={n:G.turn.n||0, end:G.turn.phase===5}; log(`${G.me.name} casts ${cname(c)} for its warp cost ${w}. It will go to the warp zone at the next end step.`); }); }
 /* Bestow: "Bestow {cost}" casts the card as an Aura spell (c.bw) targeting a creature (c.bwt); on resolution it is attached, or enters as a creature
    if the target is gone; when its creature leaves the battlefield it stays and becomes a creature again (bestowCheck). */
 const bestowInfo = c => { const o=frontText(c)||'', m=o.match(/(?:^|\n)Bestow\s*[—–-]?\s*((?:\{[^}]+\})+)(?:,\s*collect evidence (\d+))?/i); return m ? {mana:m[1], ev:m[2] ? +m[2] : 0, gy:/cast this card from your graveyard using its bestow ability/i.test(o)} : null; };
 const bestowCost = c => { const b=bestowInfo(c); return b ? b.mana+(b.ev ? `, collect evidence ${b.ev}` : '') : ''; };
 function castBestow(id){ const f=find(id); if(!f) return; const c=f.c, b=bestowInfo(c), w=bestowCost(c), from=f.z;
-  const go=()=>{ const g=find(id); if(!g || g.z!==from) return; c.bw=true; castSpellNow(id, {silent:true}, ()=>{ log(`${G.me.name} casts ${cname(c)}${from==='gy'?' from their graveyard':''} for its bestow cost ${w}, as an Aura.`); G.mode={type:'arrow', from:id}; toast(`Bestow: click the creature ${cdata(c).n} should enchant (or right-drag its arrow there).`); render(); }); };
+  const go=()=>{ const g=find(id); if(!g || g.z!==from) return; c.bw=true; castSpellNow(id, {silent:true, payCost:b.mana, onCancel:()=>{ delete c.bw; }}, ()=>{ log(`${G.me.name} casts ${cname(c)}${from==='gy'?' from their graveyard':''} for its bestow cost ${w}, as an Aura.`); G.mode={type:'arrow', from:id}; toast(`Bestow: click the creature ${cdata(c).n} should enchant (or right-drag its arrow there).`); render(); }); };
   castGate(id, ()=> b && b.ev ? collectEvidence(b.ev, c, go) : go()); }
 function bestowArrow(md, target){
   const s=find(md.from); if(!s || s.z!=='st' || !s.c.bw) return false; const t=findAny(target);
@@ -2045,13 +2058,118 @@ function castGate(id, go){
 /* every way of casting from my own zones comes through here; an instant or sorcery with modes asks first, and Cancel leaves the card where it was */
 function castSpell(id, o={}, after){ castGate(id, ()=>castSpellNow(id, o, after)); }
 function castSpellNow(id, o={}, after){
-  { const f0=find(id); if(f0 && f0.z!=='st' && o.x==null && !f0.c.fd && !G.me.ctl && /\{X\}/.test((cdata(f0.c).mc||'').split(' // ')[f0.c.flip?1:0]||'')){ askN(`${cdata(f0.c).n}: X =`, 1).then(n=>{ if(n==null || n<0) return; castSpellNow(id, Object.assign({}, o, {x:n}), after); }); return; } }
+  { const f0=find(id); if(f0 && f0.z!=='st' && o.x==null && !f0.c.fd && !G.me.ctl && /\{X\}/.test(o.payCost!=null ? o.payCost : ((cdata(f0.c).mc||'').split(' // ')[f0.c.flip?1:0]||''))){ askN(`${cdata(f0.c).n}: X =`, 1).then(n=>{ if(n==null || n<0) return; castSpellNow(id, Object.assign({}, o, {x:n}), after); }); return; } }
+  { const f2=find(id); if(f2 && f2.z!=='st' && !('md' in o)){ const c2=f2.c, md2=(!G.me.ctl && !c2.fd && isSpell(c2)) ? modesOf(c2) : null; if(md2){ pickModes(c2, md2, p=>castSpellNow(id, Object.assign({}, o, {md:p}), after)); return; } } }
+  { const f3=find(id); if(f3 && f3.z!=='st' && !o.paid && autoPayOn()){ const c3=f3.c, sy=castSyms(c3, o); if(sy){ payFor(sy, {spell:true, card:c3, id, from:f3.z}, {title:`Cast ${faceName(c3, c3.flip?1:0)}`, verb:'cast', done:r=>castSpellNow(id, Object.assign({}, o, {paid:r}), after), cancel:o.onCancel}); return; } } }
+  { const f1=find(id); if(f1 && f1.z!=='st' && o.spent==null && o.paid && o.paid.cols && !f1.c.fd && spentConds(f1.c).length) o=Object.assign({}, o, {spent:spentConds(f1.c).filter(k=>o.paid.cols[k]>=2)}); }
   { const f1=find(id); if(f1 && f1.z!=='st' && o.spent==null && !f1.c.fd && spentConds(f1.c).length){ pickSpent(f1.c, v=>castSpellNow(id, Object.assign({}, o, {spent:v}), after)); return; } }
   const f=find(id); if(!f || f.z==='st') return; const c=f.c, md=(!G.me.ctl && !c.fd && isSpell(c)) ? modesOf(c) : null;
-  const cn = !c.fd ? costNow(c) : null;
-  const go=p=>{ move(id,'st',o); if(o.x!=null) c.x=o.x; if(o.spent && o.spent.length) c.spent=o.spent.slice(); else delete c.spent; if(!c.fd && (o.nm || noManaCast(c, o.x, cn))) c.nm=1; { CHAL=chaliceWatch(); const ch=chaliceHit(c); if(ch) log(`${cname(c)} has mana value ${ch.n}, the number of charge counters on ${ch.name}.`); } if(!c.fd && HANDRE.test(stackText(c)||'')){ G.mode={type:'arrow', from:id}; toast(`${cdata(c).n}: click the player whose hand is revealed.`); } if(o.x!=null){ c.x=o.x; log(`${cname(c)} is cast with X=${o.x}.`); } if(cn && cn.delta) log(`${cname(c)} costs ${cn.cost} (printed ${cn.printed}; ${cn.why}).`); after&&after(); if(c.spent && c.spent.length) log(`${cname(c)}: ${G.me.name} spent ${c.spent.map(k=>`{${k}}{${k}}`).join(' and ')} to cast it.`); if(p && p.length){ c.md=p; log(modeLog(c, md, p)); } changed(); modalRefresh&&modalRefresh(); if(hasCascade(c)) setTimeout(()=>cascade(id), 0); if(!c.fd && isSpell(c) && !G.mode && /\btarget\b/i.test(stackText(c)||'') && !HANDRE.test(stackText(c)||'')){ G.mode={type:'arrow', from:id}; toast(`${cdata(c).n.split(' // ')[0]}: click its target (a player, a card, a spell on the stack, or a graveyard pile; Esc for none).`); render(); } };
-  if(md) pickModes(c, md, go); else go();
+  const cn = !c.fd ? costNow(c) : null, pd=o.paid, pnote = pd && !o.silent ? (pd.other ? ', paying for it another way' : pd.text ? `, paying ${pd.text}` : '') : '';
+  const go=p=>{ move(id,'st',pnote ? Object.assign({}, o, {note:pnote}) : o); if(o.x!=null) c.x=o.x; if(o.spent && o.spent.length) c.spent=o.spent.slice(); else delete c.spent; if(!c.fd && (o.nm || noManaCast(c, o.x, cn) || (pd && pd.mana===0))) c.nm=1; { CHAL=chaliceWatch(); const ch=chaliceHit(c); if(ch) log(`${cname(c)} has mana value ${ch.n}, the number of charge counters on ${ch.name}.`); } if(!c.fd && HANDRE.test(stackText(c)||'')){ G.mode={type:'arrow', from:id}; toast(`${cdata(c).n}: click the player whose hand is revealed.`); } if(o.x!=null){ c.x=o.x; log(`${cname(c)} is cast with X=${o.x}.`); } if(cn && cn.delta) log(`${cname(c)} costs ${cn.cost} (printed ${cn.printed}; ${cn.why}).`); after&&after(); if(pd && o.silent && (pd.other || pd.text)) log(`${G.me.name} pays ${pd.other ? 'for it another way' : pd.text}.`); applyRiders(c, pd); if(c.spent && c.spent.length) log(`${cname(c)}: ${G.me.name} spent ${c.spent.map(k=>`{${k}}{${k}}`).join(' and ')} to cast it.`); if(p && p.length){ c.md=p; log(modeLog(c, md, p)); } changed(); modalRefresh&&modalRefresh(); if(hasCascade(c)) setTimeout(()=>cascade(id), 0); if(!c.fd && isSpell(c) && !G.mode && /\btarget\b/i.test(stackText(c)||'') && !HANDRE.test(stackText(c)||'')){ G.mode={type:'arrow', from:id}; toast(`${cdata(c).n.split(' // ')[0]}: click its target (a player, a card, a spell on the stack, or a graveyard pile; Esc for none).`); render(); } };
+  go(md ? (o.md||null) : null);
 }
+/* ===== Auto-pay (v3.0) =====
+   With S.autoPay on, a spell or ability takes its cost from the mana pool (castSyms/abilSyms → payPlan → payApply). If the pool is short, the
+   payment window (#payPanel, beside the pact and cycling panels) waits while lands are tapped; the card stays where it was until it is paid.
+   Special mana (G.me.smana: {k, src, only, rider, chosen}) is mana with a restriction ("Spend this mana only …") or a rider (Arena of Glory's
+   haste, Cavern of Souls' can't be countered). It is spent only where specRule allows it, before ordinary mana when it is restricted or its
+   rider applies. Hybrid and Phyrexian symbols can be switched in the window; a cost with Phyrexian mana always opens it. */
+const autoPayOn = () => S.autoPay!==false && !G.me.ctl;
+const riderOf = ln => /If that mana is spent on a creature spell, it gains haste/i.test(ln) ? 'haste' : /that spell can(?:'|’)t be countered/i.test(ln) ? 'unc' : '';
+function specRule(only){
+  const t=(only||'').replace(/,?\s*and that spell can(?:'|’)t be countered/i,'').trim(); if(!t) return null;
+  const sp=t.match(/\bcast (?:an? )?([\w\s-]*?)\s*spells?\b( of the chosen type)?/i), ab=t.match(/\bactivate (?:an? )?abilit(?:y|ies) of (?:an? )?([\w\s-]+?)(?=\s*$|\s+or\b|,)/i);
+  return sp || ab ? {spell: sp ? sp[1].trim() : null, chosen: !!(sp && sp[2]), abil: ab ? ab[1].trim() : null} : null;
+}
+const descMatch = (c, desc, chosen) => (!chosen || spellMatches(c, '', chosen)) && (desc||'').split(/\s+/).filter(Boolean).every(w=>{ const lw=w.toLowerCase(), ww = /^sources?$/.test(lw) ? '' : lw in TYPEW ? TYPEW[lw] : w; return !ww || spellMatches(c, ww, null); });
+function specAllows(e, ctx){ if(!e.only) return true; const r=specRule(e.only); if(!r) return null; const c=ctx.card; if(!c) return false;
+  if(ctx.spell) return r.spell!=null && descMatch(c, r.spell, r.chosen && e.chosen ? e.chosen : null);
+  if(ctx.abil) return r.abil!=null && descMatch(c, r.abil, null); return false; }
+const riderApplies = (e, ctx) => e.rider==='haste' ? !!(ctx.spell && ctx.card && isCreature(ctx.card)) : e.rider==='unc' ? !!ctx.spell : false;
+function specLabel(e){ const r=specRule(e.only), out=[];
+  if(e.rider==='haste') out.push('creature spell gains haste');
+  if(e.only){ if(!r) out.push('only '+e.only.replace(/^to /i,'')); else { const sd=r.spell!=null ? ((r.chosen ? (e.chosen||'chosen type')+' ' : '')+r.spell).trim() : null;
+      out.push(sd!=null && r.abil!=null && r.abil.toLowerCase()===r.spell.toLowerCase() ? `${sd} only` : [sd!=null ? `${sd||'any'} spells` : '', r.abil!=null ? `abilities of ${r.abil}` : ''].filter(Boolean).join(' or ')+' only'); } }
+  if(e.rider==='unc') out.push("can't be countered"); return out.join(' · '); }
+const SYMRX=/^(\d+|[WUBRGCS]|[WUBRG]\/[WUBRGP]|2\/[WUBRG]|[XYZ])$/;
+function normSyms(list, x, less){ let gen=0; const rest=[]; for(const k0 of list){ const k=String(k0).toUpperCase(); if(!SYMRX.test(k)) continue; if(/^\d+$/.test(k)) gen+=+k; else if(/^[XYZ]$/.test(k)) gen+=(+x||0); else if(k==='S') gen+=1; else rest.push(k); } gen=Math.max(0, gen-(+less||0)); return [...(gen ? [String(gen)] : []), ...rest]; }
+function castSyms(c, o){
+  if(o.nm || c.fd) return null; const mcs=(cdata(c).mc||'').split(' // ');
+  let s; if(o.payCost!=null) s=costSyms(o.payCost); else if(o.fuse) s=costSyms(mcs.join('')); else { const cn=!c.flip ? costNow(c) : null; s=cn ? cn.syms.slice() : costSyms(mcs[c.flip?1:0]||''); }
+  if(o.md && o.md.length){ const md=modesOf(c), txt=frontText(c)||''; if(md){
+      if(/^Spree/i.test(md.head)) for(const i of o.md){ const mm=(md.modes[i-1]||'').match(/^((?:\{[^}]+\})+)/); if(mm) s=s.concat(costSyms(mm[1])); }
+      const esk=txt.match(/(?:^|\n)Escalate\s*((?:\{[^}]+\})+)/i); if(esk) for(let j=1;j<o.md.length;j++) s=s.concat(costSyms(esk[1]));
+      const ent=txt.match(/(?:^|\n)Entwine\s*((?:\{[^}]+\})+)/i); if(ent && md.modes.length>1 && o.md.length>=md.modes.length) s=s.concat(costSyms(ent[1])); } }
+  return normSyms(s, o.x, o.less);
+}
+const abilSyms = (cost, x) => normSyms(costSyms(cost).filter(k=>k!=='T' && k!=='Q' && k!=='E'), x);
+const symStr = ks => ks.map(k=>`{${k}}`).join('');
+function payPlan(syms, ctx, ch){
+  ch=ch||{}; const m=G.me, pool=Object.assign(noMana(), m.mana||{}), sp=(m.smana||[]).map((e,i)=>({e, i, ok:specAllows(e, ctx)===true, used:false}));
+  sp.forEach(x=>{ x.good = x.ok && (!!x.e.only || (!!x.e.rider && riderApplies(x.e, ctx))); });
+  const spent=[], from={}, riders=[], cols=noMana(); let life=0, short=0;
+  const use=(x,k)=>{ x.used=true; cols[k]++; (from[x.e.src]=from[x.e.src]||[]).push(k); if(x.e.rider && riderApplies(x.e, ctx) && !riders.some(r=>r.r===x.e.rider)) riders.push({r:x.e.rider, src:x.e.src}); };
+  const take=k=>{ let x=sp.find(y=>!y.used && y.good && y.e.k===k); if(x){ use(x,k); return true; } if(pool[k]>0){ pool[k]--; cols[k]++; spent.push(k); return true; } x=sp.find(y=>!y.used && y.ok && y.e.k===k); if(x){ use(x,k); return true; } return false; };
+  const avail=k=>pool[k]+sp.filter(y=>!y.used && y.ok && y.e.k===k).length;
+  const marks=syms.map(()=>false), pick={}, gen=[];
+  syms.forEach((s,i)=>{ if(MANA.includes(s)){ if(take(s)) marks[i]=true; else short++; } });
+  syms.forEach((s,i)=>{ let mm;
+    if((mm=s.match(/^([WUBRG])\/P$/))){ const k=mm[1], v=ch[i] || (avail(k)>0 ? 'mana' : 'life'); pick[i]=v; if(v==='life'){ life+=2; marks[i]=true; } else if(take(k)) marks[i]=true; else short++; }
+    else if((mm=s.match(/^([WUBRG])\/([WUBRG])$/))){ const v=ch[i] || (avail(mm[1])>0 ? mm[1] : avail(mm[2])>0 ? mm[2] : mm[1]); pick[i]=v; if(take(v)) marks[i]=true; else short++; }
+    else if((mm=s.match(/^2\/([WUBRG])$/))){ const k=mm[1], v=ch[i] || (avail(k)>0 ? k : '2'); pick[i]=v; if(v==='2') gen.push([i,2]); else if(take(k)) marks[i]=true; else short++; }
+    else if(/^\d+$/.test(s)) gen.push([i,+s]); });
+  const takeAny=()=>{ let x=sp.find(y=>!y.used && y.good); if(x){ use(x,x.e.k); return true; } const k=pool.C>0 ? 'C' : MANA.slice().sort((a,b)=>pool[b]-pool[a])[0]; if(pool[k]>0){ pool[k]--; cols[k]++; spent.push(k); return true; } x=sp.find(y=>!y.used && y.ok); if(x){ use(x,x.e.k); return true; } return false; };
+  for(const [i,n] of gen){ let got=0; while(got<n && takeAny()) got++; if(got===n) marks[i]=true; else short+=n-got; }
+  const mana=spent.length+Object.values(from).reduce((a,v)=>a+v.length,0);
+  return {ok:short===0, short, marks, pick, life, pool, used:sp.filter(x=>x.used).map(x=>x.i), riders, cols, spent, from, mana};
+}
+function payText(pl, lifeNote){ const ord=k=>MANA.indexOf(k), parts=[];
+  if(pl.spent.length) parts.push(`${symStr(pl.spent.slice().sort((a,b)=>ord(a)-ord(b)))} from the mana pool`);
+  for(const s in pl.from) parts.push(`${symStr(pl.from[s])} from ${s}`);
+  if(pl.life) parts.push(`${pl.life} life (${lifeNote||'now '+G.me.life})`);
+  return parts.length>1 ? parts.slice(0,-1).join(', ')+' and '+parts[parts.length-1] : (parts[0]||''); }
+function payApply(pl){ const m=G.me; m.mana=pl.pool; if(pl.used.length) m.smana=(m.smana||[]).filter((e,i)=>!pl.used.includes(i)); if(pl.life) m.life-=pl.life;
+  return {text:payText(pl), cols:pl.cols, mana:pl.mana, riders:pl.riders, life:pl.life}; }
+function applyRiders(c, pd){ for(const r of (pd && pd.riders)||[]){ if(r.r==='haste'){ c.hst=G.turn.n||1; log(`${cname(c)} will have haste this turn (paid with ${r.src}'s mana).`); } else if(r.r==='unc'){ c.unc=1; log(`${cname(c)} can't be countered (paid with ${r.src}'s mana).`); } } }
+let PAY=null;
+function payFor(syms, ctx, o){
+  if(!syms || !syms.length){ o.done({text:'', cols:noMana(), mana:0, riders:[], life:0}); return; }
+  const pl=payPlan(syms, ctx, {});
+  if(pl.ok && !syms.some(k=>/\/P$/.test(k))){ o.done(payApply(pl)); return; }
+  if(PAY){ const P=PAY; closePay(); P.o.cancel&&P.o.cancel(); }
+  PAY={syms, ctx, o, ch:{}}; paintPay(); }
+function closePay(){ PAY=null; const el=$('#payPanel'); el.hidden=true; el.innerHTML=''; }
+function paintPay(){
+  const el=$('#payPanel'); if(!PAY){ el.hidden=true; return; } const {syms, ctx, o, ch}=PAY;
+  if(ctx.id){ const f=find(ctx.id); if(!f || f.z!==ctx.from){ closePay(); return; } }
+  const pl=payPlan(syms, ctx, ch), cost=symStr(syms); el.hidden=false;
+  const chips=syms.map((k,i)=>/\/P$/.test(k) && pl.pick[i]==='life' ? '<i class="ms lifec ok" title="2 life">2♥</i>' : symHTML([k]).replace('class="ms ', `class="ms ${pl.marks[i]?'ok ':''}`)).join('');
+  const rows=syms.map((k,i)=>{ let mm; const opts = (mm=k.match(/^([WUBRG])\/P$/)) ? [['mana',symHTML([mm[1]])],['life','2 life']] : (mm=k.match(/^([WUBRG])\/([WUBRG])$/)) ? [[mm[1],symHTML([mm[1]])],[mm[2],symHTML([mm[2]])]] : (mm=k.match(/^2\/([WUBRG])$/)) ? [[mm[1],symHTML([mm[1]])],['2',symHTML(['2'])]] : null;
+    return opts ? `<div class="pch">${symHTML([k])}<span>pay with</span>${opts.map(([v,h])=>`<button class="${pl.pick[i]===v?'on':''}" data-pay="ch:${i}:${v}">${h}</button>`).join('')}</div>` : ''; }).join('');
+  const cancel = ctx.spell ? (ctx.from==='hand' ? 'Cancel (back to hand)' : `Cancel (stays in ${ctx.from==='gy' ? 'the graveyard' : ZN[ctx.from]||'place'})`) : 'Cancel';
+  const what = ctx.spell ? 'It goes on the stack once it\'s paid.' : 'The ability goes on the stack once it\'s paid.';
+  el.innerHTML=`<button class="px" data-pay="cancel" title="${esc(cancel)}">✕</button><h3>${esc(o.title)}</h3>
+    <span class="hint">${what} Tap lands; each symbol lights up as your pool covers it.</span>
+    <div class="pcost">${chips}</div>${rows}
+    <span class="pst ${pl.ok?'ok':''}">${pl.ok ? (pl.mana || pl.life ? `Covered: ${esc(payText(pl, `${G.me.life} → ${G.me.life-pl.life}`))}.` : 'Covered.') : `Not covered yet: ${pl.short} more mana to go.`}</span>
+    <div class="pbtns"><button class="go" data-pay="pay" ${pl.ok?'':'disabled'}>Pay ${esc(cost)} and ${o.verb}</button><button data-pay="other">Paid another way</button><button class="ghost" data-pay="cancel">${esc(cancel)}</button></div>`;
+}
+function payAction(k){ if(!PAY) return; const P=PAY;
+  if(k.startsWith('ch:')){ const [i,v]=k.slice(3).split(':'); P.ch[i]=v; paintPay(); return; }
+  if(k==='cancel'){ closePay(); P.o.cancel&&P.o.cancel(); return; }
+  if(k==='other'){ closePay(); P.o.done({other:true, text:'', cols:null, mana:null, riders:[], life:0}); return; }
+  if(k==='pay'){ const pl=payPlan(P.syms, P.ctx, P.ch); if(!pl.ok) return; closePay(); P.o.done(payApply(pl)); } }
+/* clicking a special mana symbol by hand: spend it, and give its rider to the spell on top of my stack */
+function spendSpecial(i){ const m=G.me, e=(m.smana||[])[i]; if(!e) return;
+  const top=m.st[m.st.length-1]; let ctx=null, tgt=null;
+  if(top && !top.pact){ if(top.ab || top.ch){ const s=top.ab && find(top.ab.id); ctx={abil:true, card:s ? s.c : null}; } else { ctx={spell:true, card:top}; tgt=top; } }
+  if(ctx && e.only && specAllows(e, ctx)===false){ toast(`${e.src}'s mana can only be spent ${e.only.replace(/,?\s*and that spell can(?:'|’)t be countered/i,'')}.`); return; }
+  m.smana.splice(i,1); let note='';
+  if(tgt && e.rider && riderApplies(e, ctx)){ if(e.rider==='haste'){ tgt.hst=G.turn.n||1; note=`: ${cname(tgt)} will have haste this turn`; } else { tgt.unc=1; note=`: ${cname(tgt)} can't be countered`; } }
+  log(`${m.name} spends {${e.k}} from ${e.src}${note}.`); changed(); }
+const smanaHTML = (p, mine) => { const L=p.smana||[]; if(!L.length) return ''; const g=[];
+  L.forEach((e,i)=>{ const key=[e.src,e.only,e.rider,e.chosen].join('|'), last=g[g.length-1]; if(last && last.key===key) last.ix.push(i); else g.push({key, e, ix:[i]}); });
+  return `<div class="smana">${g.map(x=>{ const lab=specLabel(x.e); return `<div class="srow">${x.ix.map(i=>`<span class="mp on ${mine?'mine':''}" ${mine?`data-smana="${i}"`:''} title="${esc(x.e.src)}: ${esc(lab)}${mine?'. Auto-pay spends it where it is allowed; click to spend it by hand (its rider goes to the spell on top of your stack).':''}">${symHTML([L[i].k])}</span>`).join('')}<span class="slab" title="${esc(lab)}">${esc(x.e.src)} · ${esc(lab)}</span></div>`; }).join('')}</div>`; };
 /* exiled cards that may be played for a while: c.pl is 'next' (until the end of my next turn) or 'this' (until the end of this turn).
    'next' becomes 'this' when my turn starts; 'this' is dropped when the turn number changes. The card stays in exile throughout. */
 function expirePlayable(){ let ch=false; for(const c of G.me.ex) if(c.pl==='this'){ delete c.pl; ch=true; } return ch; }
@@ -2338,10 +2456,11 @@ function exileWith(id, target, mode){
 const WARP_SVG = '<svg class="warpmark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11.5" fill="#000" stroke="#fff" stroke-width=".8"/><path d="M12 12.2c.1-1.6 2.6-1.5 2.6.6 0 2.600-4.6 3-5.400-.2-.7-3 2.300-5.700 5.500-4.600 3.700 1.300 4.300 6 1.700 8.600" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>';
 const faceName = (c,i) => { const p=(cdata(c).n||'').split(' // '); return p[i]||p[0]||'this card'; };
 const faceTypeOf = (c,i) => { const p=(cdata(c).t||'').split(' // '); return p[i]||p[0]||''; };
-function playBack(id, zone, tapped){
+function playBack(id, zone, tapped, pd){
   const f=find(id); if(!f) return; const c=f.c, nm=faceName(c,1);
+  if(zone==='st' && !pd && autoPayOn()){ const sy=normSyms(costSyms((cdata(c).mc||'').split(' // ')[1]||'')); payFor(sy, {spell:true, card:c, id, from:f.z}, {title:`Cast ${nm}`, verb:'cast', done:r=>playBack(id, zone, tapped, r)}); return; }
   if(zone==='bf'){ c.flip=true; move(id,'bf',{silent:true,tap:!!tapped}); log(`${G.me.name} plays ${cname(c)} as a land (${nm})${tapped?' tapped':''}.`); if(!tapped) landEnters(id); }
-  else { move(id,'st',{silent:true}); c.flip=true; log(`${G.me.name} casts ${nm}, the other side of ${cname(c)}.`); }
+  else { move(id,'st',{silent:true}); c.flip=true; log(`${G.me.name} casts ${nm}, the other side of ${cname(c)}${pd && pd.other ? ', paying for it another way' : pd && pd.text ? ', paying '+pd.text : ''}.`); if(pd && pd.mana===0) c.nm=1; applyRiders(c, pd); }
   changed();
 }
 function attack(id, vig){
@@ -2352,7 +2471,7 @@ function attack(id, vig){
   atkTrigs(c); youAttack(); { const mb=(frontText(c)||'').match(/(?:^|\n)Mobilize (\d+)/i); if(mb){ const d=cdata(c), sn=d.n.split(',')[0]; G.me.st.push(mk(null,{tok:true, ts:Date.now(), ab:{id:c.id, tr:true}, cu:{n:`${sn}: mobilize ${mb[1]}`, t:'Triggered ability', o:`Create ${mb[1]} tapped and attacking 1/1 red Warrior creature tokens. Sacrifice them at the beginning of the next end step.`, img:d.img||''}})); log(`${sn} attacks: mobilize ${mb[1]} goes on the stack.`); changed(); } }
   { const b=blinkTrig(c); if(b && b.when==='attacks') toast(`${srcName(c)} attacks: right-drag its arrow onto ${b.upto?'up to one':'a'} ${b.other?'other ':''}${b.phrase} to put its trigger on the stack.`); }
 }
-function emptyPool(){ const m=G.me; if(m.mana && MANA.some(k=>m.mana[k])){ m.mana=noMana(); return true; } return false; }
+function emptyPool(){ const m=G.me; let ch=false; if(m.mana && MANA.some(k=>m.mana[k])){ m.mana=noMana(); ch=true; } if(m.smana && m.smana.length){ m.smana=[]; ch=true; } return ch; }
 function untapCard(c){ if(c.stun>0){ c.stun--; log(`A stun counter comes off ${cname(c)} instead of it untapping (${c.stun} left).`); return false; } c.tap=false; return true; }
 /* Empower Jace N (Reality Fracture): if you control no Jace token, create a 0-loyalty blue Jace planeswalker token; then put N loyalty counters on your Jace token. */
 function empowers(c){
@@ -2383,7 +2502,7 @@ function toggleTap(id, x, y){
     const abs=manaAbilities(c);
     if(abs.length>1 || (abs.length===1 && (abs[0].cost || abs[0].rem))){ if(x==null){ const el=$(`#table .card[data-id="${id}"]`), r=el?el.getBoundingClientRect():{left:200,top:200,width:0}; x=r.left+r.width/2; y=r.top+20; }
       menu(x, y, [...abs.map(a=>[abilityLabel(a), ()=>{ if(useAbility(c,a)) changed(); }]), '-', ['Tap without adding mana', ()=>{ c.tap=true; changed(); }]]); return; }
-    if(abs.length===1){ addMana(abs[0].out); if(isCreature(c)) extraMana(c); }
+    if(abs.length===1){ if(abs[0].only || abs[0].rider){ useAbility(c, abs[0]); changed(); return; } addMana(abs[0].out); if(isCreature(c)) extraMana(c); }
   }
   c.tap=true; changed();
 }
@@ -2442,7 +2561,7 @@ function newMatch(){ G.me.wins=0; G.me.wonGame=0; send({t:'newmatch'}); log(`${G
 function gather(){
   const m=G.me; G.noUndo=true;
   for(const z of ['hand','bf','gy','ex','st']){ for(const c of m[z].splice(0)){ if(c.tok || c.made) continue; if(c.o!==G.myId){ send({t:'give', card:Object.assign(c,{tap:false,c:0,att:null,atk:false,fd:false,flip:false}), zone:'lib'}); continue; } Object.assign(c,{tap:false,c:0,att:null,atk:false,fd:false,flip:false,note:'',row:null}); m.lib.push(c); } }
-  m.life=20; m.lastLife=20; delete m.gain; delete m.city; delete m.wya; delete m.atkC; delete m.lock; m.ctr={poison:0,energy:0}; m.arrows=[]; m.reveal=false; m.mull=0; m.roll=null; m.compDone=false; m.skipRoll=false; m.dealt=false; m.kept=false; m.mana=noMana(); m.energySeen=false; m.drew=0; m.ctl=false; m.ctlNext=false; m.cast={n:0,is:0}; m.pacts=[]; m.baub=[]; m.trk=null; for(const c of m.side) delete c.comp; for(const c of m.lib){ delete c.by; delete c.warp; delete c.wp; delete c.fl; delete c.bt; delete c.ent; delete c.offer; delete c.pl; delete c.kw; delete c.lt; delete c.sick; delete c.lft; delete c.cp; }
+  m.life=20; m.lastLife=20; delete m.gain; delete m.city; delete m.wya; delete m.atkC; delete m.lock; m.ctr={poison:0,energy:0}; m.arrows=[]; m.reveal=false; m.mull=0; m.roll=null; m.compDone=false; m.skipRoll=false; m.dealt=false; m.kept=false; m.mana=noMana(); m.smana=[]; m.energySeen=false; m.drew=0; m.ctl=false; m.ctlNext=false; m.cast={n:0,is:0}; m.pacts=[]; m.baub=[]; m.trk=null; for(const c of m.side) delete c.comp; for(const c of m.lib){ delete c.by; delete c.warp; delete c.wp; delete c.fl; delete c.bt; delete c.ent; delete c.offer; delete c.pl; delete c.kw; delete c.lt; delete c.sick; delete c.lft; delete c.cp; }
 }
 function newGame(remote){
   gather(); G.turn={active:null, phase:2, n:0};
@@ -2489,7 +2608,7 @@ async function loadDeck(d, name, onProgress){
   const m=G.me; for(const z of ['lib','hand','bf','gy','ex','st','side']){ for(const c of m[z]) if(c.o!==G.myId && !c.tok) send({t:'give', card:c, zone:'lib'}); m[z]=[]; }
   for(const [n,c] of d.main) for(let i=0;i<c;i++) m.lib.push(mk(kk(n)));
   for(const [n,c] of d.side) for(let i=0;i<c;i++) m.side.push(mk(kk(n)));
-  m.deck=name; m.life=20; m.ctr={poison:0,energy:0}; m.mull=0; m.arrows=[]; m.roll=null; m.compDone=false; m.skipRoll=false; m.dealt=false; m.kept=false; m.mana=noMana(); m.energySeen=false; m.drew=0; m.cast={n:0,is:0}; m.pacts=[]; m.baub=[]; m.trk=null; setCares();
+  m.deck=name; m.life=20; m.ctr={poison:0,energy:0}; m.mull=0; m.arrows=[]; m.roll=null; m.compDone=false; m.skipRoll=false; m.dealt=false; m.kept=false; m.mana=noMana(); m.smana=[]; m.energySeen=false; m.drew=0; m.cast={n:0,is:0}; m.pacts=[]; m.baub=[]; m.trk=null; setCares();
   log(`${m.name} brought ${name}.`); shuffleUp();
 }
 
@@ -2516,6 +2635,7 @@ function cardHTML(c, z, mine, cls=''){
   if(z==='bf' && c.eb && !backUp) b+='<span class="ebban" title="Earthbent: a creature with haste that is still a land">EARTHBENT</span>';
   if(z==='bf' && c.bw && c.att && !backUp) b+='<span class="chban" title="Bestowed: an Aura while attached">BESTOWED</span>';
   if(z==='st' && c.bw && !backUp) b+='<span class="badge mdb">Bestow</span>';
+  if(z==='st' && !backUp && (c.hst || c.unc)) b+=`<span class="ribban" title="Paid with special mana">${[c.hst&&'HASTE', c.unc&&'CAN\'T BE COUNTERED'].filter(Boolean).join('<br>')}</span>`;
   if(z==='st' && c.ev && !backUp) b+='<span class="badge mdb">Evoked</span>';
   if(z==='st' && !backUp && !c.tok && chaliceHit(c)) b+=`<span class="cmcban" title="Mana value matches the charge counters on ${esc(chaliceHit(c).name)}">CMC = ${chaliceHit(c).n}</span>`;
   if(z==='st' && c.nm && !backUp && NMW) b+='<span class="nmban" title="No mana was spent to cast this spell">NO MANA<br>WAS SPENT</span>';
@@ -2553,7 +2673,7 @@ function avatarHTML(p, pid, mine){
   const chips = Object.entries(p.ctr||{}).map(([k,v])=>`<span class="chip ${v?'nz':''}" data-ctr="${k}" data-pl="${pid}" title="Click to add, right-click to remove">${k} ${v}</span>`).join('');
   return `<div class="nm">${esc(p.name||'Opponent')}${act?' ●':''}</div>
     <div class="life"><button data-life="-1" data-pl="${pid}" aria-label="Lose 1 life">−</button><b>${p.life}</b><button data-life="1" data-pl="${pid}" aria-label="Gain 1 life">+</button></div>
-    <div class="dk">${esc(p.deck||'No deck yet')}${p.mull?` · ${p.mull} mulligan${p.mull>1?'s':''}`:''}</div><div class="mana">${MANA.map(k=>{ const n=(p.mana||{})[k]||0; return `<span class="mp ${n?'on':''} ${mine?'mine':''}" ${mine?`data-mana="${k}"`:''} title="${MNAME[k]} mana${mine?': click to spend one, Shift-click or right-click to add one':''}">${n>1?`<b>${n}</b>`:''}<i class="ms ms-${k}">${k}<img src="https://svgs.scryfall.io/card-symbols/${k}.svg" alt="" draggable="false" onerror="this.remove()"></i></span>`; }).join('')}</div><div class="chips">${chips}<span class="winmark ${p.wins?'on':''}" data-win="${pid}" title="Click to mark a game win. Right-click to take one back."><i></i>${p.wins>=2?'Match won':p.wins?'1 game won':'Game win'}</span></div>`;
+    <div class="dk">${esc(p.deck||'No deck yet')}${p.mull?` · ${p.mull} mulligan${p.mull>1?'s':''}`:''}</div><div class="mana">${MANA.map(k=>{ const n=(p.mana||{})[k]||0; return `<span class="mp ${n?'on':''} ${mine?'mine':''}" ${mine?`data-mana="${k}"`:''} title="${MNAME[k]} mana${mine?': click to spend one, Shift-click or right-click to add one':''}">${n>1?`<b>${n}</b>`:''}<i class="ms ms-${k}">${k}<img src="https://svgs.scryfall.io/card-symbols/${k}.svg" alt="" draggable="false" onerror="this.remove()"></i></span>`; }).join('')}</div>${smanaHTML(p, mine)}<div class="chips">${chips}<span class="winmark ${p.wins?'on':''}" data-win="${pid}" title="Click to mark a game win. Right-click to take one back."><i></i>${p.wins>=2?'Match won':p.wins?'1 game won':'Game win'}</span></div>`;
 }
 let NMW=null, CHAL=[];   /* name of a card that cares whether mana was spent, set each render */
 function render(){
@@ -2653,7 +2773,7 @@ function render(){
   const hd=$('#myHand'), n=m.hand.length, fc=hd.firstElementChild;
   if(fc && n>1){ const w=fc.offsetWidth, step=Math.min(w*.86, (hd.clientWidth-24-w)/(n-1)); hd.style.setProperty('--hm', (-(w-step)/2)+'px'); }
   $('#undoBtn').disabled = !UNDO.length; $('#undoBtn').style.opacity = UNDO.length ? 1 : .45;
-  renderLog(); requestAnimationFrame(drawArrows); if(PACT) paintPact(); else if(CYC) paintCyc();
+  renderLog(); requestAnimationFrame(drawArrows); if(PACT) paintPact(); else if(CYC) paintCyc(); paintPay();
   if(m.deck && !t.n && !m.compDone && !needRoll() && !compCandidates().length && !m.side.some(c=>c.comp)){ m.compDone=true; setTimeout(changed, 0); }
 }
 function renderLog(){
@@ -2788,13 +2908,13 @@ function cardMenu(id, x, y){
         ? [[`Play as land: ${faceName(c,1)}`,()=>playBack(id,'bf')], [`Play as land, tapped: ${faceName(c,1)}`,()=>playBack(id,'bf',true)]]
         : d.lay!=='transform' ? [[`Cast the other side: ${faceName(c,1)} (goes to the stack)`,()=>castGate(id, ()=>playBack(id,'st'))]] : []) : []),
     !isLand(c)&&warpCost(c)&&[`Cast for its warp cost ${warpCost(c)} (goes to the stack)`,()=>castWarp(id)],
-    dashCost(c)&&[`Cast for its dash cost ${dashCost(c)} (haste; returns to your hand at the end step)`,()=>castSpell(id,{silent:true},()=>{ c.dash=1; log(`${G.me.name} casts ${cname(c)} for its dash cost ${dashCost(c)}. It has haste and returns to their hand at the end step.`); })],
-    /(?:^|\n)Fuse\b/.test(cdata(c).o||'')&&[`Cast both halves (fuse) ${(cdata(c).mc||'').replace(' // ','')}`,()=>castSpell(id,{silent:true},()=>{ c.fuse=1; log(`${G.me.name} casts ${cname(c)}, both halves (fuse).`); })],
-    ...(evokeOf(c) ? (spentConds(c).length && /\{[WUBRG]\/[WUBRG]\}/.test(evokeOf(c).text) ? spentConds(c).map(k=>[`Cast for its evoke cost, paying {${k}}{${k}} (its {${k}}{${k}} trigger; sacrificed when it enters)`,()=>castAlt(id, Object.assign({}, evokeOf(c), {mana:`{${k}}{${k}}`}), 'evoke', [k])]) : [[`Cast for its evoke cost: ${evokeOf(c).text} (sacrificed when it enters)`,()=>castAlt(id, evokeOf(c), 'evoke')]]) : []),
-    ...(spentConds(c).length ? [...spentConds(c).map(k=>[k]), ...(spentConds(c).length>1 ? [spentConds(c)] : [])].map(v=>[`Cast it, paying ${v.map(k=>`{${k}}{${k}}`).join(' and ')} (${v.length>1?'both triggers':'that trigger'})`,()=>castSpell(id,{spent:v})]) : []),
+    dashCost(c)&&[`Cast for its dash cost ${dashCost(c)} (haste; returns to your hand at the end step)`,()=>castSpell(id,{silent:true, payCost:dashCost(c)},()=>{ c.dash=1; log(`${G.me.name} casts ${cname(c)} for its dash cost ${dashCost(c)}. It has haste and returns to their hand at the end step.`); })],
+    /(?:^|\n)Fuse\b/.test(cdata(c).o||'')&&[`Cast both halves (fuse) ${(cdata(c).mc||'').replace(' // ','')}`,()=>castSpell(id,{silent:true, fuse:1},()=>{ c.fuse=1; log(`${G.me.name} casts ${cname(c)}, both halves (fuse).`); })],
+    ...(evokeOf(c) ? (spentConds(c).length && /\{[WUBRG]\/[WUBRG]\}/.test(evokeOf(c).text) && !autoPayOn() ? spentConds(c).map(k=>[`Cast for its evoke cost, paying {${k}}{${k}} (its {${k}}{${k}} trigger; sacrificed when it enters)`,()=>castAlt(id, Object.assign({}, evokeOf(c), {mana:`{${k}}{${k}}`}), 'evoke', [k])]) : [[`Cast for its evoke cost: ${evokeOf(c).text} (sacrificed when it enters)`,()=>castAlt(id, evokeOf(c), 'evoke')]]) : []),
+    ...(spentConds(c).length && !autoPayOn() ? [...spentConds(c).map(k=>[k]), ...(spentConds(c).length>1 ? [spentConds(c)] : [])].map(v=>[`Cast it, paying ${v.map(k=>`{${k}}{${k}}`).join(' and ')} (${v.length>1?'both triggers':'that trigger'})`,()=>castSpell(id,{spent:v})]) : []),
     ...altCostsOf(c).map(a=>[`Cast without paying its mana cost: ${a.text}${a.cond?' ('+a.cond.toLowerCase()+')':''}`,()=>castAlt(id, a, 'alt')]),
     ...handAbils(c).map((x,i)=>[`${x.chan?'Channel — ':'Discard to activate — '}${x.mana||x.cost}${x.less?' (after '+x.less+' less)':''}: ${x.eff.length>70 ? x.eff.slice(0,68)+'…' : x.eff}`,()=>channel(id, i)]),
-    targetDiscount(c)&&(x=>[`Cast for ${x.cost} (it targets ${x.what})`,()=>castSpell(id,{silent:true},()=>log(`${G.me.name} casts ${cname(c)} for ${x.cost}: it targets ${x.what}.`))])(targetDiscount(c)),
+    targetDiscount(c)&&(x=>[`Cast for ${x.cost} (it targets ${x.what})`,()=>castSpell(id,{silent:true, payCost:x.cost},()=>log(`${G.me.name} casts ${cname(c)} for ${x.cost}: it targets ${x.what}.`))])(targetDiscount(c)),
     ...cyclingOf(c).map((cy,i)=>[`${cy.label}${cy.mana?' '+cy.mana:''}${cy.life?(cy.mana?', ':' — ')+'pay '+cy.life+' life':''}${cy.other?', '+cy.other:''} (${cy.what ? 'search for a'+(/^[aeiou]/i.test(cy.what)?'n':'')+' '+cy.what.toLowerCase()+' card' : 'draw a card'})`, ()=>startCycle(id, i)]),
     bestowCost(c)&&[`Cast for its bestow cost ${bestowCost(c)} (an Aura: then click its creature)`,()=>castBestow(id)],
     impendingN(c)>0&&[`Cast for its impending cost (${impendingN(c)} time counters)`,()=>castGate(id, ()=>{ const n=impendingN(c); move(id,'st',{silent:true}); c.imp=n; log(`${G.me.name} casts ${cname(c)} for its impending cost.`); ch(); })],
@@ -2809,7 +2929,7 @@ function cardMenu(id, x, y){
   else if(z==='ex' && c.fl) items=[ ['Return it to the battlefield now',()=>{ flReturn(c); ch(); modalRefresh&&modalRefresh(); }], ['Leave it in exile (stop tracking)',()=>{ if(c.fl.trig){ const k=G.me.st.findIndex(x=>x.id===c.fl.trig); if(k>=0) G.me.st.splice(k,1); } delete c.fl; log(`${cname(c)} stays in exile.`); ch(); modalRefresh&&modalRefresh(); }], '-', ...dest ];
   else if(z==='ex' && c.pl) items=[ ...playItems(c,id), ['Stop tracking it (stays in exile)',()=>{ delete c.pl; ch(); modalRefresh&&modalRefresh(); }], c.pl==='next'&&['Move to "until end of this turn"',()=>{ c.pl='this'; ch(); modalRefresh&&modalRefresh(); }], '-', ...dest ];
   else if(z==='side' && c.comp) items=compItems(c, id);
-  else items=[ z==='side'&&isCompanion(c)&&!G.me.side.some(x=>x.comp)&&['Reveal as your companion',()=>{ revealCompanion(id); modalRefresh&&modalRefresh(); }], z==='lib'&&['Reveal this card to opponent',()=>log(`${G.me.name} reveals ${cname(c)} from their library.`)], [c.warp?(c.warp===G.turn.n?'Cast it anyway (warped this turn; normally a later turn)':'Cast this card (from the warp zone)'):'Cast from here (to the stack)',()=>castSpell(id)], z==='gy'&&[c.fbk?'Remove flashback mark':'Mark for flashback (until end of turn)',()=>{ if(c.fbk){ delete c.fbk; log(`${cname(c)} no longer has flashback.`); } else { c.fbk=G.turn.n||1; log(`${G.me.name} gives ${cname(c)} in their graveyard flashback until end of turn.`); } ch(); modalRefresh&&modalRefresh(); }], ...(z==='gy' ? gyAbils(c).map((a,i)=>[`Activate from the graveyard — ${a.cost}: ${a.eff.length>60?a.eff.slice(0,58)+'…':a.eff}`,()=>useGyAbil(id,i)]) : []), z==='gy'&&flashbackCost(c)&&[`Cast with flashback ${flashbackCost(c)} (exiled after)`,()=>castSpell(id,{xr:1,silent:true},()=>log(`${G.me.name} casts ${cname(c)} from their graveyard with flashback ${flashbackCost(c)}. It will be exiled.`))], z==='gy'&&harmonizeOf(c)&&[`Cast for its harmonize cost ${harmonizeOf(c)} (tap a creature to pay less; exiled after)`,()=>castHarmonize(id)], z==='gy'&&(x=>x&&x.gy)(bestowInfo(c))&&[`Cast for its bestow cost from your graveyard (${bestowCost(c)}; then click its creature)`,()=>castBestow(id)], z==='gy'&&['Cast from here, then exile',()=>castSpell(id,{xr:1,silent:true},()=>log(`${G.me.name} casts ${cname(c)} from their graveyard. It will be exiled when it leaves the stack.`))], c.by&&['Return to battlefield now',go('bf')], z==='ex'&&!c.by&&!c.warp&&!c.fd&&['May be played until end of next turn',()=>{ c.pl='next'; delete c.offer; log(`${G.me.name} may play ${cname(c)} from exile until the end of their next turn.`); ch(); modalRefresh&&modalRefresh(); }], z==='ex'&&!c.by&&!c.warp&&!c.fd&&['May be played until end of this turn',()=>{ c.pl='this'; delete c.offer; log(`${G.me.name} may play ${cname(c)} from exile until the end of this turn.`); ch(); modalRefresh&&modalRefresh(); }], ...dest ];
+  else items=[ z==='side'&&isCompanion(c)&&!G.me.side.some(x=>x.comp)&&['Reveal as your companion',()=>{ revealCompanion(id); modalRefresh&&modalRefresh(); }], z==='lib'&&['Reveal this card to opponent',()=>log(`${G.me.name} reveals ${cname(c)} from their library.`)], [c.warp?(c.warp===G.turn.n?'Cast it anyway (warped this turn; normally a later turn)':'Cast this card (from the warp zone)'):'Cast from here (to the stack)',()=>castSpell(id)], z==='gy'&&[c.fbk?'Remove flashback mark':'Mark for flashback (until end of turn)',()=>{ if(c.fbk){ delete c.fbk; log(`${cname(c)} no longer has flashback.`); } else { c.fbk=G.turn.n||1; log(`${G.me.name} gives ${cname(c)} in their graveyard flashback until end of turn.`); } ch(); modalRefresh&&modalRefresh(); }], ...(z==='gy' ? gyAbils(c).map((a,i)=>[`Activate from the graveyard — ${a.cost}: ${a.eff.length>60?a.eff.slice(0,58)+'…':a.eff}`,()=>useGyAbil(id,i)]) : []), z==='gy'&&flashbackCost(c)&&[`Cast with flashback ${flashbackCost(c)} (exiled after)`,()=>castSpell(id,{xr:1,silent:true, payCost:flashbackCost(c)},()=>log(`${G.me.name} casts ${cname(c)} from their graveyard with flashback ${flashbackCost(c)}. It will be exiled.`))], z==='gy'&&harmonizeOf(c)&&[`Cast for its harmonize cost ${harmonizeOf(c)} (tap a creature to pay less; exiled after)`,()=>castHarmonize(id)], z==='gy'&&(x=>x&&x.gy)(bestowInfo(c))&&[`Cast for its bestow cost from your graveyard (${bestowCost(c)}; then click its creature)`,()=>castBestow(id)], z==='gy'&&['Cast from here, then exile',()=>castSpell(id,{xr:1,silent:true},()=>log(`${G.me.name} casts ${cname(c)} from their graveyard. It will be exiled when it leaves the stack.`))], c.by&&['Return to battlefield now',go('bf')], z==='ex'&&!c.by&&!c.warp&&!c.fd&&['May be played until end of next turn',()=>{ c.pl='next'; delete c.offer; log(`${G.me.name} may play ${cname(c)} from exile until the end of their next turn.`); ch(); modalRefresh&&modalRefresh(); }], z==='ex'&&!c.by&&!c.warp&&!c.fd&&['May be played until end of this turn',()=>{ c.pl='this'; delete c.offer; log(`${G.me.name} may play ${cname(c)} from exile until the end of this turn.`); ch(); modalRefresh&&modalRefresh(); }], ...dest ];
   { const ev=evidenceN(c); if(ev && !(bestowInfo(c)&&bestowInfo(c).ev) && !abilitiesOf(c).some(a=>/collect evidence/i.test(a.cost) && z==='bf')) items=[[`Collect evidence ${ev}… (exile from your graveyard)`,()=>collectEvidence(ev, c)], '-', ...items]; }
   if(z==='gy'){ const srcs=myStackSources(); if(srcs.length) items=[...srcs.map(sc=>[`Target this card with ${cdata(sc).n.replace(/: (ability|chapter [IVX]+)$/,'')}`, ()=>{ addGyTarget(sc.id, id, G.myId); modalRefresh&&modalRefresh(); }]), '-', ...items]; }
   if(arrowsOn(id)) items=[['Clear targets',()=>clearTargets(id)], '-', ...items];
@@ -2860,6 +2980,7 @@ function tableMenu(x,y){
     ['Concede this game',()=>concede()],
     ['Change deck',()=>showDecks()], ['Take the turn',()=>{ setTurn({active:G.myId, phase:2, n:Math.max(1,G.turn.n)}); }],
     [S.autoDraw?'Turn off auto-draw each turn':'Turn on auto-draw each turn',()=>{ S.autoDraw=!S.autoDraw; store.set('mt_settings',S); toast('Auto-draw is '+(S.autoDraw?'on':'off')); }],
+    [`Auto-pay from mana pool: ${S.autoPay!==false?'On':'Off'}`,()=>{ S.autoPay=S.autoPay===false; store.set('mt_settings',S); toast(S.autoPay ? 'Auto-pay is on: spells and abilities take their cost from your mana pool.' : 'Auto-pay is off: spells go straight to the stack; spend mana by clicking its symbols.'); }],
     ['Clear my arrows',()=>{ G.me.arrows=[]; changed(); }], ['Shortcuts and help',()=>helpModal()], ["What's new",()=>newsModal()], ['Send feedback',()=>openFeedback()], '-',
     ['Leave the table',()=>confirmBox('Leave this table?','Your seat is kept on this computer, so you can come back from the front page.',()=>{ save(); location.href=location.pathname+location.search; })] ]);
 }
@@ -2868,7 +2989,7 @@ function helpModal(){
   const k=(a,b)=>`<div><kbd class="k">${a}</kbd> ${b}</div>`;
   const g=(h, ...l)=>`<h5>${h}</h5>${l.map(x=>`<div>${x}</div>`).join('')}`;
   const el=modal('How this table works', `<div class="hrule"><b>Anything that needs to happen can happen.</b> A lot happens by itself. Anything that doesn't is in a right-click menu (on a card, a pile, your hand or your library), or you can drag the card where it goes. Nothing is enforced, so agree with your opponent and do it by hand. If something takes more steps than it should, use <b>Send feedback</b> to say what you did and what you wanted to happen. That is how things get streamlined.</div>
-  <div class="two help"><div><h4>Mouse</h4>${g('Playing cards','Click a card in your hand: lands enter play, spells go to the stack. Shift-click a land to play it tapped.','Right-click a card in your hand for other ways to cast it (evoke, cycling, warp, its other side).','Drag cards between your zones.')}${g('The stack','Click a spell or ability to resolve it. Simple effects happen by themselves; a window asks when there is a choice to make.','Right-click a permanent to use its abilities.')}${g('Targets','Right-drag from a card to its target to draw an arrow. Right-click either end to clear it.')}${g('Library and graveyard','Click your library to draw; right-click it to search, scry, mill or shuffle.','Click a graveyard or exile pile to look through it.')}${g('Mana','Tapping a land adds its mana to your pool; click a symbol to spend it. The pool empties when the phase changes.')}${g('Turns','The big button moves to the next step. Ending your turn passes it; your opponent clicks Start my turn when ready.')}${g('Life and score','Use − and + beside a player (Shift-click for 5). Click the circle under a player\'s life when they win a game.')}${g('Mistakes','Undo steps back your own last action (not past a shuffle or the end of a turn).')}</div>
+  <div class="two help"><div><h4>Mouse</h4>${g('Playing cards','Click a card in your hand: lands enter play, spells go to the stack. Shift-click a land to play it tapped.','Right-click a card in your hand for other ways to cast it (evoke, cycling, warp, its other side).','Drag cards between your zones.')}${g('The stack','Click a spell or ability to resolve it. Simple effects happen by themselves; a window asks when there is a choice to make.','Right-click a permanent to use its abilities.')}${g('Targets','Right-drag from a card to its target to draw an arrow. Right-click either end to clear it.')}${g('Library and graveyard','Click your library to draw; right-click it to search, scry, mill or shuffle.','Click a graveyard or exile pile to look through it.')}${g('Mana','Tap lands for mana. Spells and abilities pay from the pool; a window waits if it is short (auto-pay is in the table menu).')}${g('Turns','The big button moves to the next step. Ending your turn passes it; your opponent clicks Start my turn when ready.')}${g('Life and score','Use − and + beside a player (Shift-click for 5). Click the circle under a player\'s life when they win a game.')}${g('Mistakes','Undo steps back your own last action (not past a shuffle or the end of a turn).')}</div>
   <div><h4>Keys, with the pointer over your card</h4>${k('T','tap or untap')}${k('A','attack: taps and gets a gold border')}${k('V','attack with vigilance: gold border, stays untapped')}${k('B','block: then click the attacker')}${k('R','target: then click a card or player')}${k('C','add a counter')}${k('X','remove a counter')}${k('−','mark 1 damage (works on your opponent\'s creatures too)')}${k('=','remove 1 damage')}${k('F','transform')}${k('G','graveyard')}${k('E','exile')}${k('H','hand')}<h4 style="margin-top:10px">Anywhere</h4>${k('D','draw a card')}${k('S','shuffle')}${k('Ctrl+Z','undo your last action')}${k('Space','next phase')}${k('Esc','cancel')}</div></div>`, [["What's new",()=>{ closeModal(); newsModal(); },'ghost'], ['Send feedback',()=>{ closeModal(); openFeedback(); },'ghost'], ['Got it',()=>closeModal(),'go']]);
 }
 function sideboardModal(){
@@ -2997,6 +3118,8 @@ document.addEventListener('click', e=>{
   const tc=t.closest('[data-tcross]'); if(tc){ const li=tc; if(+li.dataset.ct<2) li.classList.add('gone'); setTimeout(()=>crossTrack(+li.dataset.tcross), 280); return; }
   const pk=t.closest('[data-pk]'); if(pk){ if(!pk.disabled) pactAction(pk.dataset.pk); return; }
   const cy=t.closest('[data-cy]'); if(cy){ if(!cy.disabled) cycAction(cy.dataset.cy); return; }
+  const py=t.closest('[data-pay]'); if(py){ if(!py.disabled) payAction(py.dataset.pay); return; }
+  const smp=t.closest('[data-smana]'); if(smp){ spendSpecial(+smp.dataset.smana); return; }
   const lifeB=t.closest('[data-life]'); if(lifeB){ const d=(+lifeB.dataset.life)*(e.shiftKey?5:1); if(lifeB.dataset.pl===G.myId) setLife(d); else if(G.opp){ send({t:'adj', life:d}); log(`${G.me.name} changes ${G.opp.name}'s life by ${d>0?'+':''}${d}.`); } return; }
   const tk=t.closest('[data-take]'); if(tk){ send({t:'take', id:tk.dataset.take}); tk.disabled=true; return; }
   const bb=t.closest('[data-byback]'); if(bb){ const f=find(bb.dataset.byback); if(f){ log(`${G.me.name} returns ${cname(f.c)} from exile to the battlefield.`); move(f.c.id,'bf',{silent:true}); changed(); } return; }
@@ -3027,7 +3150,7 @@ $('#diceBtn').onclick=e=>{ const r=e.currentTarget.getBoundingClientRect(), roll
   menu(r.left, r.bottom+4, [['Roll a d20',roll(20)],['Roll a d6',roll(6)],['Flip a coin',()=>log(`${G.me.name} flips a coin: ${Math.random()<.5?'heads':'tails'}.`)]]); };
 $('#chat').onkeydown=e=>{ e.stopPropagation(); if(e.key==='Enter' && e.target.value.trim()){ const text=`${G.me.name}: ${e.target.value.trim()}`; addLog(text,'cm'); send({t:'log', text, chat:1}); e.target.value=''; } };
 document.addEventListener('keydown', e=>{
-  if(e.key==='Escape'){ if(G.mode){ G.mode=null; render(); } closeMenu(); if(!$('#modal')._noClose) closeModal(); return; }
+  if(e.key==='Escape'){ if(PAY && !G.mode && $('#modal').hidden){ payAction('cancel'); closeMenu(); return; } if(G.mode){ G.mode=null; render(); } closeMenu(); if(!$('#modal')._noClose) closeModal(); return; }
   if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName) && !$('#table').hidden && $('#modal').hidden){ e.preventDefault(); undo(); return; }
   if(/INPUT|TEXTAREA/.test(document.activeElement.tagName) || $('#table').hidden || !$('#modal').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
   const k=e.key.toLowerCase();

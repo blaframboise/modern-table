@@ -12,9 +12,9 @@ Owner: Ben (GitHub `blaframboise`). The game is served by GitHub Pages from `mai
 - `draft/sets/*.json`, `tools/make_draft_sets.py`: booster odds per set for the Draft Table.
 
 ## Versioning
-`const VERSION = 'v2.NN'` in `src/app.src.html` (v2.0 on 2026-10-14 marked the table resolving rules itself; v1 ran to v1.99). Bump NN by one for any feature or behaviour change: v2.0 → v2.01 → v2.02 … Do NOT bump it for a decks-only refresh.
+`const VERSION = 'v3.NN'` in `src/app.src.html` (v3.0 on 2026-10-15 brought auto-pay from the mana pool; v2.0 on 2026-10-14 marked the table resolving rules itself, v2 ran to v2.06; v1 ran to v1.99). Bump NN by one for any feature or behaviour change: v3.0 → v3.01 → v3.02 … Do NOT bump it for a decks-only refresh.
 
-With every version bump, add one line at the top of the `NEWS` array in `src/app.src.html` (`['v2.NN','Mon D','what changed']`). It feeds the "What's new" list on the front page and in the table menu, and is written for players: plain language, no function names.
+With every version bump, add one line at the top of the `NEWS` array in `src/app.src.html` (`['v3.NN','Mon D','what changed']`). It feeds the "What's new" list on the front page and in the table menu, and is written for players: plain language, no function names.
 
 ## Draft Table (`/draft/`)
 Booster draft for up to 8 players; bots fill empty seats. Its own version: `const VERSION = 'v0.NN'` in `src/draft.src.html`, bumped the same way.
@@ -51,6 +51,9 @@ Colour-code archetype names from MTGGoldfish (WU, UR, WBG) may be replaced with 
 
 ## Feedback
 The game links to a Google Form ("Send feedback" on the front page and in the table menu), pre-filling the version and game details. Responses go to a Google Sheet in Ben's Drive, which Ben reviews before asking for changes. The form URL and field ids are constants near the top of `src/app.src.html` (`FEEDBACK_FORM`, `FB_VERSION`, `FB_DETAILS`).
+
+## Auto-pay (v3.0)
+With `S.autoPay` on (the default; ☰ menu toggle), `castSpellNow` and `activate` work out the cost (`castSyms`/`abilSyms`), plan it from the pool (`payPlan`) and either pay at once or open `#payPanel`, which waits while lands are tapped; the card stays in its zone until paid. Alternative costs pass `payCost` (warp, dash, flashback, madness, bestow, harmonize with `less`, Mystical Dispute), `castAlt` pays first, free casts pass `nm`. Mana with a restriction or rider goes to `G.me.smana` (its own row under the pool) and is spent only where `specRule` allows. Old tests that cast by hand should set `S.autoPay=false` after the page loads.
 
 ## Testing
 The page needs Scryfall and a PeerJS broker at runtime, which the cloud sandbox cannot reach. For a smoke test, load `index.html` in the pre-installed Chromium with Playwright, mock `api.scryfall.com/cards/collection`, and check the deck screen lists the decks and a solo game starts.
