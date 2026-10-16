@@ -91,10 +91,11 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .pile label{position:absolute;left:0;right:0;bottom:0;background:#000b;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:2px 5px;display:flex;justify-content:space-between;pointer-events:none}
 .pile label b{color:var(--brass);font-variant-numeric:tabular-nums}
 .pile.drop,.row.drop,.handrow.drop,#stack.drop{outline:2px solid var(--brass);outline-offset:-2px}
-#board{display:flex;flex-direction:column;min-width:0;background:radial-gradient(90% 70% at 50% 50%,#1e3a3f,var(--felt) 60%,var(--felt2))}
+#board{position:relative;display:flex;flex-direction:column;min-width:0;background:radial-gradient(90% 70% at 50% 50%,#1e3a3f,var(--felt) 60%,var(--felt2))}
 /* each row has see-through room above and below (--rp) that overlaps its neighbours, so tapped cards, attackers and glows are not cut off; the layout height is unchanged */
 .row{--rp:calc(var(--ch)*.22);height:calc(var(--ch) + 2*var(--rp));display:flex;align-items:center;gap:6px;padding:var(--rp) 10px;margin:calc(-1*var(--rp)) 0;background-clip:content-box;overflow-x:auto;overflow-y:hidden;flex:none;scrollbar-width:thin}
 #mid>*{position:relative;z-index:4}
+#blockBar{position:absolute;left:12px;z-index:30;display:flex;flex-direction:column;gap:6px;align-items:stretch;width:178px;padding:8px 10px;background:#0b1417f2;border:1px solid var(--brass);border-radius:10px;box-shadow:0 8px 24px #000a}#blockBar span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass);font-weight:800;text-align:center}#blockBar button{font-size:12.5px}
 .row .gap{flex:1;min-width:12px}
 .row.front{justify-content:safe center}
 #oppBack,#oppFront{background:#0000001c}
@@ -390,6 +391,7 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
         <button id="menuBtn" title="Table menu">☰</button>
       </div>
     </div>
+    <div id="blockBar" hidden></div>
     <div id="myFront" class="row front" data-drop="bf"></div>
     <div id="myBack" class="row" data-drop="bf"></div>
     <div id="myHand" class="handrow" data-drop="hand"></div>
@@ -416,10 +418,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v3.19';
+const VERSION = 'v3.20';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.20','Oct 16',"Blocking is easier. When you are attacked, buttons appear on your side of the table: Declare a blocker (click your creature, then the attacker), No blocks, Reset blockers, and Finish declaring blocks, which hands the turn back. Any arrow you draw from your untapped creature to an attacker during blocks also counts as a block."],
   ['v3.19','Oct 16',"Combat damage triggers that say 'to a player or planeswalker' (Psychic Frog) now go on the stack when the creature attacks a planeswalker unblocked, too."],
   ['v3.18','Oct 16',"Psychic Frog's 'exile three cards from your graveyard' ability is back on its menu, and it now gives Frog flying until end of turn (the flying icon shows on the card). Other abilities that exile cards from your graveyard as their cost show up again too."],
   ['v3.17','Oct 16',"Fixed: Atraxa's enter trigger now opens the card-type picker when it resolves."],
@@ -2937,6 +2940,8 @@ function render(){
   const gate=m.gate && t.active===G.myId ? m.gate : null, gateOld = gate && Date.now()-gate.at >= GATE_MS;
   $('#drawBtn').hidden = gate ? false : !(t.n>1 && t.active===G.myId && !S.autoDraw && t.phase===1 && m.drew!==t.n && m.lib.length);
   $('#drawBtn').textContent = gate ? (gateOld ? 'Draw anyway' : `Waiting for ${o?o.name:'opponent'}…`) : 'Draw a card'; $('#drawBtn').disabled = !!gate && !gateOld;
+  { const bb=$('#blockBar'); if(blockStep()){ const n=G.me.arrows.filter(a=>a.blk).length; bb.hidden=false;
+      bb.innerHTML = `<span>${n ? n+' blocker'+(n>1?'s':'')+' declared' : 'You are being attacked'}</span><button class="go" data-bk="declare">${n?'Declare another blocker':'Declare a blocker'}</button>${n ? '<button data-bk="reset">Reset blockers</button><button class="go" data-bk="finish">Finish declaring blocks</button>' : '<button data-bk="finish">No blocks</button>'}`; const fr=$('#myFront'), mid=$('#mid'); bb.style.top=Math.max(mid.offsetTop + mid.offsetHeight + 8, fr.offsetTop + (fr.offsetHeight - bb.offsetHeight)/2)+'px'; } else if(!bb.hidden){ bb.hidden=true; bb.innerHTML=''; } }
   const nb=$('#next');
   if(!t.n){ nb.textContent='Waiting to start'; nb.disabled=true; }
   else if(t.passed){ nb.disabled=mine; nb.textContent = mine ? `Waiting for ${o&&o.name||'opponent'}` : 'Start my turn'; }
@@ -2985,7 +2990,7 @@ function render(){
     bn.hidden=false; bn.innerHTML = `<h3>${h}</h3>${st}<div>${btn}</div>`;
   }
   else bn.hidden=true;
-  $('#modebar').hidden = !G.mode; if(G.mode) $('#modebar').textContent = (G.mode.type==='exhold'||G.mode.type==='exvoid' ? 'Click the card that is doing the exiling' : G.mode.type==='attach' ? 'Click the permanent to attach to' : G.mode.type==='block' ? 'Click the attacker to block' : 'Click a target: a card or a player') + ' · Esc cancels';
+  $('#modebar').hidden = !G.mode; if(G.mode) $('#modebar').textContent = (G.mode.type==='exhold'||G.mode.type==='exvoid' ? 'Click the card that is doing the exiling' : G.mode.type==='attach' ? 'Click the permanent to attach to' : G.mode.type==='block' ? 'Click the attacker to block' : G.mode.type==='pickblocker' ? 'Click one of your untapped creatures to block with' : 'Click a target: a card or a player') + ' · Esc cancels';
   if(!G.mode){ const ic=iControl(), ctlMe=m.ctl && G.turn.active===G.myId; if(ic || ctlMe || m.ctlNext || (o&&o.ctlNext)){ $('#modebar').hidden=false; $('#modebar').textContent = ic ? `You control ${o.name}'s turn: click and right-click their cards, and use the Next button` : ctlMe ? `${o?o.name:'Opponent'} controls this turn. You take an extra turn afterwards` : m.ctlNext ? `${o?o.name:'Opponent'} will control your next turn` : `You will control ${o.name}'s next turn`; } }
   const hd=$('#myHand'), n=m.hand.length, fc=hd.firstElementChild;
   if(fc && n>1){ const w=fc.offsetWidth, step=Math.min(w*.86, (hd.clientWidth-24-w)/(n-1)); hd.style.setProperty('--hm', (-(w-step)/2)+'px'); }
@@ -3255,6 +3260,8 @@ function blinkArrow(md, target){
 function startMode(type, from){ G.mode={type, from}; render(); }
 function finishMode(target){
   const md=G.mode; G.mode=null; if(!md) return;
+  if(md.type==='pickblocker'){ const f=find(target); if(!f || f.z!=='bf' || !isCreature(f.c) || f.c.tap){ toast('Click one of your untapped creatures.'); G.mode=md; render(); return; } G.mode={type:'block', from:target}; toast(`${cdata(f.c).n}: now click the attacker it blocks.`); render(); return; }
+  if(md.type==='arrow' && blockStep()){ const f=find(md.from), t=findAny(target); if(f && f.z==='bf' && isCreature(f.c) && !f.c.tap && t && !t.mine && t.z==='bf' && t.c.atk) md.type='block'; }   // an arrow from my creature to an attacker is a block
   if(md.type==='exhold' || md.type==='exvoid'){ exileWith(md.from, target, md.type==='exhold'?'hold':'play'); changed(); return; }
   if(md.type==='attach'){ const f=find(md.from); if(f && target!==md.from && target!=='p1' && target!=='p2'){ f.c.att=target; f.c.atk=false; if(!find(target)) G.me.arrows.push({a:md.from,b:target}); log(`${G.me.name} attaches ${cname(f.c)}.`); } }
   else if(md.type==='block'){ const f=findAny(md.from), t=findAny(target);
@@ -3350,6 +3357,7 @@ document.addEventListener('click', e=>{
   const pk=t.closest('[data-pk]'); if(pk){ if(!pk.disabled) pactAction(pk.dataset.pk); return; }
   const cy=t.closest('[data-cy]'); if(cy){ if(!cy.disabled) cycAction(cy.dataset.cy); return; }
   const py=t.closest('[data-pay]'); if(py){ if(!py.disabled) payAction(py.dataset.pay); return; }
+  const bk=t.closest('[data-bk]'); if(bk){ const k=bk.dataset.bk; if(!blockStep()) return; if(k==='declare'){ G.mode={type:'pickblocker'}; toast('Click one of your untapped creatures to block with.'); render(); } else if(k==='reset'){ const n=G.me.arrows.filter(a=>a.blk).length; G.me.arrows=G.me.arrows.filter(a=>!a.blk); G.mode=null; if(n) log(`${G.me.name} resets their blocks.`); changed(); } else if(k==='finish'){ G.mode=null; doneBlocking(); } return; }
   const smp=t.closest('[data-smana]'); if(smp){ spendSpecial(+smp.dataset.smana); return; }
   const lifeB=t.closest('[data-life]'); if(lifeB){ const d=(+lifeB.dataset.life)*(e.shiftKey?5:1); if(lifeB.dataset.pl===G.myId) setLife(d); else if(G.opp){ send({t:'adj', life:d}); log(`${G.me.name} changes ${G.opp.name}'s life by ${d>0?'+':''}${d}.`); } return; }
   const tk=t.closest('[data-take]'); if(tk){ send({t:'take', id:tk.dataset.take}); tk.disabled=true; return; }
