@@ -57,3 +57,6 @@ With `S.autoPay` on (the default; ☰ menu toggle), `castSpellNow` and `activate
 
 ## Testing
 The page needs Scryfall and a PeerJS broker at runtime, which the cloud sandbox cannot reach. For a smoke test, load `index.html` in the pre-installed Chromium with Playwright, mock `api.scryfall.com/cards/collection`, and check the deck screen lists the decks and a solo game starts.
+
+## Discord announcements
+`.github/workflows/announce.yml` runs on pushes to `main` that touch `src/app.src.html`. If `VERSION` changed, `.github/scripts/announce.py` posts every new `NEWS` line (oldest first) to the Discord #announcements channel through the `DISCORD_WEBHOOK` repo secret, after a 90-second wait for Pages. Deck refreshes don't change `VERSION`, so they post nothing (Ben's choice). So the `NEWS` line is what players see on Discord too: keep it plain. "Run workflow" on the Actions tab re-posts the newest entry. Test locally with `DRY_RUN=1 python3 .github/scripts/announce.py old.html src/app.src.html`.
