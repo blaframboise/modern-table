@@ -424,10 +424,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v3.17';
+const VERSION = 'v3.18';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.18','Oct 16',"Psychic Frog's 'exile three cards from your graveyard' ability is back on its menu, and it now gives Frog flying until end of turn (the flying icon shows on the card). Other abilities that exile cards from your graveyard as their cost show up again too."],
   ['v3.17','Oct 16',"Fixed: Atraxa's enter trigger now opens the card-type picker when it resolves."],
   ['v3.16','Oct 16',"Spells that return a card from your graveyard (Goryo's Vengeance) open your graveyard as you cast them: the cards they can target are lit, the rest dimmed. Pick one and confirm, and the spell goes on the stack with its target marked."],
   ['v3.15','Oct 16',"Seasoned Cryomancer's enter trigger no longer asks for a target. It draws two and asks for the discards when it resolves, and only then does the stun trigger ask for its targets."],
@@ -1572,6 +1573,7 @@ const allColorsBy = pid => { for(const x of sideOf(pid).bf||[]){ if(!x.fd && (x.
 /* keywords a creature gets from its controller's permanents: Scion of Draco ("Each creature you control has vigilance if it's white, hexproof if it's blue, …")
    and plain anthems ("Creatures you control have flying", "Other creatures you control have …") → [{k, src}] */
 function grantedKw(c, pid){ if(c.fd || !isCreature(c) || !pid) return []; const out=[], cols=cardColors(c);
+  if(c.tkw && c.tkw.n===G.turn.n) for(const k of c.tkw.k) out.push({k, src:'until end of turn'});   // "<this creature> gains flying until end of turn"
   for(const x of sideOf(pid).bf||[]){ if(x.fd || (!x.k && !x.cu)) continue; const src=cdata(x).n.split(',')[0];
     for(const m of (frontText(x)||'').matchAll(/(?:^|\n|\.\s)(Other )?(?:Each creature you control has|Creatures you control have) ([^.\n]+)\./gi)){ if(m[1] && x.id===c.id) continue;
       for(const it of m[2].split(/,\s*(?:and\s+)?|\s+and\s+/)){ const q=it.trim().match(/^([a-z ]+?)(?: if it's (white|blue|black|red|green))?$/i); if(!q) continue; const k=q[1].toLowerCase().trim();
@@ -1635,6 +1637,8 @@ async function simpleEffects(c, text, srcId){
     if(/^choose an exiled card an opponent owns with a void counter on it\.?$/i.test(sen)){ const n=((G.opp&&G.opp.ex)||[]).filter(x=>x.by && x.by.mode==='play' && x.by.pid===G.myId).length; log(`${by}: ${m.name} chooses an exiled card with a void counter (${n} available) to play this turn without paying its mana cost.`); toast(n ? 'Cast it from the Exiled by cards box on the right.' : 'There is no exiled card with a void counter.'); continue; }
     if(/^you may play it this turn without paying its mana cost\.?$/i.test(sen)) continue;
     if(/^(?:that player shuffles, then draws a card for each card exiled from their hand this way|if that spell is countered this way, exile it|ferocious — if you control a creature with power 4 or greater, counter that spell instead|until end of turn, you may cast that card|revolt — destroy that creature if|choose target creature or planeswalker\.?$|delirium — )/i.test(sen)) continue;
+    if((r=sen.match(new RegExp('^'+self+' gains ([a-z ,]+?) until end of turn\\.?$','i')))){ const f=srcId && find(srcId), ks=r[1].split(/,\s*(?:and\s+)?|\s+and\s+/).map(x=>x.trim().toLowerCase()).filter(k=>KW.includes(k));
+      if(f && f.z==='bf' && ks.length){ const x=f.c; if(!x.tkw || x.tkw.n!==G.turn.n) x.tkw={n:G.turn.n, k:[]}; for(const k of ks) if(!x.tkw.k.includes(k)) x.tkw.k.push(k); log(`${cname(x)} gains ${ks.join(' and ')} until end of turn.`); changed(); continue; } }
     if((r=sen.match(/^tap up to (a|one|two|three|\d+) target creatures? and put a stun counter on each of them\.?$/i))){ const k=NUMW2[r[1].toLowerCase()]||+r[1]||1, ts=tg.filter(x=>{ const a=findAny(x); return a && a.z==='bf' && isCreature(a.c); }).slice(0,k); if(!ts.length) log(`${by}: no creature was targeted.`);
       for(const t of ts){ const f=find(t); if(f){ f.c.tap=true; f.c.stun=(f.c.stun||0)+1; log(`${by}: ${cname(f.c)} is tapped and gets a stun counter.`); } else { send({t:'tapstun', id:t, by, who:m.name}); log(`${by}: ${G.opp?G.opp.name:'the opponent'}'s ${cname(findAny(t).c)} is tapped and gets a stun counter.`); } } changed(); continue; }
     if(/^return target [^.]+? card from your graveyard to the battlefield(?: tapped)?\.?$/i.test(sen)){ if(!(G.gyRet && G.gyRet.s===c.id)) log(`${by}: no card in ${m.name}'s graveyard was targeted, so nothing returns.`); made=(G.gyRet && G.gyRet.s===c.id) ? G.gyRet.cards.filter(x=>find(x.id)) : []; continue; }
@@ -2085,7 +2089,7 @@ function abilitiesOf(c){
     if(!line.includes(':') && (m=line.match(/^(Equip|Crew|Reconfigure|Fortify)\b\s*(?:—\s*)?(.+)$/))){ out.push({cost:m[2].trim(), eff:m[1], kw:true}); continue; }
     const g=line.match(/(?:gains|has) "([^":]{1,120}): (.+)"\.?$/); if(g){ if(line.includes(nm) || /\bthis\b/i.test(line.slice(0,g.index))) push(g[1], g[2]); continue; }
     if((/^Delirium —/i.test(line) || /four or more card types among cards in your graveyard/i.test(line)) && /:/.test(line) && gyTypes(G.me.gy).length<4) continue;   // shown once you have delirium
-    if(/^Channel\s*[—–-]/i.test(line) || new RegExp('\\bDiscard (?:this card|'+escRe(nm)+'|'+escRe(nm.split(',')[0])+')\\b[^:]*:','i').test(line) || /\bExile (?:this card|[^:]*) from your graveyard\b[^:]*:/i.test(line)) continue;
+    if(/^Channel\s*[—–-]/i.test(line) || new RegExp('\\bDiscard (?:this card|'+escRe(nm)+'|'+escRe(nm.split(',')[0])+')\\b[^:]*:','i').test(line) || new RegExp('\\bExile (?:this card|'+escRe(nm)+'|'+escRe(nm.split(',')[0])+') from your graveyard\\b[^:]*:','i').test(line)) continue;   // abilities used from the graveyard (gyAbils), not costs that exile other cards
     m=line.replace(/^[A-Z][A-Za-z' ]{2,30} — (?=[^:]*:)/,'').match(/^([^:"]{1,140}): (.+)$/); if(!m) continue;
     const cost=m[1].trim(), loy=/^[+−-]?(\d+|X)$/.test(cost);
     if(loy ? pw : (/\{[^}]+\}/.test(cost) || /^(Sacrifice|Discard|Pay|Remove|Exile|Tap|Untap|Return|Reveal|Put|Exert|Forage|Collect evidence)\b/i.test(cost))) push(cost, m[2]);
