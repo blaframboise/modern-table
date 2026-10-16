@@ -419,11 +419,12 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v3.22';
+const VERSION = 'v3.23';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
-  ['v3.22','Oct 16',"Faithful Mending works: pick up to two cards to discard, then you draw two and gain 2 life. The note on a flashback spell on the stack now reads Exiled after, in the same plain label as X and Mode."],
+  ['v3.23','Oct 16',"Faithful Mending fixed: you gain 2 life, draw two, and then the discard window asks for two cards. Flashback copies are still exiled after."],
+  ['v3.22','Oct 16',"The note on a flashback spell on the stack now reads Exiled after, in the same plain label as X and Mode."],
   ['v3.21','Oct 16',"Blocking: Declare another blocker only shows while you still have an untapped creature that isn't blocking (a creature blocks one attacker unless its card says otherwise). When you click to target or block, a dashed arrow follows your mouse from the card until you pick, then turns solid."],
   ['v3.20','Oct 16',"Blocking is easier. When you are attacked, buttons appear on your side of the table: Declare a blocker (click your creature, then the attacker), No blocks, Reset blockers, and Finish declaring blocks, which hands the turn back. Any arrow you draw from your untapped creature to an attacker during blocks also counts as a block."],
   ['v3.19','Oct 16',"Combat damage triggers that say 'to a player or planeswalker' (Psychic Frog) now go on the stack when the creature attacks a planeswalker unblocked, too."],
@@ -1409,11 +1410,11 @@ async function discard(ids, note){
   }
 }
 function discardRandom(n){ const m=G.me; if(!m.hand.length){ toast('Your hand is empty.'); return; } const ids=shuffle(m.hand.map(c=>c.id)).slice(0, Math.max(1,n)); discard(m.hand.filter(c=>ids.includes(c.id)).map(c=>c.id), ' at random'); }
-function discardPicker(){
-  const m=G.me; if(!m.hand.length){ toast('Your hand is empty.'); return; } const sel=new Set();
-  const el=modal('Discard cards', `<span class="hint">Click each card you are discarding, then confirm. They are discarded together.</span><div class="grid" id="dcGrid">${m.hand.map(c=>cardHTML(c,'hand',true)).join('')}</div>`,
-    [['Cancel',()=>closeModal(),'ghost'],['Discard',()=>{ const ids=m.hand.filter(c=>sel.has(c.id)).map(c=>c.id); if(!ids.length) return; closeModal(); discard(ids); },'go']], {wide:true});
-  const goB=$('footer button.go', el), upd=()=>{ goB.disabled=!sel.size; goB.textContent = sel.size ? `Discard ${sel.size} card${sel.size>1?'s':''}` : 'Discard'; }; upd();
+function discardPicker(n){   // n: a spell says "discard two cards", so exactly that many (or the whole hand if smaller)
+  const m=G.me; if(!m.hand.length){ toast('Your hand is empty.'); return; } const sel=new Set(), need = n ? Math.min(n, m.hand.length) : 0;
+  const el=modal(need ? `Discard ${['','a','two','three','four','five','six','seven'][need]||need} card${need>1?'s':''}` : 'Discard cards', `<span class="hint">Click each card you are discarding, then confirm. They are discarded together.</span><div class="grid" id="dcGrid">${m.hand.map(c=>cardHTML(c,'hand',true)).join('')}</div>`,
+    [...(need ? [] : [['Cancel',()=>closeModal(),'ghost']]),['Discard',()=>{ const ids=m.hand.filter(c=>sel.has(c.id)).map(c=>c.id); if(!ids.length || (need && ids.length!==need)) return; closeModal(); discard(ids); },'go']], {wide:true});
+  const goB=$('footer button.go', el), upd=()=>{ goB.disabled = need ? sel.size!==need : !sel.size; goB.textContent = sel.size ? `Discard ${sel.size} card${sel.size>1?'s':''}` : 'Discard'; }; upd();
   $('#dcGrid').onclick=e=>{ const cd=e.target.closest('.card[data-id]'); if(!cd) return; const id=cd.dataset.id; if(sel.has(id)) sel.delete(id); else sel.add(id); cd.classList.toggle('sel', sel.has(id)); upd(); };
 }
 /* Collect evidence N: exile any cards from my graveyard with total mana value N or more. The window keeps a running total and lets the player
@@ -1632,6 +1633,7 @@ async function simpleEffects(c, text, srcId){
   { const lt=lookTopSpec(text); if(lt){ waited=true; await lookTopWin(lt, by); text=text.replace(lt.src,' '); } }
   const self='(?:this creature|it|'+escRe(nm||'@@')+'|'+escRe((nm||'@@').split(',')[0])+')';
   for(let sen of (text||'').replace(/\([^)]*\)/g,'').split(/(?<=\.)\s+|\n/)){ sen=sen.trim().replace(/^[A-Z][A-Za-z' ]{2,30} — (?=(?:When|Whenever|At) )/,'').replace(/^(?:When|Whenever|At) (?!you attack this turn)(?!you do\b)[^,]+, /i,''); let r;
+    if((r=sen.match(/^you gain (\d+) life, (draw .+)$/i))){ m.life+=+r[1]; log(`${by}: ${m.name} gains ${r[1]} life (now ${m.life}).`); changed(); sen=r[2].replace(/^d/,'D'); }   // Faithful Mending: life first, then the draw/discard sentence
     if((r=sen.match(/^(scry|surveil) (\d+)(?:, then draw (a|one|two) cards?)?\.?$/i))){ waited=true; await scryWin(+r[2], r[1].toLowerCase(), by); if(r[3]) draw(NUMW2[r[3].toLowerCase()]||1); continue; }
     if(/^choose an exiled card an opponent owns with a void counter on it\.?$/i.test(sen)){ const n=((G.opp&&G.opp.ex)||[]).filter(x=>x.by && x.by.mode==='play' && x.by.pid===G.myId).length; log(`${by}: ${m.name} chooses an exiled card with a void counter (${n} available) to play this turn without paying its mana cost.`); toast(n ? 'Cast it from the Exiled by cards box on the right.' : 'There is no exiled card with a void counter.'); continue; }
     if(/^you may play it this turn without paying its mana cost\.?$/i.test(sen)) continue;
@@ -1666,7 +1668,6 @@ async function simpleEffects(c, text, srcId){
     if(/^sacrifice (?:them|it|those tokens) at the beginning of the next end step\.?$/i.test(sen)){ for(const tk of made){ tk.sacEnd=1; tk.sacBy=String(by).split(":")[0]; } continue; }
     if((r=String(text).match(/^(?:[^\n]*?)Whenever you attack this turn, ([\s\S]+)$/i)) && /^whenever you attack this turn,/i.test(sen)){ (m.wya=(m.wya||[]).filter(e=>e.n===G.turn.n)).push({n:G.turn.n, src:by, txt:r[1].trim()}); log(`${by}: the next time ${m.name} attacks this turn, ${r[1].trim().replace(/\.$/,'')}.`); break; }
     if((r=sen.match(/^then if you have the city's blessing, for each token you control that entered (?:the battlefield )?this turn, create a token that's a copy of it\.?$/i))){ if(!m.city) continue; const ts=m.bf.filter(x=>x.tok && x.tokT===G.turn.n); const cps=[]; for(const x of ts){ const tk=mk(null,{tok:true, cu:Object.assign({}, x.cu||{}), k:x.k}); tk.tokT=G.turn.n; tk.sick=true; m.bf.push(tk); cps.push(tk); } for(const tk of cps) entered(tk); log(`${by}: city's blessing, ${m.name} copies ${ts.length} token${ts.length===1?'':'s'} that entered this turn.`); changed(); continue; }
-    if((r=sen.match(/^discard up to (a|one|two|three) cards?, then draw (a|one|two|three) cards?(?:, then you gain (\d+) life)?\.?$/i))){ waited=true; const k=NUMW2[r[1].toLowerCase()]||1, d=NUMW2[r[2].toLowerCase()]||1, hc=m.hand.slice(); let ids = hc.length ? await pickManyP(`${by}: discard up to ${r[1].toLowerCase()} card${k>1?'s':''}`, hc, 'Discard them') : []; if(ids.length>k){ toast(`Only ${k}: discarding the first ${k} you picked.`); ids=ids.slice(0,k); } if(ids.length) await discard(ids); else log(`${by}: ${m.name} discards nothing.`); draw(d); if(r[3]){ m.life+=+r[3]; log(`${by}: ${m.name} gains ${r[3]} life (now ${m.life}).`); } changed(); continue; }
     if((r=sen.match(/^discard two cards, then draw two cards\.?$/i))){ waited=true; const hc=m.hand.slice(); let ids = hc.length<=2 ? hc.map(x=>x.id) : await pickManyP(`${by}: discard two cards`, hc, 'Discard them'); if(hc.length>2 && ids.length!==2){ ids = ids.slice(0,2); } sacPow=ids.filter(i=>{ const f=find(i); return f && !isLand(f.c); }).length; await discard(ids); draw(2); continue; }
     if((r=sen.match(/^for each nonland card discarded this way, create an? (\d+)\/(\d+) ([a-z ]+?) creature token\.?$/i))){ if(sacPow>0) made=makeCreatureTokens(sacPow, r[1], r[2], r[3], {src:srcCard(srcId)||srcCard(c.id)}, by); continue; }
     if((r=sen.match(/^(?:converge — )?exile target (.+?) if its mana value is less than or equal to the number of colors of mana spent to cast this spell\.?$/i))){ const t=fitTargets(tg, r[1])[0]; if(!t){ log(`${by}: no target was chosen.`); continue; } waited=true; const k=c.pc!=null ? c.pc : await askN(`${by}: how many colors of mana did you spend?`, Math.max(1, c.x||1)); if(c.pc!=null) log(`${by}: ${c.pc} color${c.pc===1?'':'s'} of mana were spent to cast it.`); const a=findAny(t), mv=manaValue(a.c);
@@ -1745,7 +1746,7 @@ async function simpleEffects(c, text, srcId){
         const nl=ids.filter(i=>{ const f=find(i); return f && !isLand(f.c); }).length; await discard(ids);
         if(nl>0){ const sc=srcC||{}, d0=srcC?cdata(srcC):{n:by,img:''}; const mkr=mk(null,{tok:true, ts:Date.now(), ab:{id:srcId||c.id, tr:true}, cu:{n:`${by}: trigger`, t:'Triggered ability', o:`Tap up to ${nl} target creature${nl>1?'s':''} and put a stun counter on each of them.`, img:d0.img||''}}); m.st.push(mkr); G.mode={type:'arrow', from:mkr.id}; log(`${by}: ${m.name} discarded ${nl} nonland card${nl>1?'s':''}, so a trigger goes on the stack: tap up to ${nl} target creature${nl>1?'s':''} and stun ${nl>1?'them':'it'}.`); toast(`${by}: click the creature to tap and stun${nl>1?' (right-drag more arrows for the others)':''}.`); changed(); }
         break; }
-      if(/then discard (a|one|two) cards?/i.test(sen)){ const d=NUMW2[sen.match(/then discard (a|one|two)/i)[1].toLowerCase()]; toast(`${by}: now discard ${d} card${d>1?'s':''}.`); setTimeout(discardPicker, 0); } }
+      if(/then discard (a|one|two) cards?/i.test(sen)){ const d=NUMW2[sen.match(/then discard (a|one|two)/i)[1].toLowerCase()]; toast(`${by}: now discard ${d} card${d>1?'s':''}.`); setTimeout(()=>discardPicker(d), 0); } }
     else if((r=sen.match(/^you gain (\d+) life\.?$/i))){ m.life+=+r[1]; log(`${by}: ${m.name} gains ${r[1]} life (now ${m.life}).`); }
     else if((r=sen.match(/^you lose (\d+) life\.?$/i))){ m.life-=+r[1]; log(`${by}: ${m.name} loses ${r[1]} life (now ${m.life}).`); }
     else if(/^untap (?:this (?:creature|land|permanent|artifact)|it)\.?$/i.test(sen) || (nm && new RegExp('^untap '+nm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\.?$','i').test(sen))){ const f=srcId && find(srcId); if(f && f.z==='bf'){ f.c.tap=false; log(`${cname(f.c)} untaps.`); } }
