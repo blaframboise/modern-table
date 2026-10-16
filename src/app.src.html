@@ -123,6 +123,7 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .card.tap{transform:rotate(18deg) scale(.94);filter:brightness(.62) saturate(.7)}
 .card.atk{transform:translateY(-14%);box-shadow:0 0 0 3px var(--brass),0 0 16px 3px #d9b25faa,0 8px 14px #000a}
 .card.atk.tap{filter:brightness(.8) saturate(.85)}
+.card.nblk,.card.atk.nblk,.card.atk.tap.nblk{filter:grayscale(.9) brightness(.4)}
 .opp .card.atk,.card.opp.atk{transform:translateY(14%)}
 .card.atk.tap{transform:translateY(-14%) rotate(18deg) scale(.94)}
 .card.opp.atk.tap{transform:translateY(14%) rotate(18deg) scale(.94)}
@@ -419,10 +420,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v3.23';
+const VERSION = 'v3.24';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.24','Oct 16',"Blocking knows evasion: flying and reach, menace, shadow, horsemanship, fear, intimidate, skulk, swampwalk and the other landwalks, protection, and cards that say they can't be blocked or can't block. Once you pick a blocker, attackers it can't block are dimmed. The table warns rather than stops you, so a block it thinks is illegal is flagged to both players, and Finish declaring blocks asks before handing back. At the start of combat and of blocks, the table reminds you of creatures that must attack or block. Dragon's Rage Channeler with delirium gets +2/+2 and flying."],
   ['v3.23','Oct 16',"Faithful Mending fixed: you gain 2 life, draw two, and then the discard window asks for two cards. Flashback copies are still exiled after."],
   ['v3.22','Oct 16',"The note on a flashback spell on the stack now reads Exiled after, in the same plain label as X and Mode."],
   ['v3.21','Oct 16',"Blocking: Declare another blocker only shows while you still have an untapped creature that isn't blocking (a creature blocks one attacker unless its card says otherwise). When you click to target or block, a dashed arrow follows your mouse from the card until you pick, then turns solid."],
@@ -2541,6 +2543,7 @@ function dynPT(c, pid){
       const per = g[3]==='each' ? 1 : (+g[4] || NUMW[(g[4]||'').toLowerCase()] || 1), cnt=countPhrase(g[5], pid, c.id); if(cnt==null) continue; const k=Math.floor(cnt/per);
       gp+=(+g[1])*k; gt+=(+g[2])*k; dyn=true; why.push(`+${g[1]}/+${g[2]} for ${g[3].trim()} ${g[5]}: ${cnt}${per>1 ? ' → '+k+'×' : ''}`); } };
   grow(o, '(?:this creature|this token|'+faceName(c,0).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')');
+  for(const g of o.matchAll(/as long as there are four or more card types among cards in your graveyard, (?:this creature|it|[^,]+?) gets \+(\d+)\/\+(\d+)/gi)){ const s=sideOf(pid); if(s && gyTypes(s.gy||[]).length>=4){ gp+=+g[1]; gt+=+g[2]; dyn=true; why.push(`+${g[1]}/+${g[2]}: delirium`); } }
   for(const g of o.matchAll(new RegExp('\\b(?:this creature|it|'+escRe(faceName(c,0))+') gets \\+(\\d+)\\/\\+(\\d+) as long as you control an? ([A-Z][a-z]+)','g'))){ if(controlsType(pid, g[3])){ gp+=+g[1]; gt+=+g[2]; dyn=true; why.push(`+${g[1]}/+${g[2]}: you control a ${g[3]}`); } }
   for(const [bf] of [[sideOf(G.myId).bf],[sideOf(oppId()).bf]]) for(const e of bf) if(e.att===c.id && !e.fd && (e.k || e.cu)){ grow(frontText(e), 'Equipped creature'); for(const g of (frontText(e)||'').matchAll(/\b(?:Enchanted|Equipped) creature gets ([+\-−]\d+)\/([+\-−]\d+)\b(?! for each)/gi)){ const v=x=>parseInt(x.replace('−','-'),10); gp+=v(g[1]); gt+=v(g[2]); dyn=true; why.push(`${cdata(e).n}: ${g[1]}/${g[2]}`); } }
   if(!dyn && !c.tp && !c.tt && !c.eb) return null;
@@ -2732,6 +2735,59 @@ function startMyTurn(){
 /* combat steps (G.turn.cs while in Combat): attackers are declared (no cs) → 'blk' the defender blocks (click a creature, then the attacker;
    arrows with blk) and presses Done blocking → 'blkd' → the active player goes to combat damage → 'dmg': the log lists blocked and unblocked
    attackers and puts "deals combat damage to a player" triggers of unblocked attackers on the stack. Damage itself is left to the players. */
+/* Blocking rules (CR 509.1, 702.9 flying, 702.16 reach, 702.26 shadow, 702.29 horsemanship, 702.34 fear, 702.12 intimidate, 702.13 landwalk, 702.15 protection, 702.110 menace, 702.118 skulk).
+   The table warns, it never refuses: the players fix anything it gets wrong. */
+const unlink = t => String(t).replace(/\[\[([^|\]]*)\|[^\]]*\]\]/g,'$1');   // card links → plain names, for toasts and dialogs
+const EVK=['flying','reach','menace','shadow','horsemanship','fear','intimidate','skulk','defender'];
+const noRemind = c => (frontText(c)||'').replace(/\([^)]*\)/g,'');
+const kwLines = c => { const out=[]; for(const l of noRemind(c).split('\n')){ const ws=l.trim().toLowerCase().replace(/\.$/,'').split(/,\s*|;\s*/).map(w=>w.trim()).filter(Boolean);
+    if(ws.length && ws.every(w=>KW.includes(w) || EVK.includes(w) || /^(?:(?:snow|legendary|nonbasic) )?[a-z]*walk$/.test(w) || /^protection from /.test(w) || /^ward\b/.test(w))) out.push(...ws); } return out; };
+const sideCards = c => G.me.bf.includes(c) ? G.me : G.opp;
+/* "Delirium — As long as there are four or more card types among cards in your graveyard, this creature gets +2/+2, has flying, …" */
+const deliriumOn = c => { const s=sideCards(c); return !!(s && gyTypes(s.gy||[]).length>=4); };
+const condKw = c => { const out=[]; for(const m of noRemind(c).matchAll(/as long as there are four or more card types among cards in your graveyard, ([^.]+)\./gi)){ if(!deliriumOn(c)) continue; for(const h of m[1].matchAll(/\bhas ([a-z]+(?: strike)?)/gi)) out.push(h[1].toLowerCase()); } return out; };
+const kwOn = (c, k) => { const s=sideCards(c), pid = s===G.me ? G.myId : oppId(); return hasKw(c, pid, k) || kwLines(c).includes(k) || condKw(c).includes(k); };
+const isArtC = c => /\bArtifact\b/.test(faceTypeOf(c, c.flip?1:0));
+const selfRe = c => "(?:this creature|this token|"+escRe(faceName(c,0))+")";
+function blockIssues(b, a){   // b: my would-be blocker, a: the attacker; reasons the block looks illegal
+  const out=[], an=cname(a), bn=cname(b), ao=noRemind(a), bo=noRemind(b), cb=cardColors(b), ca=cardColors(a), pw=x=>powerAny(findAny(x.id)||{c:x, mine:G.me.bf.includes(x)});
+  if(kwOn(a,'flying') && !kwOn(b,'flying') && !kwOn(b,'reach')) out.push(`${an} has flying, and ${bn} has neither flying nor reach`);
+  if(kwOn(a,'horsemanship') && !kwOn(b,'horsemanship')) out.push(`${an} has horsemanship and ${bn} doesn't`);
+  if(kwOn(a,'shadow') && !kwOn(b,'shadow')) out.push(`${an} has shadow and ${bn} doesn't`);
+  if(!kwOn(a,'shadow') && kwOn(b,'shadow')) out.push(`${bn} has shadow, so it can block only creatures with shadow`);
+  if(kwOn(a,'fear') && !isArtC(b) && !cb.includes('B')) out.push(`${an} has fear: only artifact or black creatures can block it`);
+  if(kwOn(a,'intimidate') && !isArtC(b) && !cb.some(x=>ca.includes(x))) out.push(`${an} has intimidate: only artifact creatures or creatures sharing a color with it can block it`);
+  if(kwOn(a,'skulk') && pw(b) > pw(a)) out.push(`${an} has skulk: ${bn} has greater power`);
+  for(const w of kwLines(a)){ const m=w.match(/^(?:(snow|legendary|nonbasic) )?([a-z]*)walk$/); if(!m) continue; const sub=m[2]&&m[2]!=='land' ? m[2][0].toUpperCase()+m[2].slice(1) : null;
+    const hit=G.me.bf.some(l=>!l.fd && isLand(l) && (()=>{ const t=faceTypeOf(l, l.flip?1:0); if(sub && !new RegExp('\\b'+sub+'\\b').test(t)) return false; if(m[1]==='nonbasic') return !/\bBasic\b/.test(t); if(m[1]) return new RegExp('\\b'+m[1]+'\\b','i').test(t); return true; })());
+    if(hit) out.push(`${an} has ${w}, and you control ${sub ? (/^[AEIOU]/.test(sub)?'an ':'a ')+(m[1]&&m[1]!=='nonbasic'?m[1]+' ':'')+sub : (m[1]||'')+' land'}`); }
+  for(const w of kwLines(a)){ const m=w.match(/^protection from (.+)$/); if(!m) continue; for(const q of m[1].split(/\s*(?:,|and)\s*(?:from\s+)?/)){ const t=q.trim().replace(/^from /,'');
+      const bad = t==='everything' || t==='creatures' || (COLN[t] && cb.includes(COLN[t])) || (t==='artifacts' && isArtC(b)) || (t==='multicolored' && cb.length>1) || (t==='monocolored' && cb.length===1) || (/^(?:all )?colors$/.test(t) && cb.length>0);
+      if(bad){ out.push(`${an} has protection from ${t}`); break; } } }
+  if(new RegExp("(?:^|\\n|\\.\\s)"+selfRe(a)+" can[’']t be blocked\\.", 'i').test(ao)) out.push(`${an} can't be blocked`);
+  for(const m of ao.matchAll(new RegExp(selfRe(a)+" can[’']t be blocked by creatures with power (\\d+) or (less|greater)", 'gi'))){ const p=pw(b); if(m[2].toLowerCase()==='less' ? p<=+m[1] : p>=+m[1]) out.push(`${an} can't be blocked by creatures with power ${m[1]} or ${m[2].toLowerCase()}`); }
+  for(const m of ao.matchAll(new RegExp(selfRe(a)+" can[’']t be blocked by (white|blue|black|red|green|artifact) creatures", 'gi'))){ const t=m[1].toLowerCase(); if(t==='artifact' ? isArtC(b) : cb.includes(COLN[t])) out.push(`${an} can't be blocked by ${t} creatures`); }
+  for(const m of ao.matchAll(new RegExp(selfRe(a)+" can[’']t be blocked except by creatures with (flying|reach|defender|shadow)", 'gi'))){ if(!kwOn(b, m[1].toLowerCase())) out.push(`${an} can be blocked only by creatures with ${m[1].toLowerCase()}`); }
+  if(new RegExp("(?:^|\\n|\\.\\s)"+selfRe(b)+" can[’']t block\\.", 'i').test(bo)) out.push(`${bn} can't block`);
+  if(new RegExp(selfRe(b)+" can block only creatures with flying", 'i').test(bo) && !kwOn(a,'flying')) out.push(`${bn} can block only creatures with flying`);
+  return out; }
+/* rules about the whole set of blocks, checked at Finish: menace, "can't be blocked except by two or more", "can't be blocked by more than one creature" */
+function blockSetIssues(){ const out=[]; const by={}; for(const a of G.me.arrows.filter(a=>a.blk)) (by[a.b]=by[a.b]||[]).push(a.a);
+  for(const [aid, bs] of Object.entries(by)){ const f=findAny(aid); if(!f) continue; const a=f.c, an=cname(a), ao=noRemind(a), n=bs.length;
+    const min = kwOn(a,'menace') ? 2 : (()=>{ const m=ao.match(new RegExp(selfRe(a)+" can[’']t be blocked except by (two|three|four) or more creatures", 'i')); return m ? NUMW[m[1].toLowerCase()] : 0; })();
+    if(min && n<min) out.push(`${an} ${kwOn(a,'menace')?'has menace: it ':''}can't be blocked except by ${['','','two','three','four'][min]} or more creatures, and only ${n===1?'one creature is':n+' are'} blocking it`);
+    if(n>1 && new RegExp(selfRe(a)+" can[’']t be blocked by more than one creature", 'i').test(ao)) out.push(`${an} can't be blocked by more than one creature`); }
+  for(const a of G.me.arrows.filter(a=>a.blk)){ const f=find(a.a), g=findAny(a.b); if(f && g) for(const r of blockIssues(f.c, g.c)) out.push(`${cname(f.c)} blocking ${cname(g.c)}: ${r}`); }
+  return out; }
+/* must attack / must block reminders (Dragon's Rage Channeler with delirium "attacks each combat if able") */
+function mustNotes(cards, re){ const out=[]; for(const c of cards){ if(c.fd || !isCreature(c) || c.tap) continue; const o=noRemind(c);
+    for(const sen of o.split(/\n|(?<=\.)\s+/)){ if(!re.test(sen)) continue; if(/four or more card types among cards in your graveyard/i.test(sen) && !deliriumOn(c)) continue; const cond=/\bas long as\b/i.test(sen) && !/card types among cards in your graveyard/i.test(sen); out.push(cname(c)+(cond?' (if its condition is met)':'')); break; } } return out; }
+const mustAttack = () => mustNotes(G.me.bf.filter(c=>!c.sick || kwOn(c,'haste')), /\battacks each (?:combat|turn) if able\b/i);
+const mustBlockNotes = () => { const atk=(G.opp&&G.opp.bf||[]).filter(c=>c.atk), out=[];
+  for(const n of mustNotes(G.me.bf, /\bblocks each (?:combat|turn) if able\b/i)) out.push(`${n} blocks each combat if able`);
+  for(const c of atk){ const o=noRemind(c); if(/\bmust be blocked(?: by [^.]+)? if able\b/i.test(o) || /\ball creatures able to block [^.]+ do so\b/i.test(o)) out.push(`${cname(c)} must be blocked if able`); }
+  return out; };
+const blkDim = c => { const md=G.mode; if(!md || !md.from || !(md.type==='block' || md.type==='arrow') || !blockStep()) return ''; const f=find(md.from); if(!f || f.z!=='bf' || !isCreature(f.c)) return ''; const r=blockIssues(f.c, c); return r.length ? r.join('; ') : ''; };
 const multiBlock = c => /can block (?:an additional|any number of|two) creatures?/i.test(frontText(c)||'');
 const blockersLeft = () => { const used=new Set(G.me.arrows.filter(a=>a.blk).map(a=>a.a)); return G.me.bf.filter(c=>!c.fd && isCreature(c) && !c.tap && (!used.has(c.id) || multiBlock(c))); };
 const blockStep = () => { const t=G.turn; return !!(t.n && t.phase===3 && t.cs==='blk' && t.active!==G.myId && !t.passed); };
@@ -2749,7 +2805,8 @@ function combatDamage(){ const t=G.turn, m=G.me, oa=(G.opp&&G.opp.arrows)||[], p
     if(bl.length) parts.push(`${cname(c)} (power ${p}) is blocked by ${bl.join(' and ')}`);
     else { parts.push(`${cname(c)} (power ${p}) is unblocked${pw ? ', attacking '+cname(pw.c) : ''}`); const l=cdmgLine(c); if(l && (!pw || /to a player or planeswalker/i.test(l))) trig.push(c.id); } }
   setTurn(Object.assign({}, t, {cs:'dmg'})); log(`Combat damage: ${parts.join('; ') || 'no attackers'}. Adjust life and creatures by hand.`); for(const id of trig) cdmgTrig(id); changed(); }
-function doneBlocking(){ const bl=G.me.arrows.filter(a=>a.blk).map(a=>{ const f=find(a.a), g=findAny(a.b); return `${f?cname(f.c):'a creature'} blocks ${g?cname(g.c):'an attacker'}`; });
+function doneBlocking(force){ if(!force){ const iss=blockSetIssues(); if(iss.length){ modal('These blocks may break the rules', `<ul style="margin:0;padding-left:18px;line-height:1.5">${iss.map(x=>`<li>${esc(unlink(x))}</li>`).join('')}</ul><span class="hint">The table can misread a card, so you decide.</span>`, [['Go back',()=>closeModal(),'ghost'],['Finish anyway',()=>{ closeModal(); log(`${G.me.name} keeps blocks the table flagged: ${iss.join('; ')}.`); doneBlocking(true); },'go']]); return; } }
+  const bl=G.me.arrows.filter(a=>a.blk).map(a=>{ const f=find(a.a), g=findAny(a.b); return `${f?cname(f.c):'a creature'} blocks ${g?cname(g.c):'an attacker'}`; });
   log(`${G.me.name} is done blocking${bl.length ? ': '+bl.join('; ') : ' (no blocks)'}.`); setTurn(Object.assign({}, G.turn, {cs:'blkd'})); changed(); }
 function nextPhase(){
   const t=G.turn; if(!t.n){ return; }
@@ -2760,7 +2817,7 @@ function nextPhase(){
   if(t.phase===0 && G.me.st.some(c=>c.pact)){ leaveUpkeep(); return; }
   if(G.me.gate && t.phase===1){ toast(`Waiting for ${G.opp?G.opp.name:'your opponent'} to answer about the pact trigger.`); return; }
   if(t.phase===3 && combatStep()) return;
-  if(t.phase < PH.length-1){ const p=t.phase+1; if(p===3) log(`${G.me.name} moves to combat.`); setTurn({...t, phase:p}); return; }
+  if(t.phase < PH.length-1){ const p=t.phase+1; if(p===3){ log(`${G.me.name} moves to combat.`); const ma=mustAttack(); if(ma.length){ log(`Must attack this combat if able: ${ma.join(', ')}.`); toast(unlink(`${ma.join(', ')} ${ma.length>1?'attack':'attacks'} this combat if able.`)); } } setTurn({...t, phase:p}); return; }
   G.me.bf.forEach(c=>c.atk=false); G.me.arrows=[]; G.noUndo=true;
   if(G.me.ctl){ G.me.ctl=false; log(`The controlled turn ends. ${G.me.name} takes an extra turn under their own control.`); G.turn={active:G.myId, phase:0, n:t.n+1}; startMyTurn(); return; }
   if(G.solo || !G.opp){ log(`${G.me.name} ends the turn.`); G.turn={active:G.myId, phase:0, n:t.n+1}; startMyTurn(); }
@@ -2869,7 +2926,7 @@ function cardHTML(c, z, mine, cls=''){
   if(z==='ex' && c.fl && !backUp) b+=`<span class="flban">Exiled by ${esc(String(c.fl.by).split(',')[0])}</span>`;
   if(z==='ex' && c.warp && !backUp) b+='<span class="wrpban">WARPED</span>';
   if(z==='ex' && c.pl && !backUp){ cls+=' pl'; b+=`<span class="plban">PLAYABLE · ${c.pl==='this'?'THIS TURN':'NEXT TURN'}</span>`; }
-  return `<div class="card ${mine?'':'opp'} ${c.tap?'tap':''} ${c.atk?'atk':''} ${c.fd&&mine?'fdmine':''} ${cls}" data-id="${c.id}" data-z="${z}" data-o="${mine?'me':'opp'}">${inner}${b}${extra}</div>`;
+  return `<div class="card ${mine?'':'opp'} ${c.tap?'tap':''} ${c.atk?'atk':''} ${!mine && c.atk && z==='bf' && blkDim(c) ? 'nblk' : ''} ${c.fd&&mine?'fdmine':''} ${cls}" data-id="${c.id}" data-z="${z}" data-o="${mine?'me':'opp'}">${inner}${b}${extra}</div>`;
 }
 const markerHTML = (n, pid) => `<div class="card marker" data-ctr="energy" data-pl="${pid}" title="Energy reserve. Click to add energy, right-click to remove."><span class="mkt">Energy reserve</span><img src="${ENERGY_IMG}" alt="" draggable="false" referrerpolicy="no-referrer" onerror="this.remove()"><span class="mkn">${n}</span></div>`;
 function rowsHTML(bf, mine){
@@ -2948,7 +3005,7 @@ function render(){
   $('#drawBtn').hidden = gate ? false : !(t.n>1 && t.active===G.myId && !S.autoDraw && t.phase===1 && m.drew!==t.n && m.lib.length);
   $('#drawBtn').textContent = gate ? (gateOld ? 'Draw anyway' : `Waiting for ${o?o.name:'opponent'}…`) : 'Draw a card'; $('#drawBtn').disabled = !!gate && !gateOld;
   { const bb=$('#blockBar'); if(blockStep()){ const n=G.me.arrows.filter(a=>a.blk).length; bb.hidden=false;
-      const more=blockersLeft().length>0; bb.innerHTML = `<span>${n ? n+' blocker'+(n>1?'s':'')+' declared' : 'You are being attacked'}</span>${more ? `<button class="go" data-bk="declare">${n?'Declare another blocker':'Declare a blocker'}</button>` : (n ? '' : '<span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:400">No untapped creatures to block with</span>')}${n ? '<button data-bk="reset">Reset blockers</button><button class="go" data-bk="finish">Finish declaring blocks</button>' : '<button data-bk="finish">No blocks</button>'}`; const fr=$('#myFront'), mid=$('#mid'); bb.style.top=Math.max(mid.offsetTop + mid.offsetHeight + 8, fr.offsetTop + (fr.offsetHeight - bb.offsetHeight)/2)+'px'; } else if(!bb.hidden){ bb.hidden=true; bb.innerHTML=''; } }
+      const atks=(G.opp&&G.opp.bf||[]).filter(c=>c.atk), more=blockersLeft().some(b=>atks.some(a=>!blockIssues(b,a).length)), must=mustBlockNotes(); bb.innerHTML = `<span>${n ? n+' blocker'+(n>1?'s':'')+' declared' : 'You are being attacked'}</span>${must.map(x=>`<span style="text-transform:none;letter-spacing:0;color:var(--brass);font-weight:600">${esc(unlink(x))}</span>`).join('')}${more ? `<button class="go" data-bk="declare">${n?'Declare another blocker':'Declare a blocker'}</button>` : (n ? '' : '<span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:400">None of your creatures can block these attackers</span>')}${n ? '<button data-bk="reset">Reset blockers</button><button class="go" data-bk="finish">Finish declaring blocks</button>' : '<button data-bk="finish">No blocks</button>'}`; const fr=$('#myFront'), mid=$('#mid'); bb.style.top=Math.max(mid.offsetTop + mid.offsetHeight + 8, fr.offsetTop + (fr.offsetHeight - bb.offsetHeight)/2)+'px'; } else if(!bb.hidden){ bb.hidden=true; bb.innerHTML=''; } }
   const nb=$('#next');
   if(!t.n){ nb.textContent='Waiting to start'; nb.disabled=true; }
   else if(t.passed){ nb.disabled=mine; nb.textContent = mine ? `Waiting for ${o&&o.name||'opponent'}` : 'Start my turn'; }
@@ -3273,7 +3330,7 @@ function finishMode(target){
   if(md.type==='attach'){ const f=find(md.from); if(f && target!==md.from && target!=='p1' && target!=='p2'){ f.c.att=target; f.c.atk=false; if(!find(target)) G.me.arrows.push({a:md.from,b:target}); log(`${G.me.name} attaches ${cname(f.c)}.`); } }
   else if(md.type==='block'){ const f=findAny(md.from), t=findAny(target);
     if(!t || t.mine || t.z!=='bf' || (blockStep() && !t.c.atk)){ toast('Click the attacking creature it blocks (Esc to cancel).'); G.mode=md; render(); return; }
-    { const bf=find(md.from); G.me.arrows=G.me.arrows.filter(a=>!(a.blk && a.a===md.from && (!(bf && multiBlock(bf.c)) || a.b===target))); } G.me.arrows.push({a:md.from, b:target, blk:1}); log(`${G.me.name}'s ${f?cname(f.c):'creature'} blocks ${G.opp?G.opp.name+"'s ":''}${cname(t.c)}.`); }
+    { const bf=find(md.from); G.me.arrows=G.me.arrows.filter(a=>!(a.blk && a.a===md.from && (!(bf && multiBlock(bf.c)) || a.b===target))); } G.me.arrows.push({a:md.from, b:target, blk:1}); log(`${G.me.name}'s ${f?cname(f.c):'creature'} blocks ${G.opp?G.opp.name+"'s ":''}${cname(t.c)}.`); { const iss=f ? blockIssues(f.c, t.c) : []; if(iss.length){ log(`Check this block: ${iss.join('; ')}.`); toast(unlink(`Check this block: ${iss.join('; ')}. Reset blockers to change it.`)); } } }
   else if(md.type==='arrow' && earthArrow(md, target)){ return; }
   else if(md.type==='arrow' && bestowArrow(md, target)){ return; }
   else if(md.type==='arrow' && (bk=>bk)(blinkArrow(md, target))){ return; }
