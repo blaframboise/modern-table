@@ -424,10 +424,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v3.16';
+const VERSION = 'v3.17';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.17','Oct 16',"Fixed: Atraxa's enter trigger now opens the card-type picker when it resolves."],
   ['v3.16','Oct 16',"Spells that return a card from your graveyard (Goryo's Vengeance) open your graveyard as you cast them: the cards they can target are lit, the rest dimmed. Pick one and confirm, and the spell goes on the stack with its target marked."],
   ['v3.15','Oct 16',"Seasoned Cryomancer's enter trigger no longer asks for a target. It draws two and asks for the discards when it resolves, and only then does the stun trigger ask for its targets."],
   ['v3.14','Oct 16',"Esper Goryo's. Goryo's Vengeance returns the legendary creature you targeted in your graveyard with haste and puts an exile trigger on the stack at the end step (Ephemerate it in response and it stays). Atraxa reveals ten: drag one card into each card type's box, then confirm. Griselbrand draws seven. Seasoned Cryomancer taps and stuns a creature for each nonland card it made you discard. Consign to Memory asks how many times to replicate. March of Otherworldly Light lets you exile white cards from your hand to pay less. Prismatic Ending counts the colors auto-pay spent. Elesh Norn doubles your enter triggers and stops your opponent's. Nihil Spellbomb exiles a graveyard and offers a card for {B} when it goes to the graveyard. Ashiok mills four and exiles the graveyard. Test of Talents shows you your opponent's graveyard, hand and library to exile every copy of the spell."],
@@ -1639,7 +1640,7 @@ async function simpleEffects(c, text, srcId){
     if(/^return target [^.]+? card from your graveyard to the battlefield(?: tapped)?\.?$/i.test(sen)){ if(!(G.gyRet && G.gyRet.s===c.id)) log(`${by}: no card in ${m.name}'s graveyard was targeted, so nothing returns.`); made=(G.gyRet && G.gyRet.s===c.id) ? G.gyRet.cards.filter(x=>find(x.id)) : []; continue; }
     if(/^it gains haste(?: until end of turn)?\.?$/i.test(sen)){ for(const x of made){ x.hst=G.turn.n||1; log(`${cname(x)} has haste this turn.`); } changed(); continue; }
     if(/^exile (?:it|them) at the beginning of the next end step\.?$/i.test(sen)){ for(const x of made){ if(find(x.id)){ x.exEnd={ent:x.ent||'', by}; log(`${by}: ${cname(x)} will be exiled at the beginning of the next end step.`); } } changed(); continue; }
-    if((r=sen.match(/^reveal the top (\w+) cards of your library\.?$/i)) && /For each card type, you may put a card of that type from among cards revealed this way into your hand/i.test(text)){ waited=true; await atraxaWin(NUMW2[r[1].toLowerCase()]||+r[1]||10, by); break; }
+    if((r=sen.match(/^reveal the top (\w+) cards of your library\.?$/i)) && /For each card type, you may put a card of that type from among (?:the revealed cards|cards revealed this way|them) into your hand/i.test(text)){ waited=true; await atraxaWin(NUMW2[r[1].toLowerCase()]||+r[1]||10, by); break; }
     if((r=sen.match(/^you may pay ((?:\{[WUBRGC0-9]\})+)\.?$/i))){ waited=true; sacPow=0; const yes=await yesNo(by, `Pay ${r[1]}?`, `Pay ${r[1]}`, "Don't pay"); if(!yes){ log(`${by}: ${m.name} doesn't pay ${r[1]}.`); continue; }
       const syms=normSyms(costSyms(r[1])); let pd=true; if(autoPayOn()) pd=await new Promise(res=>payFor(syms, {abil:true, card:srcC||c}, {title:`${by}: pay ${r[1]}`, verb:'continue', done:x=>res(x), cancel:()=>res(null)}));
       if(!pd){ log(`${by}: ${m.name} doesn't pay ${r[1]}.`); continue; } sacPow=1; log(`${by}: ${m.name} pays ${r[1]}${pd.text?' ('+pd.text+')':''}.`); changed(); continue; }
