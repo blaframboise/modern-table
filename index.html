@@ -421,10 +421,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v3.11';
+const VERSION = 'v3.12';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.12','Oct 15',"Orcish Bowmasters: its trigger goes on the stack when it enters and whenever your opponent draws a card (except the first one in their draw step); it deals 1 damage to the target you pick, then amasses Orcs 1 (an Orc Army token gets the counter). Guide of Souls and other 'whenever a creature enters' cards now trigger for every token, including Ocelot Pride's city's blessing copies. Fixed a spell that could get stuck on the stack. In games 2 and 3, opening hands wait until both players finish sideboarding. Mulligans go in turn: the player on the play keeps or mulligans first, then the player on the draw, round by round."],
   ['v3.11','Oct 15',"The deck screen shows each deck as cards, laid out like sideboarding: lands in the first column, spells in columns by mana value, and the sideboard in a column on the right. A Cards / List switch brings back the text list."],
   ['v3.10','Oct 15',"Sideboarding: lands are back in a column, now the first one on the left (one card per land with a count), followed by the spells in columns by mana value. Every copy of a spell shows again."],
   ['v3.09','Oct 15',"Sideboarding: all spells sit together in columns by mana value, each column in color order (W U B R G, multicolored, colorless) and then alphabetical, with copies of a card stacked tightly and counted (×4). Lands stay in their row along the bottom."],
@@ -625,6 +626,8 @@ const oppId = () => G.myId==='p1' ? 'p2' : 'p1';
 const nid = () => G.myId+'-'+(++G.idc).toString(36);
 const ZN = {lib:'library', hand:'hand', bf:'battlefield', gy:'graveyard', ex:'exile', st:'stack', side:'sideboard'};
 const mk = (k, extra) => Object.assign({ id:nid(), k, o:G.myId, tap:false, fd:false, flip:false, c:0, att:null, atk:false }, extra);
+/* two of my cards must never share an id (a card on the stack that shared one with a graveyard card could not be resolved): the later one gets a new id */
+function dedupeIds(){ const seen=new Set(); for(const z of Object.keys(ZN)) for(const c of G.me[z]){ if(!c || !c.id) continue; if(seen.has(c.id)){ const old=c.id; c.id=nid(); console.warn('Modern Table: duplicate card id', old, 'in', z, '→', c.id); } else seen.add(c.id); } }
 function find(id){ for(const z of Object.keys(ZN)){ const i=G.me[z].findIndex(c=>c.id===id); if(i>=0) return {c:G.me[z][i], z, i}; } return null; }
 function findAny(id){ const f=find(id); if(f) return Object.assign(f,{mine:true}); if(G.opp) for(const z of ['bf','gy','ex','st','hand','comp']){ const c=(G.opp[z]||[]).find(c=>c.id===id); if(c) return {c, z, mine:false}; } return null; }
 const cname = c => c.fd ? 'a face-down card' : '[['+(cdata(c).n||'a card')+'|'+(c.cu?'':c.k||'')+']]';
@@ -632,7 +635,7 @@ const cname = c => c.fd ? 'a face-down card' : '[['+(cdata(c).n||'a card')+'|'+(
 function pub(){
   const m=G.me, p = c => c.fd ? Object.assign({}, c, {k:null, cu:null, note:''}) : c;
   return { name:m.name, deck:m.deck, life:m.life, ctr:m.ctr, libN:m.lib.length, handN:m.hand.length, sideN:m.side.length,
-    hand:(m.reveal || m.ctl) ? m.hand : null, comp:m.side.filter(c=>c.comp), compDone:!!m.compDone, skipRoll:!!m.skipRoll, wonGame:m.wonGame||0, ctl:!!m.ctl, ctlNext:!!m.ctlNext, city:!!m.city, bf:m.bf.map(p), gy:m.gy, ex:m.ex.map(p), st:m.st.map(p), arrows:m.arrows, mull:m.mull, wins:m.wins||0, roll:m.roll||null, dealt:!!m.dealt, kept:!!m.kept, mana:m.mana||noMana(), smana:m.smana||[], energySeen:!!m.energySeen, cast:m.cast||{n:0,is:0}, cares:m.cares||null, gtg:m.gtg||[], baub:m.baub||[], trk:m.trk||null };
+    hand:(m.reveal || m.ctl) ? m.hand : null, comp:m.side.filter(c=>c.comp), compDone:!!m.compDone, skipRoll:!!m.skipRoll, wonGame:m.wonGame||0, ctl:!!m.ctl, ctlNext:!!m.ctlNext, city:!!m.city, sbing:!!m.sbing, bf:m.bf.map(p), gy:m.gy, ex:m.ex.map(p), st:m.st.map(p), arrows:m.arrows, mull:m.mull, wins:m.wins||0, roll:m.roll||null, dealt:!!m.dealt, kept:!!m.kept, mana:m.mana||noMana(), smana:m.smana||[], energySeen:!!m.energySeen, cast:m.cast||{n:0,is:0}, cares:m.cares||null, gtg:m.gtg||[], baub:m.baub||[], trk:m.trk||null };
 }
 /* undo: a snapshot of my own side is kept before each change. Shuffles and anything that crosses to the other player close the history. */
 const UNDO=[]; let lastSnap=null, lastLogi=0;
@@ -649,7 +652,7 @@ function undo(){
   log(`${G.me.name} undid: ${what}.`); changed();
 }
 let syncT=0;
-function changed(){ if(G.me.ctr.energy>0) G.me.energySeen=true; checkHeld(); pruneGtg(); pruneArrows(); checkpoint(); render(); clearTimeout(syncT); syncT=setTimeout(()=>{ send({t:'state', s:pub()}); save(); }, 40); }
+function changed(){ dedupeIds(); if(G.me.ctr.energy>0) G.me.energySeen=true; checkHeld(); pruneGtg(); pruneArrows(); checkpoint(); render(); clearTimeout(syncT); syncT=setTimeout(()=>{ send({t:'state', s:pub()}); save(); }, 40); }
 function save(){ if(G.code || G.solo) store.set('mt_session', {code:G.code, solo:G.solo, myId:G.myId, me:G.me, turn:G.turn, idc:G.idc, at:Date.now()}); }
 function log(text, cls){ addLog(text, cls||'m'); send({t:'log', text}); }
 function addLog(text, cls){ G.log.push({text, cls}); if(G.log.length>300) G.log.shift(); renderLog(); }
@@ -719,6 +722,7 @@ function onMsg(m){
   else if(m.t==='gyexile'){ const f=find(m.id); const by=String(m.by||'a spell').slice(0,80), who=String(m.who||'Opponent').slice(0,40); if(f && f.z==='gy'){ const nm=cname(f.c); move(m.id,'ex',{silent:true}); log(`${who}'s ${by} exiles ${nm} from ${G.me.name}'s graveyard.`); changed(); } else { const t=`${by}'s target is no longer in ${G.me.name}'s graveyard, so nothing is exiled.`; addLog(t,'s'); send({t:'log', text:t}); } }
   else if(m.t==='hit'){ hitMe(m); }
   else if(m.t==='counter'){ counterAsk(m); }
+  else if(m.t==='drew'){ oppDrew(Math.max(0,Math.min(30,+m.n||0)), +m.first?1:0); }
   else if(m.t==='lock'){ G.me.lock={n:G.turn.n, nc:!!m.nc, by:String(m.by||'An effect').slice(0,60)}; changed(); }
   else if(m.t==='extract'){ extractName(String(m.name||'').slice(0,80), String(m.by||'A spell').slice(0,60), String(m.who||'Opponent').slice(0,40)); }
   else if(m.t==='wipe'){ wipe(String(m.desc||'').slice(0,60), m.mv==null?null:+m.mv, String(m.by||'A spell').slice(0,60), String(m.who||'Opponent').slice(0,40)); }
@@ -792,7 +796,7 @@ function move(id, zone, o={}){
   }
   if(zone==='bf' && from!=='bf' && !o.later) entered(c);
 }
-function draw(n=1, quiet){ const m=G.me; let k=0; if(n>0 && m.hand.length<=1){ const rq=m.bf.filter(x=>!x.fd && (x.k||x.cu) && /As long as you have one or fewer cards in hand, if you would draw one or more cards, you draw that many cards plus one instead/i.test(frontText(x)||'')); if(rq.length){ n+=rq.length; if(!quiet) log(`${rq.map(x=>cdata(x).n).join(', ')}: ${m.name} has one or fewer cards in hand, so they draw ${n} instead.`); } } while(n-- > 0 && m.lib.length){ m.hand.push(m.lib.shift()); k++; } if(!quiet) log(`${m.name} draws ${k===1?'a card':k+' cards'}.`); if(!k && !quiet) toast('Your library is empty.'); return k; }
+function draw(n=1, quiet, step){ const m=G.me; let k=0; if(n>0 && m.hand.length<=1){ const rq=m.bf.filter(x=>!x.fd && (x.k||x.cu) && /As long as you have one or fewer cards in hand, if you would draw one or more cards, you draw that many cards plus one instead/i.test(frontText(x)||'')); if(rq.length){ n+=rq.length; if(!quiet) log(`${rq.map(x=>cdata(x).n).join(', ')}: ${m.name} has one or fewer cards in hand, so they draw ${n} instead.`); } } while(n-- > 0 && m.lib.length){ m.hand.push(m.lib.shift()); k++; } if(!quiet) log(`${m.name} draws ${k===1?'a card':k+' cards'}.`); if(!k && !quiet) toast('Your library is empty.'); if(k && !quiet && G.opp && G.turn.n) send({t:'drew', n:k, first:step?1:0}); return k; }
 function shuffleLib(quiet){ G.noUndo=true; shuffle(G.me.lib); if(!quiet) log(`${G.me.name} shuffles their library.`); }
 function playFromHand(id){ const f=find(id); if(!f) return; if(isLand(f.c)){ move(id,'bf'); changed(); landEnters(id); } else castSpell(id); }
 function resolve(id){ const f=find(id); if(!f) return; const c=f.c;
@@ -1128,6 +1132,18 @@ function sacEndTrig(){ const m=G.me, due=m.bf.filter(c=>c.sacEnd===1); if(!due.l
   return true; }
 function sacEndResolve(c){ const m=G.me, gone=[]; for(const id of c.ab.sacend){ const f=find(id); if(f && f.z==='bf'){ gone.push(cname(f.c)); move(id,'gy',{silent:true}); } }
   log(gone.length ? `${m.name} sacrifices ${gone.length} token${gone.length>1?'s':''} (${[...new Set(gone)].join(', ')}).` : 'The tokens are already gone.'); }
+/* "Whenever an opponent draws a card [except the first one they draw in each of their draw steps], …" (Orcish Bowmasters): one trigger per card,
+   on my stack, when the opponent's client reports a draw ('drew': how many, and whether the first was their draw-step card) */
+function oppDrew(n, first){ const m=G.me, out=[]; let last=null;
+  for(const x of m.bf){ if(x.fd || (!x.k && !x.cu)) continue; const l=(frontText(x)||'').split('\n').find(l=>/whenever an opponent draws a card/i.test(l)); if(!l) continue;
+    const k=/except the first one they draw in each of their draw steps/i.test(l) ? n-first : n; if(k<=0) continue; const d=cdata(x), sn=d.n.split(',')[0];
+    for(let i=0;i<k;i++){ last=mk(null,{tok:true, ts:Date.now(), ab:{id:x.id, tr:true}, cu:{n:`${sn}: trigger`, t:'Triggered ability', o:l.trim(), img:d.img||''}}); m.st.push(last); } out.push(sn+(k>1?' ×'+k:'')); }
+  if(!out.length) return; log(`${G.opp?G.opp.name:'The opponent'} draws: ${out.join(', ')} trigger${out.length>1||/×/.test(out[0])?'s':''} on ${m.name}'s stack.`);
+  if(last && /\btarget\b/i.test(last.cu.o) && !G.mode){ G.mode={type:'arrow', from:last.id}; toast(`${out[0].split(' ×')[0]}: click its target (right-drag from the others on the stack for theirs).`); } changed(); }
+/* Amass [type] N: if I control no Army, create a 0/0 black [type] Army token; then N +1/+1 counters on an Army I control */
+function amass(type, n, by, src){ type=type.replace(/s$/,''); const m=G.me;   /* "Amass Orcs" makes an Orc Army */ let army=m.bf.find(x=>isCreature(x) && /\bArmy\b/.test(faceType(x)));
+  if(!army){ army=makeCreatureTokens(1, '0', '0', `black ${type} Army`, {src}, by)[0]; }
+  army.c=(army.c||0)+n; log(`${by}: amass ${type} ${n}. ${cname(army)} gets ${n===1?'a +1/+1 counter':n+' +1/+1 counters'} (now ${powerOf(army)}/${powerOf(army)}).`); changed(); }
 /* combat damage triggers, from the creature's menu: "Whenever this creature deals combat damage to a player, …" (Ragavan, Psychic Frog) */
 const cdmgLine = c => { const nm=faceName(c,0); const m=(frontText(c)||'').match(new RegExp('Whenever (?:this creature|'+escRe(nm)+'|'+escRe(nm.split(',')[0])+') deals combat damage to a player(?: or planeswalker)?, ([^\\n]+)','i')); return m ? m[0] : null; };
 function cdmgTrig(id){ const f=find(id); if(!f) return; const c=f.c, d=cdata(c), l=cdmgLine(c); if(!l) return; const short=d.n.split(',')[0];
@@ -1385,14 +1401,14 @@ function leaveUpkeep(){
 }
 function releaseGate(){
   const m=G.me, t=G.turn; delete m.gate;
-  if(t.active===G.myId && t.phase<=1 && S.autoDraw){ if(m.drew!==t.n && t.n>1 && m.lib.length){ draw(1); m.drew=t.n; } setTurn({...t, phase:2}); }
+  if(t.active===G.myId && t.phase<=1 && S.autoDraw){ if(m.drew!==t.n && t.n>1 && m.lib.length){ draw(1,false,true); m.drew=t.n; } setTurn({...t, phase:2}); }
   changed();
 }
 /* the pact trigger is gone (paid, countered, closed): carry on with the turn as auto-draw would have */
 function resumeAfterPact(){
   const m=G.me, t=G.turn; if(m.st.some(c=>c.pact) || t.active!==G.myId) return;
   if(m.gate){ releaseGate(); return; }
-  if(t.phase===0 && S.autoDraw && m.drew!==t.n){ if(t.n>1 && m.lib.length){ draw(1); m.drew=t.n; } setTurn({...t, phase:2}); changed(); }
+  if(t.phase===0 && S.autoDraw && m.drew!==t.n){ if(t.n>1 && m.lib.length){ draw(1,false,true); m.drew=t.n; } setTurn({...t, phase:2}); changed(); }
 }
 function pactGateAsk(src, cost){
   const on=G.opp?G.opp.name:'Your opponent';
@@ -1453,7 +1469,7 @@ function trackPad(t, mine){ const g=[]; t.list.forEach((x,i)=>{ const e=g.find(y
    put an ab.etb / ab.ph marker on my stack with that line; autoResolve carries out the simple parts. Lines with an intervening "if" only get a log reminder
    at the start of a step, so the upkeep doesn't stop every turn for them. */
 const escRe = x => x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-function etbLines(c){ const nm=faceName(c,0), short=nm.split(',')[0]; const re=new RegExp('^(?:[A-Z][A-Za-z\' ]{2,30} — )?When(?:ever)? (?:this (?:creature|artifact|enchantment|land|permanent)|'+escRe(nm)+'|'+escRe(short)+') enters(?: the battlefield)?(?: or [^,]+)?, (.+)$','i');
+function etbLines(c){ const nm=faceName(c,0), short=nm.split(',')[0]; const re=new RegExp('^(?:[A-Z][A-Za-z\' ]{2,30} — )?When(?:ever)? (?:this (?:creature|artifact|enchantment|land|permanent)|'+escRe(nm)+'|'+escRe(short)+') enters(?: the battlefield)?(?: (?:or|and) [^,]+)?, (.+)$','i');
   return (frontText(c)||'').split('\n').map(l=>l.trim()).filter(l=>re.test(l) && !/\bearthbend\b/i.test(l) && !blinkOf(l) && !/exile all graveyards/i.test(l) && spentOk(c, l)); }
 function etbTrigs(c){ for(const l of etbLines(c)){ const d=cdata(c), nm=d.n.split(',')[0];
     const mkr=mk(null,{tok:true, ts:Date.now(), ab:{id:c.id, etb:true}, cu:{n:`${nm}: trigger`, t:'Triggered ability', o:l, img:d.img||''}}); G.me.st.push(mkr); log(`${nm} enters: its trigger goes on the stack.`);
@@ -1566,7 +1582,7 @@ async function simpleEffects(c, text, srcId){
       const n=r[1].toUpperCase()==='X' ? (c.x||0) : (NUMW2[r[1].toLowerCase()]||+r[1]||1); made=makeCreatureTokens(n, r[3], r[4], r[5], {tapatk:!!(r[2]||r[7]), art:!!r[6], kw:r[8] ? r[8].replace(/^"|"$/g,'').replace(/^([a-z])/, x=>x.toUpperCase()) : '', src:srcCard(srcId)||srcCard(c.id)}, by); continue; }
     if(/^sacrifice (?:them|it|those tokens) at the beginning of the next end step\.?$/i.test(sen)){ for(const tk of made){ tk.sacEnd=1; tk.sacBy=String(by).split(":")[0]; } continue; }
     if((r=String(text).match(/^(?:[^\n]*?)Whenever you attack this turn, ([\s\S]+)$/i)) && /^whenever you attack this turn,/i.test(sen)){ (m.wya=(m.wya||[]).filter(e=>e.n===G.turn.n)).push({n:G.turn.n, src:by, txt:r[1].trim()}); log(`${by}: the next time ${m.name} attacks this turn, ${r[1].trim().replace(/\.$/,'')}.`); break; }
-    if((r=sen.match(/^then if you have the city's blessing, for each token you control that entered (?:the battlefield )?this turn, create a token that's a copy of it\.?$/i))){ if(!m.city) continue; const ts=m.bf.filter(x=>x.tok && x.tokT===G.turn.n); for(const x of ts){ const tk=mk(null,{tok:true, cu:Object.assign({}, x.cu||{}), k:x.k}); tk.tokT=G.turn.n; tk.sick=true; m.bf.push(tk); } log(`${by}: city's blessing, ${m.name} copies ${ts.length} token${ts.length===1?'':'s'} that entered this turn.`); changed(); continue; }
+    if((r=sen.match(/^then if you have the city's blessing, for each token you control that entered (?:the battlefield )?this turn, create a token that's a copy of it\.?$/i))){ if(!m.city) continue; const ts=m.bf.filter(x=>x.tok && x.tokT===G.turn.n); const cps=[]; for(const x of ts){ const tk=mk(null,{tok:true, cu:Object.assign({}, x.cu||{}), k:x.k}); tk.tokT=G.turn.n; tk.sick=true; m.bf.push(tk); cps.push(tk); } for(const tk of cps) entered(tk); log(`${by}: city's blessing, ${m.name} copies ${ts.length} token${ts.length===1?'':'s'} that entered this turn.`); changed(); continue; }
     if((r=sen.match(/^discard two cards, then draw two cards\.?$/i))){ waited=true; const hc=m.hand.slice(); let ids = hc.length<=2 ? hc.map(x=>x.id) : await pickManyP(`${by}: discard two cards`, hc, 'Discard them'); if(hc.length>2 && ids.length!==2){ ids = ids.slice(0,2); } sacPow=ids.filter(i=>{ const f=find(i); return f && !isLand(f.c); }).length; await discard(ids); draw(2); continue; }
     if((r=sen.match(/^for each nonland card discarded this way, create an? (\d+)\/(\d+) ([a-z ]+?) creature token\.?$/i))){ if(sacPow>0) made=makeCreatureTokens(sacPow, r[1], r[2], r[3], {src:srcCard(srcId)||srcCard(c.id)}, by); continue; }
     if((r=sen.match(/^(?:converge — )?exile target (.+?) if its mana value is less than or equal to the number of colors of mana spent to cast this spell\.?$/i))){ const t=fitTargets(tg, r[1])[0]; if(!t){ log(`${by}: no target was chosen.`); continue; } waited=true; const k=await askN(`${by}: how many colors of mana did you spend?`, Math.max(1, c.x||1)); const a=findAny(t), mv=manaValue(a.c);
@@ -1598,6 +1614,7 @@ async function simpleEffects(c, text, srcId){
     if((r=sen.match(/^put (a|an|one|two|three|\d+) \+1\/\+1 counters? on (?:this creature|it|this permanent)\.?$/i)) || (nm && (r=sen.match(new RegExp('^put (a|an|one|two|three|\\d+) \\+1\\/\\+1 counters? on '+escRe(nm.split(',')[0])+'\\.?$','i'))))){ const f0=srcId && find(srcId); if(f0 && f0.z==='bf'){ const k=NUMW2[r[1].toLowerCase()]||+r[1]||1; f0.c.c=(f0.c.c||0)+k; log(`${by}: ${k} +1/+1 counter${k>1?'s':''} on ${cname(f0.c)}.`); changed(); } continue; }
     if((r=sen.match(/^discard a card\.?$/i))){ sacPow=null; if(!m.hand.length){ log(`${by}: ${m.name} has no card to discard.`); continue; } waited=true; const pk=await pickP(`${by}: discard a card`, m.hand.slice(), 'No card'); if(pk && find(pk.id) && find(pk.id).z==='hand'){ await discard([pk.id]); sacPow=1; } continue; }
     if((r=sen.match(/^if you do, draw (a|one|two) cards?\.?$/i))){ if(sacPow) draw(NUMW2[r[1].toLowerCase()]||1); continue; }
+    if((r=sen.match(/^(?:then )?amass ([A-Z][a-z]+) (\d+|X)\.?$/i))){ amass(r[1], r[2].toUpperCase()==='X' ? (c.x||0) : +r[2], by, srcCard(srcId)||srcCard(c.id)); continue; }
     if((r=sen.match(/^create a Treasure token and exile the top card of that player's library\.?$/i))){ makeTokens('Treasure', 1, by, srcCard(srcId)||srcCard(c.id)); if(G.opp) send({t:'ragavan', by, who:m.name}); continue; }
     if(nm && new RegExp('^double (?:this creature|it|'+escRe(nm)+'|'+escRe(nm.split(',')[0])+')(?:\'s|’s)? power until end of turn\.?$','i').test(sen)){ const f0=srcId && find(srcId); if(f0 && f0.z==='bf'){ const p=powerOf(f0.c); boost(f0.c, p, 0); log(`${by}: ${cname(f0.c)}'s power doubles to ${powerOf(f0.c)} until end of turn.`); changed(); } continue; }
     if((r=sen.match(/^empower Jace (\d+)\.?$/i))){ empowerJace(+r[1], srcC); changed(); continue; }
@@ -2598,7 +2615,7 @@ function startMyTurn(){
   clearDamage(); warpTick({n:G.turn.n-1, phase:0}, {n:G.turn.n, phase:G.turn.phase}); flTick({n:G.turn.n-1, phase:0}, {n:G.turn.n, phase:G.turn.phase});
   emptyPool(); for(const c of m.ex) delete c.offer; for(const c of m.bf) if(c.anim){ c.anim=false; c.row=null; } clearBoosts(); for(const c of m.gy) delete c.fbk; m.cast={n:0,is:0}; expirePlayable(); endCopies(); pactTick(); for(const c of m.ex) if(c.pl==='next') c.pl='this';
   delete m.gate; const oppDue=baubDue(G.opp&&G.opp.baub, G.turn.n).length>0; baubTick(G.turn.n); const upT=phaseTrigs('upkeep', true) | rbTick(); const bHeld=oppDue || m.st.some(c=>c.ab && c.ab.bdraw), held=m.st.some(c=>c.pact) || bHeld || upT;
-  if(S.autoDraw && !held){ if(G.turn.n>1 && m.lib.length){ draw(1); m.drew=G.turn.n; } G.turn.phase=2; sagaTick(G.turn.n); }
+  if(S.autoDraw && !held){ if(G.turn.n>1 && m.lib.length){ draw(1,false,true); m.drew=G.turn.n; } G.turn.phase=2; sagaTick(G.turn.n); }
   else { G.turn.phase=0; if(held){ const t=`${m.name}'s turn stops in the upkeep: ${m.st.some(c=>c.pact) ? 'the pact trigger must be dealt with before the draw' : bHeld ? "Mishra's Bauble's delayed draw trigger is on the stack" : 'an upkeep trigger is on the stack'}.`; addLog(t,'s'); send({t:'log', text:t}); } }
   send({t:'turn', turn:G.turn}); changed();
 }
@@ -2655,9 +2672,9 @@ function newGame(remote){
   gather(); G.turn={active:null, phase:2, n:0};
   if(!remote){ send({t:'newgame'}); log(`${G.me.name} started a new game.`); }
   changed();
-  if(G.me.side.length) sideboardModal(); else shuffleUp();
+  if(G.me.side.length){ G.me.sbing=true; changed(); sideboardModal(); } else shuffleUp();
 }
-function shuffleUp(){ shuffleLib(true); log(`${G.me.name} shuffles up.`); changed(); }
+function shuffleUp(){ const sb=G.me.sbing; delete G.me.sbing; shuffleLib(true); if(sb) log(`${G.me.name} is done sideboarding.`); log(`${G.me.name} shuffles up.`); changed(); }
 function drawOpening(){ const m=G.me; if(m.dealt) return; G.noUndo=true; draw(7,true); m.dealt=true; log(`${m.name} draws an opening hand of seven.`); changed(); }
 /* pre-game order (tournament style): 1 one roll for both players (game 1 only), 2 companions revealed or declined, 3 the roll winner or the
    loser of the last game chooses play or draw, 4 opening hands, mulligans, keep, 5 pregame actions (Leylines). Skip the roll = practise alone. */
@@ -2674,7 +2691,10 @@ function skipRoll(){ G.me.skipRoll=true; log(`${G.me.name} skips the roll and pr
 function chooseFirst(play){ const me=G.myId, who = alone() ? me : (play ? me : oppId()); log(`${G.me.name} chooses to ${play?'play':'draw'}.`); takeFirst(who); }
 function compDecide(id){ const m=G.me; if(id) revealCompanion(id); else log(`${m.name} plays without a companion.`); m.compDone=true; changed(); }
 function highRoll(){ const m=G.me; m.roll=1+Math.floor(Math.random()*20); const o=G.opp&&G.opp.roll; log(`${m.name} rolls ${m.roll} on the high roll.` + (o ? (m.roll===o ? ' It is a tie, so roll again.' : ` ${m.roll>o ? m.name : G.opp.name} wins the roll.`) : '')); changed(); }
-function keepHand(){ const m=G.me; m.kept=true; log(`${m.name} keeps${m.mull ? ` after ${m.mull} mulligan${m.mull>1?'s':''}` : ''}.`); changed(); pregameModal(); }
+/* London mulligan in turn order: the player on the play decides (keep or mulligan) first, then the player on the draw, round by round */
+function canDecide(){ const m=G.me, o=G.opp, t=G.turn; if(alone() || !o || !t.n || m.kept) return true; const ro=(o.mull||0)+(o.kept?1:0), mine=(m.mull||0); return t.active===G.myId ? (o.kept || ro>=mine) : (o.kept || ro>mine); }
+function notYourDecision(){ toast(`${G.turn.active===G.myId ? 'Wait' : 'The player on the play decides first. Wait'} for ${G.opp?G.opp.name:'your opponent'} to keep or mulligan.`); }
+function keepHand(){ const m=G.me; if(G.turn.n && !m.kept && !canDecide()){ notYourDecision(); return; } m.kept=true; log(`${m.name} keeps${m.mull ? ` after ${m.mull} mulligan${m.mull>1?'s':''}` : ''}.`); changed(); pregameModal(); }
 const pregameCards = () => G.me.hand.filter(c => /opening hand/i.test(cdata(c).o||''));
 function pregameModal(){
   if(!pregameCards().length && !compCandidates().length) return;
@@ -2689,7 +2709,7 @@ function pregameModal(){
     else { log(`${G.me.name} reveals ${cname(f.c)} from their opening hand.`); b.disabled=true; b.textContent='Revealed'; } };
   paint();
 }
-function mulligan(){ const m=G.me; m.lib.push(...m.hand.splice(0)); m.mull++; shuffleLib(true); draw(7,true); log(`${m.name} mulligans (number ${m.mull}) and must put ${m.mull} on the bottom.`); toast(`Right-click ${m.mull} card${m.mull>1?'s':''} in hand → Bottom of library.`); changed(); }
+function mulligan(){ const m=G.me; if(G.turn.n && !m.kept && !canDecide()){ notYourDecision(); return; } m.lib.push(...m.hand.splice(0)); m.mull++; shuffleLib(true); draw(7,true); log(`${m.name} mulligans (number ${m.mull}) and must put ${m.mull} on the bottom.`); toast(`Right-click ${m.mull} card${m.mull>1?'s':''} in hand → Bottom of library.`); changed(); }
 async function loadDeck(d, name, onProgress){
   const art=d.art||{}, kk=n=>art[keyOf(n)]||keyOf(n);
   await ensureCards([...d.main, ...d.side].map(x=>kk(x[0])), onProgress);
@@ -2835,7 +2855,11 @@ function render(){
     const on=o?o.name:'Opponent', hs=p=>!p.dealt?'not drawn yet':(p.kept?'kept':'deciding')+(p.mull?`, ${p.mull} mulligan${p.mull>1?'s':''}`:''), solo=alone();
     const ch=chooserId(), chName = ch===G.myId ? m.name : on, cand=compCandidates(), oDone = solo || (o && (o.compDone || !o.deck ? o.compDone : false));
     let h='', st='', btn='';
-    if(!t.n && needRoll()){
+    if(!t.n && (m.sbing || (o && o.sbing))){
+      h='Sideboarding';
+      st = m.sbing ? `<span class="st">Finish sideboarding, then shuffle up.</span>` : `<span class="st">Waiting for ${esc(on)} to finish sideboarding.</span>`;
+      btn = m.sbing && $('#modal').hidden ? '<button data-first="sideboard" class="go">Sideboard</button>' : '';
+    } else if(!t.n && needRoll()){
       h='Roll for the first turn';
       st = o ? (o.deck ? `<span class="st">One roll decides it for both players. The winner chooses to play or draw.</span>` : `<span class="st">Waiting for ${esc(on)} to choose a deck.</span>`) : `<span class="st">Waiting for an opponent to join. To test on your own, skip the roll.</span>`;
       btn = `<button data-first="rollboth" class="go" ${o&&o.deck?'':'disabled'}>Roll for both players</button><button data-first="skip" class="ghost">Skip the roll (practise alone)</button>`;
@@ -2852,8 +2876,9 @@ function render(){
       btn = solo ? '<button data-first="play" class="go">Start the game (you go first)</button>' : ch===G.myId ? '<button data-first="play" class="go">Play (go first)</button><button data-first="draw">Draw (go second)</button>' : '';
     } else {
       h = esc(t.active===G.myId ? m.name : on)+' goes first';
-      st = `<span class="st">Hands: <b>${esc(m.name)}</b> ${hs(m)}${o&&!solo?` · <b>${esc(on)}</b> ${hs(o)}`:''}</span>`;
-      btn = `<button data-first="deal" ${m.dealt?'disabled':''} class="${!m.dealt?'go':''}">Draw opening hand</button><button data-first="mull" ${m.dealt?'':'disabled'}>Mulligan</button>${m.dealt?'<button data-first="keep" class="go">Keep hand</button>':''}`;
+      const cd=canDecide();
+      st = `<span class="st">Hands: <b>${esc(m.name)}</b> ${hs(m)}${o&&!solo?` · <b>${esc(on)}</b> ${hs(o)}`:''}</span>` + (m.dealt && !cd ? `<span class="st">Waiting for ${esc(on)} to keep or mulligan${t.active===G.myId?'':' (the player on the play decides first)'}.</span>` : '');
+      btn = `<button data-first="deal" ${m.dealt?'disabled':''} class="${!m.dealt?'go':''}">Draw opening hand</button><button data-first="mull" ${m.dealt&&cd?'':'disabled'}>Mulligan</button>${m.dealt?`<button data-first="keep" class="go" ${cd?'':'disabled'}>Keep hand</button>`:''}`;
     }
     bn.hidden=false; bn.innerHTML = `<h3>${h}</h3>${st}<div>${btn}</div>`;
   }
@@ -2990,7 +3015,7 @@ function cardMenu(id, x, y){
     ['Move to the other row',()=>{ const cur=c.row||((c.fd||isCreature(c))?'f':'b'); c.row=cur==='f'?'b':'f'; ch(); }],
     /\bwarp\b/i.test(d.o||'')&&[c.wp?'Send to warp zone now (instead of at the end step)':'Send to warp zone (exiled, can be cast later)',()=>{ warpOut(c); ch(); }],
     c.wp&&['Keep it (remove the warp spiral)',()=>{ delete c.wp; log(`${G.me.name}'s ${cname(c)} will not go to the warp zone.`); ch(); }],
-    ['Make a token copy',()=>{ G.me.bf.push(mk(c.k,{tok:true,cu:c.cu,c:0,sick:!!G.turn.n})); log(`${G.me.name} makes a token copy of ${cname(c)}.`); ch(); }],
+    ['Make a token copy',()=>{ const tk=mk(c.k,{tok:true,cu:c.cu,c:0,sick:!!G.turn.n}); tk.tokT=G.turn.n; G.me.bf.push(tk); log(`${G.me.name} makes a token copy of ${cname(c)}.`); entered(tk); ch(); }],
     G.opp&&['Give control to opponent',()=>{ G.noUndo=true; G.me.bf.splice(find(id).i,1); c.att=null; c.atk=false; send({t:'give',card:c,zone:'bf'}); log(`${G.me.name} gives control of ${cname(c)} to ${G.opp.name}.`); ch(); }], '-', ...dest ];
   else if(z==='hand') items=[
     [d.back ? (isLand(c)?'Play as land: ':'Cast ')+faceName(c,0)+(isLand(c)?'':' (goes to the stack)') : isLand(c)?'Play land':'Cast (goes to the stack)',()=>playFromHand(id)],
@@ -3110,9 +3135,9 @@ function tokenModal(){
     try{ const ks=await scrySearch(tok?`${q} (t:token or t:emblem)`:`${q} f:modern`, tok); g.innerHTML = ks.length ? ks.map(k=>cardHTML({id:'s:'+k,k},'search',true)).join('') : '<span class="hint">No matches.</span>'; g.dataset.tok=tok?1:''; }
     catch(e){ g.innerHTML='<span class="hint">Could not reach Scryfall. Check your connection, or make a plain token below.</span>'; } };
   $('#tGo').onclick=()=>run(true); $('#cGo').onclick=()=>run(false); $('#tq').onkeydown=e=>{ if(e.key==='Enter') run(true); }; $('#tq').focus();
-  $('#tMk').onclick=()=>{ const n=$('#tn').value.trim()||'Token', pt=$('#tp').value.trim(); G.me.bf.push(mk(null,{tok:true,sick:!!G.turn.n,cu:{n,t:pt?'Token Creature':'Token',o:'',pt,img:''}})); log(`${G.me.name} creates a ${pt?pt+' ':''}${n} token.`); changed(); toast('Token created'); };
+  $('#tMk').onclick=()=>{ const n=$('#tn').value.trim()||'Token', pt=$('#tp').value.trim(); const tk=mk(null,{tok:true,sick:!!G.turn.n,cu:{n,t:pt?'Token Creature':'Token',o:'',pt,img:''}}); tk.tokT=G.turn.n; G.me.bf.push(tk); log(`${G.me.name} creates a ${pt?pt+' ':''}${n} token.`); entered(tk); changed(); toast('Token created'); };
   $('#tgrid').onclick=e=>{ const c=e.target.closest('.card'); if(!c) return; const k=c.dataset.id.slice(2), tok=!!$('#tgrid').dataset.tok;
-    if(tok){ G.me.bf.push(mk(k,{tok:true,sick:!!G.turn.n})); log(`${G.me.name} creates a ${DB[k].n} token.`); } else { G.me.hand.push(mk(k,{made:true})); log(`${G.me.name} adds ${DB[k].n} to their hand from outside the game.`); }
+    if(tok){ const tk=mk(k,{tok:true,sick:!!G.turn.n}); tk.tokT=G.turn.n; G.me.bf.push(tk); log(`${G.me.name} creates a ${DB[k].n} token.`); entered(tk); } else { G.me.hand.push(mk(k,{made:true})); log(`${G.me.name} adds ${DB[k].n} to their hand from outside the game.`); }
     saveDB(); changed(); toast(DB[k].n+(tok?' created':' added to hand')); };
 }
 /* an arrow from my blink/flicker spell or ability, or from a permanent with such a trigger: check the target, remember it, ask on the battlefield */
@@ -3235,7 +3260,7 @@ document.addEventListener('click', e=>{
   if(t.closest('#stormTag')){ adjCast(1); return; }
   const av=t.closest('.avatar'); if(av && G.mode && G.mode.type!=='attach'){ finishMode(av.dataset.pl); return; }
   const ph=t.closest('[data-ph]'); if(ph && G.turn.n){ if(G.turn.active===G.myId && G.turn.phase===0 && +ph.dataset.ph>0 && G.me.st.some(c=>c.pact)){ leaveUpkeep(); return; } setTurn({...G.turn, phase:+ph.dataset.ph, passed:false}); return; }
-  const fb=t.closest('[data-first]'); if(fb){ if(fb.disabled) return; const v=fb.dataset.first; if(v==='mull') mulligan(); else if(v==='roll') highRoll(); else if(v==='deal') drawOpening(); else if(v==='keep') keepHand(); else if(v==='me' && !G.turn.n) takeFirst(G.myId); else if(v==='rollboth') rollBoth(); else if(v==='skip') skipRoll(); else if(v==='comp') compDecide(fb.dataset.id); else if(v==='nocomp') compDecide(null); else if((v==='play'||v==='draw') && !G.turn.n) chooseFirst(v==='play'); return; }
+  const fb=t.closest('[data-first]'); if(fb){ if(fb.disabled) return; const v=fb.dataset.first; if(v==='sideboard') sideboardModal(); else if(v==='mull') mulligan(); else if(v==='roll') highRoll(); else if(v==='deal') drawOpening(); else if(v==='keep') keepHand(); else if(v==='me' && !G.turn.n) takeFirst(G.myId); else if(v==='rollboth') rollBoth(); else if(v==='skip') skipRoll(); else if(v==='comp') compDecide(fb.dataset.id); else if(v==='nocomp') compDecide(null); else if((v==='play'||v==='draw') && !G.turn.n) chooseFirst(v==='play'); return; }
   const pile=t.closest('.pile'); if(pile){ const z=pile.dataset.pile, mine=pile.dataset.o==='me';
     if(z==='gy' && G.mode && G.mode.type==='arrow' && find(G.mode.from) && find(G.mode.from).z==='st'){ const src=G.mode.from; G.mode=null; render(); openTargetGy(src, mine ? G.myId : oppId()); return; }
     if(mine && z==='lib'){ draw(1); changed(); }
@@ -3245,7 +3270,7 @@ document.addEventListener('click', e=>{
     return; }
 });
 $('#next').onclick=()=>nextPhase();
-$('#drawBtn').onclick=()=>{ if(G.me.gate){ if(Date.now()-G.me.gate.at < GATE_MS) return; log(`${G.me.name} goes ahead with the draw without an answer from ${G.opp?G.opp.name:'their opponent'}.`); releaseGate(); return; } if(draw(1)) G.me.drew=G.turn.n; changed(); };
+$('#drawBtn').onclick=()=>{ if(G.me.gate){ if(Date.now()-G.me.gate.at < GATE_MS) return; log(`${G.me.name} goes ahead with the draw without an answer from ${G.opp?G.opp.name:'their opponent'}.`); releaseGate(); return; } if(draw(1,false,true)) G.me.drew=G.turn.n; changed(); };
 $('#menuBtn').onclick=e=>{ const r=e.currentTarget.getBoundingClientRect(); tableMenu(r.left, r.bottom+4); };
 $('#handBtn').onclick=e=>{ const r=e.currentTarget.getBoundingClientRect(); handMenu(r.left, r.bottom+4); };
 $('#tokBtn').onclick=()=>tokenModal();
