@@ -421,10 +421,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v3.12';
+const VERSION = 'v3.13';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.13','Oct 15',"If the table ever has to repair two of your cards that got mixed up (the problem behind the stuck Goblin Bombardment), it now says so in the game log. If you see that line, tell us what you did just before it."],
   ['v3.12','Oct 15',"Orcish Bowmasters: its trigger goes on the stack when it enters and whenever your opponent draws a card (except the first one in their draw step); it deals 1 damage to the target you pick, then amasses Orcs 1 (an Orc Army token gets the counter). Guide of Souls and other 'whenever a creature enters' cards now trigger for every token, including Ocelot Pride's city's blessing copies. Fixed a spell that could get stuck on the stack. In games 2 and 3, opening hands wait until both players finish sideboarding. Mulligans go in turn: the player on the play keeps or mulligans first, then the player on the draw, round by round."],
   ['v3.11','Oct 15',"The deck screen shows each deck as cards, laid out like sideboarding: lands in the first column, spells in columns by mana value, and the sideboard in a column on the right. A Cards / List switch brings back the text list."],
   ['v3.10','Oct 15',"Sideboarding: lands are back in a column, now the first one on the left (one card per land with a count), followed by the spells in columns by mana value. Every copy of a spell shows again."],
@@ -627,7 +628,7 @@ const nid = () => G.myId+'-'+(++G.idc).toString(36);
 const ZN = {lib:'library', hand:'hand', bf:'battlefield', gy:'graveyard', ex:'exile', st:'stack', side:'sideboard'};
 const mk = (k, extra) => Object.assign({ id:nid(), k, o:G.myId, tap:false, fd:false, flip:false, c:0, att:null, atk:false }, extra);
 /* two of my cards must never share an id (a card on the stack that shared one with a graveyard card could not be resolved): the later one gets a new id */
-function dedupeIds(){ const seen=new Set(); for(const z of Object.keys(ZN)) for(const c of G.me[z]){ if(!c || !c.id) continue; if(seen.has(c.id)){ const old=c.id; c.id=nid(); console.warn('Modern Table: duplicate card id', old, 'in', z, '→', c.id); } else seen.add(c.id); } }
+function dedupeIds(){ const seen=new Set(); for(const z of Object.keys(ZN)) for(const c of G.me[z]){ if(!c || !c.id) continue; if(seen.has(c.id)){ const old=c.id; c.id=nid(); console.warn('Modern Table: duplicate card id', old, 'in', z, '→', c.id); log(`Table note: two of ${G.me.name}'s cards were mixed up (${cdata(c).n||'a card'}, in the ${ZN[z]}); fixed. If you see this, please say what happened just before.`, 's'); } else seen.add(c.id); } }
 function find(id){ for(const z of Object.keys(ZN)){ const i=G.me[z].findIndex(c=>c.id===id); if(i>=0) return {c:G.me[z][i], z, i}; } return null; }
 function findAny(id){ const f=find(id); if(f) return Object.assign(f,{mine:true}); if(G.opp) for(const z of ['bf','gy','ex','st','hand','comp']){ const c=(G.opp[z]||[]).find(c=>c.id===id); if(c) return {c, z, mine:false}; } return null; }
 const cname = c => c.fd ? 'a face-down card' : '[['+(cdata(c).n||'a card')+'|'+(c.cu?'':c.k||'')+']]';
