@@ -426,10 +426,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v3.20';
+const VERSION = 'v3.21';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.21','Oct 16',"Blocking: Declare another blocker only shows while you still have an untapped creature that isn't blocking (a creature blocks one attacker unless its card says otherwise). When you click to target or block, a dashed arrow follows your mouse from the card until you pick, then turns solid."],
   ['v3.20','Oct 16',"Blocking is easier. When you are attacked, buttons appear on your side of the table: Declare a blocker (click your creature, then the attacker), No blocks, Reset blockers, and Finish declaring blocks, which hands the turn back. Any arrow you draw from your untapped creature to an attacker during blocks also counts as a block."],
   ['v3.19','Oct 16',"Combat damage triggers that say 'to a player or planeswalker' (Psychic Frog) now go on the stack when the creature attacks a planeswalker unblocked, too."],
   ['v3.18','Oct 16',"Psychic Frog's 'exile three cards from your graveyard' ability is back on its menu, and it now gives Frog flying until end of turn (the flying icon shows on the card). Other abilities that exile cards from your graveyard as their cost show up again too."],
@@ -2735,6 +2736,8 @@ function startMyTurn(){
 /* combat steps (G.turn.cs while in Combat): attackers are declared (no cs) → 'blk' the defender blocks (click a creature, then the attacker;
    arrows with blk) and presses Done blocking → 'blkd' → the active player goes to combat damage → 'dmg': the log lists blocked and unblocked
    attackers and puts "deals combat damage to a player" triggers of unblocked attackers on the stack. Damage itself is left to the players. */
+const multiBlock = c => /can block (?:an additional|any number of|two) creatures?/i.test(frontText(c)||'');
+const blockersLeft = () => { const used=new Set(G.me.arrows.filter(a=>a.blk).map(a=>a.a)); return G.me.bf.filter(c=>!c.fd && isCreature(c) && !c.tap && (!used.has(c.id) || multiBlock(c))); };
 const blockStep = () => { const t=G.turn; return !!(t.n && t.phase===3 && t.cs==='blk' && t.active!==G.myId && !t.passed); };
 function combatLabel(){ const t=G.turn, on=G.opp?G.opp.name:'opponent'; if(t.phase!==3) return null;
   if(t.cs==='blk') return {text:`Waiting for ${on}'s blocks`, wait:1}; if(t.cs==='blkd') return {text:'Combat damage'};
@@ -2949,7 +2952,7 @@ function render(){
   $('#drawBtn').hidden = gate ? false : !(t.n>1 && t.active===G.myId && !S.autoDraw && t.phase===1 && m.drew!==t.n && m.lib.length);
   $('#drawBtn').textContent = gate ? (gateOld ? 'Draw anyway' : `Waiting for ${o?o.name:'opponent'}…`) : 'Draw a card'; $('#drawBtn').disabled = !!gate && !gateOld;
   { const bb=$('#blockBar'); if(blockStep()){ const n=G.me.arrows.filter(a=>a.blk).length; bb.hidden=false;
-      bb.innerHTML = `<span>${n ? n+' blocker'+(n>1?'s':'')+' declared' : 'You are being attacked'}</span><button class="go" data-bk="declare">${n?'Declare another blocker':'Declare a blocker'}</button>${n ? '<button data-bk="reset">Reset blockers</button><button class="go" data-bk="finish">Finish declaring blocks</button>' : '<button data-bk="finish">No blocks</button>'}`; const fr=$('#myFront'), mid=$('#mid'); bb.style.top=Math.max(mid.offsetTop + mid.offsetHeight + 8, fr.offsetTop + (fr.offsetHeight - bb.offsetHeight)/2)+'px'; } else if(!bb.hidden){ bb.hidden=true; bb.innerHTML=''; } }
+      const more=blockersLeft().length>0; bb.innerHTML = `<span>${n ? n+' blocker'+(n>1?'s':'')+' declared' : 'You are being attacked'}</span>${more ? `<button class="go" data-bk="declare">${n?'Declare another blocker':'Declare a blocker'}</button>` : (n ? '' : '<span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:400">No untapped creatures to block with</span>')}${n ? '<button data-bk="reset">Reset blockers</button><button class="go" data-bk="finish">Finish declaring blocks</button>' : '<button data-bk="finish">No blocks</button>'}`; const fr=$('#myFront'), mid=$('#mid'); bb.style.top=Math.max(mid.offsetTop + mid.offsetHeight + 8, fr.offsetTop + (fr.offsetHeight - bb.offsetHeight)/2)+'px'; } else if(!bb.hidden){ bb.hidden=true; bb.innerHTML=''; } }
   const nb=$('#next');
   if(!t.n){ nb.textContent='Waiting to start'; nb.disabled=true; }
   else if(t.passed){ nb.disabled=mine; nb.textContent = mine ? `Waiting for ${o&&o.name||'opponent'}` : 'Start my turn'; }
@@ -3017,7 +3020,7 @@ function anchor(id){
   return [r.left+r.width/2-t.left, r.top+r.height/2-t.top];
 }
 function drawArrows(){
-  const g=$('#arrowG'); if(!g) return; let h='';
+  const g=$('#arrowG'); if(!g) return; let h=''; try{ const L=$('#dragLine'); if(L && (!G.mode || !G.mode.from) && !rdown) L.setAttribute('visibility','hidden'); }catch(e){}
   const all=[...G.me.arrows.map(a=>[a,'A']), ...((G.opp&&G.opp.arrows)||[]).map(a=>[a,'B'])];
   for(const [a,k] of all){ const p=anchor(a.a), q=anchor(a.b); if(!p||!q) continue;
     const mx=(p[0]+q[0])/2, my=(p[1]+q[1])/2 - Math.min(60, Math.hypot(q[0]-p[0],q[1]-p[1])*.18);
@@ -3268,13 +3271,13 @@ function blinkArrow(md, target){
 function startMode(type, from){ G.mode={type, from}; render(); }
 function finishMode(target){
   const md=G.mode; G.mode=null; if(!md) return;
-  if(md.type==='pickblocker'){ const f=find(target); if(!f || f.z!=='bf' || !isCreature(f.c) || f.c.tap){ toast('Click one of your untapped creatures.'); G.mode=md; render(); return; } G.mode={type:'block', from:target}; toast(`${cdata(f.c).n}: now click the attacker it blocks.`); render(); return; }
+  if(md.type==='pickblocker'){ const f=find(target); if(!f || f.z!=='bf' || !isCreature(f.c) || f.c.tap){ toast('Click one of your untapped creatures.'); G.mode=md; render(); return; } if(!blockersLeft().some(x=>x.id===target)){ toast(`${cdata(f.c).n} is already blocking. Pick another creature, or Reset blockers.`); G.mode=md; render(); return; } G.mode={type:'block', from:target}; toast(`${cdata(f.c).n}: now click the attacker it blocks.`); render(); return; }
   if(md.type==='arrow' && blockStep()){ const f=find(md.from), t=findAny(target); if(f && f.z==='bf' && isCreature(f.c) && !f.c.tap && t && !t.mine && t.z==='bf' && t.c.atk) md.type='block'; }   // an arrow from my creature to an attacker is a block
   if(md.type==='exhold' || md.type==='exvoid'){ exileWith(md.from, target, md.type==='exhold'?'hold':'play'); changed(); return; }
   if(md.type==='attach'){ const f=find(md.from); if(f && target!==md.from && target!=='p1' && target!=='p2'){ f.c.att=target; f.c.atk=false; if(!find(target)) G.me.arrows.push({a:md.from,b:target}); log(`${G.me.name} attaches ${cname(f.c)}.`); } }
   else if(md.type==='block'){ const f=findAny(md.from), t=findAny(target);
     if(!t || t.mine || t.z!=='bf' || (blockStep() && !t.c.atk)){ toast('Click the attacking creature it blocks (Esc to cancel).'); G.mode=md; render(); return; }
-    G.me.arrows=G.me.arrows.filter(a=>!(a.blk && a.a===md.from)); G.me.arrows.push({a:md.from, b:target, blk:1}); log(`${G.me.name}'s ${f?cname(f.c):'creature'} blocks ${G.opp?G.opp.name+"'s ":''}${cname(t.c)}.`); }
+    { const bf=find(md.from); G.me.arrows=G.me.arrows.filter(a=>!(a.blk && a.a===md.from && (!(bf && multiBlock(bf.c)) || a.b===target))); } G.me.arrows.push({a:md.from, b:target, blk:1}); log(`${G.me.name}'s ${f?cname(f.c):'creature'} blocks ${G.opp?G.opp.name+"'s ":''}${cname(t.c)}.`); }
   else if(md.type==='arrow' && earthArrow(md, target)){ return; }
   else if(md.type==='arrow' && bestowArrow(md, target)){ return; }
   else if(md.type==='arrow' && (bk=>bk)(blinkArrow(md, target))){ return; }
@@ -3325,6 +3328,8 @@ function cardContext(card, x, y){
 let rdown=null, rdoneAt=0;
 const boardCard = el => { const c=el && el.closest('.card[data-id]'); return c && !c.closest('.pile') && !c.closest('#modal') && !c.closest('#shown') && c.dataset.z!=='search' ? c : null; };
 document.addEventListener('pointerdown', e=>{ if(e.button!==2 || e.pointerType==='touch') return; const c=boardCard(e.target); if(!c || !['bf','st'].includes(c.dataset.z)) return; rdown={el:c, id:c.dataset.id, x:e.clientX, y:e.clientY, drag:false}; });
+document.addEventListener('pointermove', e=>{ if(rdown) return; const md=G.mode, L=$('#dragLine'); if(!L) return; if(!md || !md.from){ if(L.getAttribute('visibility')!=='hidden' && !rdown) L.setAttribute('visibility','hidden'); return; }
+  const p=anchor(md.from); if(!p){ L.setAttribute('visibility','hidden'); return; } const t=$('#table').getBoundingClientRect(); L.setAttribute('x1', p[0]); L.setAttribute('y1', p[1]); L.setAttribute('x2', e.clientX-t.left); L.setAttribute('y2', e.clientY-t.top); L.setAttribute('visibility','visible'); });   // a dashed arrow from the card follows the mouse until the target is clicked
 document.addEventListener('pointermove', e=>{
   if(!rdown) return; if(!(e.buttons&2)){ rdown=null; $('#dragLine').setAttribute('visibility','hidden'); return; }
   if(!rdown.drag && Math.hypot(e.clientX-rdown.x, e.clientY-rdown.y)>10){ rdown.drag=true; hideZoom(); closeMenu(); }
