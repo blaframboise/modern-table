@@ -416,10 +416,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 <script>/*__PEERJS__*/</script>
 <script>
 "use strict";
-const VERSION = 'v3.18';
+const VERSION = 'v3.19';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.19','Oct 16',"Combat damage triggers that say 'to a player or planeswalker' (Psychic Frog) now go on the stack when the creature attacks a planeswalker unblocked, too."],
   ['v3.18','Oct 16',"Psychic Frog's 'exile three cards from your graveyard' ability is back on its menu, and it now gives Frog flying until end of turn (the flying icon shows on the card). Other abilities that exile cards from your graveyard as their cost show up again too."],
   ['v3.17','Oct 16',"Fixed: Atraxa's enter trigger now opens the card-type picker when it resolves."],
   ['v3.16','Oct 16',"Spells that return a card from your graveyard (Goryo's Vengeance) open your graveyard as you cast them: the cards they can target are lit, the rest dimmed. Pick one and confirm, and the spell goes on the stack with its target marked."],
@@ -2736,7 +2737,7 @@ function combatStep(){ const t=G.turn, atk=G.me.bf.filter(c=>c.atk);
 function combatDamage(){ const t=G.turn, m=G.me, oa=(G.opp&&G.opp.arrows)||[], parts=[], trig=[];
   for(const c of m.bf.filter(x=>x.atk)){ const bl=oa.filter(a=>a.blk && a.b===c.id).map(a=>{ const g=findAny(a.a); return g ? cname(g.c) : 'a creature'; }), pa=m.arrows.find(a=>a.atk && a.a===c.id), pw=pa && findAny(pa.b), p=powerOf(c);
     if(bl.length) parts.push(`${cname(c)} (power ${p}) is blocked by ${bl.join(' and ')}`);
-    else { parts.push(`${cname(c)} (power ${p}) is unblocked${pw ? ', attacking '+cname(pw.c) : ''}`); if(!pw && cdmgLine(c)) trig.push(c.id); } }
+    else { parts.push(`${cname(c)} (power ${p}) is unblocked${pw ? ', attacking '+cname(pw.c) : ''}`); const l=cdmgLine(c); if(l && (!pw || /to a player or planeswalker/i.test(l))) trig.push(c.id); } }
   setTurn(Object.assign({}, t, {cs:'dmg'})); log(`Combat damage: ${parts.join('; ') || 'no attackers'}. Adjust life and creatures by hand.`); for(const id of trig) cdmgTrig(id); changed(); }
 function doneBlocking(){ const bl=G.me.arrows.filter(a=>a.blk).map(a=>{ const f=find(a.a), g=findAny(a.b); return `${f?cname(f.c):'a creature'} blocks ${g?cname(g.c):'an attacker'}`; });
   log(`${G.me.name} is done blocking${bl.length ? ': '+bl.join('; ') : ' (no blocks)'}.`); setTurn(Object.assign({}, G.turn, {cs:'blkd'})); changed(); }
