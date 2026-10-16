@@ -154,7 +154,7 @@ textarea#paste{width:100%;min-height:300px;font-family:ui-monospace,Menlo,Consol
 .tnote::after{content:"";position:absolute;left:6px;right:5px;top:8px;height:20px;background:repeating-linear-gradient(transparent 0 4px,#1d2a3a88 4px 5px,transparent 5px 7px);clip-path:polygon(0 0,95% 0,80% 30%,100% 45%,70% 70%,90% 100%,0 100%)}
 .tnote b{position:absolute;right:-8px;bottom:-6px;background:var(--brass);color:#1b1205;font:800 11px/1 var(--ui);border-radius:99px;padding:2px 5px}
 #tpop{position:fixed;z-index:60}
-.rv .card.dim,#ltGrid .card.dim{opacity:.35;filter:grayscale(.6);cursor:not-allowed}
+.rv .card.dim,#ltGrid .card.dim,#gytGrid .card.dim{opacity:.35;filter:grayscale(.6);cursor:not-allowed}
 .costbox.up{border-color:#ff8a7a;box-shadow:0 0 6px 1px #ff4a3a88}.chban{position:absolute;left:0;right:0;top:30%;text-align:center;font:800 calc(var(--cw)*.095)/1.15 var(--ui);letter-spacing:.08em;color:#fff;background:#000e;border-top:1px solid #fffa;border-bottom:1px solid #fffa;padding:calc(var(--cw)*.02) 2px;box-shadow:0 2px 6px #0009;pointer-events:none;text-transform:uppercase}
 .costbox{position:absolute;left:3%;top:14%;display:flex;gap:1px;align-items:center;padding:2px 3px;border-radius:3px;background:#000e;border:1px solid var(--brass);box-shadow:0 2px 6px #0009;pointer-events:none}.costbox .ms{width:calc(var(--cw)*.13);height:calc(var(--cw)*.13);font-size:calc(var(--cw)*.075)}
 .badge.tok{left:4%;top:4%;border-color:var(--dim);color:var(--dim)}
@@ -428,10 +428,11 @@ kbd.k{border:1px solid var(--line);border-radius:4px;padding:0 5px;font:12px var
 </script>
 <script>
 "use strict";
-const VERSION = 'v3.24';
+const VERSION = 'v3.25';
 const FEEDBACK_FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSf0cJmkNMBHo20umPjU7AZN9L3n4YF0OAdPcftA5Vgtpb0bzA/viewform', FB_VERSION = 'entry.424564323', FB_DETAILS = 'entry.2140001333';
 /* What's new: newest first, one plain-language line per version for players. Add a line here with every version bump. */
 const NEWS = [
+  ['v3.25','Oct 16',"Goryo's Vengeance gives the returned creature haste, so it can attack right away. When you choose its target, cards in your graveyard that aren't legendary creatures are greyed out."],
   ['v3.24','Oct 16',"Blocking knows evasion: flying and reach, menace, shadow, horsemanship, fear, intimidate, skulk, swampwalk and the other landwalks, protection, and cards that say they can't be blocked or can't block. Once you pick a blocker, attackers it can't block are dimmed. The table warns rather than stops you, so a block it thinks is illegal is flagged to both players, and Finish declaring blocks asks before handing back. At the start of combat and of blocks, the table reminds you of creatures that must attack or block. Dragon's Rage Channeler with delirium gets +2/+2 and flying."],
   ['v3.23','Oct 16',"Faithful Mending fixed: you gain 2 life, draw two, and then the discard window asks for two cards. Flashback copies are still exiled after."],
   ['v3.22','Oct 16',"The note on a flashback spell on the stack now reads Exiled after, in the same plain label as X and Mode."],
@@ -1653,7 +1654,7 @@ async function simpleEffects(c, text, srcId){
     if((r=sen.match(/^tap up to (a|one|two|three|\d+) target creatures? and put a stun counter on each of them\.?$/i))){ const k=NUMW2[r[1].toLowerCase()]||+r[1]||1, ts=tg.filter(x=>{ const a=findAny(x); return a && a.z==='bf' && isCreature(a.c); }).slice(0,k); if(!ts.length) log(`${by}: no creature was targeted.`);
       for(const t of ts){ const f=find(t); if(f){ f.c.tap=true; f.c.stun=(f.c.stun||0)+1; log(`${by}: ${cname(f.c)} is tapped and gets a stun counter.`); } else { send({t:'tapstun', id:t, by, who:m.name}); log(`${by}: ${G.opp?G.opp.name:'the opponent'}'s ${cname(findAny(t).c)} is tapped and gets a stun counter.`); } } changed(); continue; }
     if(/^return target [^.]+? card from your graveyard to the battlefield(?: tapped)?\.?$/i.test(sen)){ if(!(G.gyRet && G.gyRet.s===c.id)) log(`${by}: no card in ${m.name}'s graveyard was targeted, so nothing returns.`); made=(G.gyRet && G.gyRet.s===c.id) ? G.gyRet.cards.filter(x=>find(x.id)) : []; continue; }
-    if(/^it gains haste(?: until end of turn)?\.?$/i.test(sen)){ for(const x of made){ x.hst=G.turn.n||1; log(`${cname(x)} has haste this turn.`); } changed(); continue; }
+    if(/^(?:it|that creature|they|those creatures) gains? haste(?: until end of turn)?\.?$/i.test(sen)){ for(const x of made){ x.hst=G.turn.n||1; log(`${cname(x)} has haste this turn.`); } changed(); continue; }
     if(/^exile (?:it|them) at the beginning of the next end step\.?$/i.test(sen)){ for(const x of made){ if(find(x.id)){ x.exEnd={ent:x.ent||'', by}; log(`${by}: ${cname(x)} will be exiled at the beginning of the next end step.`); } } changed(); continue; }
     if((r=sen.match(/^reveal the top (\w+) cards of your library\.?$/i)) && /For each card type, you may put a card of that type from among (?:the revealed cards|cards revealed this way|them) into your hand/i.test(text)){ waited=true; await atraxaWin(NUMW2[r[1].toLowerCase()]||+r[1]||10, by); break; }
     if((r=sen.match(/^you may pay ((?:\{[WUBRGC0-9]\})+)\.?$/i))){ waited=true; sacPow=0; const yes=await yesNo(by, `Pay ${r[1]}?`, `Pay ${r[1]}`, "Don't pay"); if(!yes){ log(`${by}: ${m.name} doesn't pay ${r[1]}.`); continue; }
